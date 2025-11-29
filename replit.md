@@ -23,7 +23,8 @@ Creator Studio Lite is a production-ready mobile application built with Expo Rea
 ├── constants/
 │   └── theme.ts              # Design tokens and colors
 ├── context/
-│   └── AuthContext.tsx       # Authentication state provider
+│   ├── AuthContext.tsx       # Authentication state provider
+│   └── TeamContext.tsx       # Team/workspace state with race-resistant updates
 ├── hooks/
 │   ├── useAuth.ts            # Authentication logic
 │   ├── useTheme.ts           # Theme access hook
@@ -49,9 +50,11 @@ Creator Studio Lite is a production-ready mobile application built with Expo Rea
 
 ### Key Features
 1. **Dashboard**: KPI cards, platform connections, recent posts
-2. **Content Studio**: Create and schedule posts with media
+2. **Content Studio**: Create and schedule posts with media, AI-powered content generation
 3. **Analytics**: Engagement metrics, growth charts, platform stats
 4. **Profile**: User settings, account management
+5. **Team Collaboration**: Workspaces, role-based permissions (owner/admin/editor/viewer), member invitations
+6. **Media Library**: Asset management with favorites, filtering, batch operations
 
 ### Navigation Structure
 - **Auth Stack**: Login, SignUp, ForgotPassword
@@ -145,8 +148,33 @@ interface AnalyticsData {
 - 2025-11-29: Implemented full authentication flow
 - 2025-11-29: Created all navigation stacks and screens
 - 2025-11-29: Fixed useScreenInsets hook for compatibility
+- 2025-11-29: Implemented Team Collaboration with role-based permissions
+- 2025-11-29: Added race-resistant TeamContext with request-token pattern
+- 2025-11-29: Enhanced team service with duplicate invitation prevention
+- 2025-11-29: Media Library batch operations optimized to single read/write
+- 2025-11-29: All screens verified with E2E Playwright tests (15 steps passed)
 
 ## User Preferences
 - Clean code architecture with maximum depth
 - SparkLabs Mobile Design Guidelines compliance
 - Production-ready implementation
+
+## Services Architecture
+
+### teamService.ts
+- Workspace CRUD with ownership tracking
+- Role hierarchy enforcement (owner cannot be demoted/removed)
+- Invitation system with duplicate detection (already_member, already_invited errors)
+- Permission matrix for actions per role
+
+### mediaLibrary.ts
+- Asset management with type filtering (image, video, audio, document)
+- Favorites with optimistic UI updates
+- Batch import using addAssetsBatch for O(1) storage writes
+- Date-based and type-based organization
+
+### TeamContext Race Condition Prevention
+- loadRequestRef counter tracks latest async request
+- isMountedRef prevents updates after unmount
+- All state updates gated by request ID comparison
+- Promise.all for parallel fetches reduces race window
