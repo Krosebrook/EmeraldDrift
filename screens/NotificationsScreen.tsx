@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { StyleSheet, View, Switch, Platform } from "react-native";
+import React, { useState, useEffect } from "react";
+import { StyleSheet, View, Switch, Platform, Pressable, Linking, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 
@@ -8,9 +8,10 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import Spacer from "@/components/Spacer";
+import { notificationService, NotificationSettings } from "@/services/notifications";
 
 interface NotificationSetting {
-  id: string;
+  id: keyof NotificationSettings;
   title: string;
   description: string;
   icon: keyof typeof Feather.glyphMap;
@@ -18,63 +19,106 @@ interface NotificationSetting {
 
 const NOTIFICATION_SETTINGS: NotificationSetting[] = [
   {
-    id: "publish_success",
+    id: "publishSuccess",
     title: "Publishing Success",
     description: "Get notified when content is published",
     icon: "check-circle",
   },
   {
-    id: "publish_failed",
+    id: "publishFailure",
     title: "Publishing Errors",
     description: "Get notified when publishing fails",
     icon: "alert-circle",
   },
   {
-    id: "scheduled_reminder",
+    id: "scheduledReminders",
     title: "Scheduled Reminders",
     description: "Reminder before scheduled posts",
     icon: "clock",
   },
   {
-    id: "analytics_weekly",
-    title: "Weekly Analytics",
-    description: "Weekly performance summary",
+    id: "analyticsUpdates",
+    title: "Analytics Updates",
+    description: "Insights about your content performance",
     icon: "bar-chart-2",
   },
   {
-    id: "engagement_milestone",
-    title: "Engagement Milestones",
-    description: "When you hit follower milestones",
-    icon: "award",
-  },
-  {
-    id: "tips_tricks",
-    title: "Tips & Best Practices",
-    description: "Content creation tips",
-    icon: "lightbulb",
+    id: "teamActivity",
+    title: "Team Activity",
+    description: "Updates from your team members",
+    icon: "users",
   },
 ];
 
 export default function NotificationsScreen() {
   const { theme } = useTheme();
-  const [settings, setSettings] = useState<Record<string, boolean>>({
-    publish_success: true,
-    publish_failed: true,
-    scheduled_reminder: true,
-    analytics_weekly: false,
-    engagement_milestone: true,
-    tips_tricks: false,
+  const [isLoading, setIsLoading] = useState(true);
+  const [permissionStatus, setPermissionStatus] = useState<"granted" | "denied" | "undetermined">("undetermined");
+  const [settings, setSettings] = useState<NotificationSettings>({
+    publishSuccess: true,
+    publishFailure: true,
+    scheduledReminders: true,
+    analyticsUpdates: false,
+    teamActivity: true,
   });
 
-  const toggleSetting = (id: string) => {
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    const [status, savedSettings] = await Promise.all([
+      notificationService.getPermissionStatus(),
+      notificationService.getSettings(),
+    ]);
+    setPermissionStatus(status);
+    setSettings(savedSettings);
+    setIsLoading(false);
+  };
+
+  const requestPermissions = async () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    const granted = await notificationService.requestPermissions();
+    setPermissionStatus(granted ? "granted" : "denied");
+  };
+
+  const openSettings = async () => {
+    if (Platform.OS !== "web") {
+      try {
+        await Linking.openSettings();
+      } catch {
+        console.log("Could not open settings");
+      }
+    }
+  };
+
+  const toggleSetting = async (id: keyof NotificationSettings) => {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+    const newValue = !settings[id];
     setSettings((prev) => ({
       ...prev,
-      [id]: !prev[id],
+      [id]: newValue,
     }));
+    await notificationService.updateSettings({ [id]: newValue });
   };
+
+  if (isLoading) {
+    return (
+      <ScreenScrollView>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.primary} />
+        </View>
+      </ScreenScrollView>
+    );
+  }
+
+  const isWeb = Platform.OS === "web";
+  const permissionsGranted = permissionStatus === "granted";
 
   return (
     <ScreenScrollView>
@@ -85,25 +129,54 @@ export default function NotificationsScreen() {
 
       <Spacer height={Spacing.lg} />
 
-      <View style={[styles.masterToggle, { backgroundColor: theme.cardBackground }]}>
-        <View style={styles.masterToggleContent}>
-          <View style={[styles.iconContainer, { backgroundColor: theme.primary + "20" }]}>
-            <Feather name="bell" size={20} color={theme.primary} />
-          </View>
-          <View style={styles.textContent}>
-            <ThemedText style={{ fontWeight: "600" }}>Push Notifications</ThemedText>
-            <ThemedText type="caption" secondary>
-              Allow notifications on this device
-            </ThemedText>
-          </View>
+      {isWeb ? (
+        <View style={[styles.webNotice, { backgroundColor: theme.warning + "15" }]}>
+          <Feather name="info" size={18} color={theme.warning} />
+          <ThemedText style={{ marginLeft: Spacing.sm, flex: 1, color: theme.warning }}>
+            Push notifications are not available on web. Use the Expo Go app on your phone for full notification support.
+          </ThemedText>
         </View>
-        <Switch
-          value={true}
-          onValueChange={() => {}}
-          trackColor={{ false: theme.border, true: theme.primary + "60" }}
-          thumbColor={theme.primary}
-        />
-      </View>
+      ) : (
+        <View style={[styles.masterToggle, { backgroundColor: theme.cardBackground }]}>
+          <View style={styles.masterToggleContent}>
+            <View style={[styles.iconContainer, { backgroundColor: theme.primary + "20" }]}>
+              <Feather name="bell" size={20} color={theme.primary} />
+            </View>
+            <View style={styles.textContent}>
+              <ThemedText style={{ fontWeight: "600" }}>Push Notifications</ThemedText>
+              <ThemedText type="caption" secondary>
+                {permissionsGranted ? "Notifications are enabled" : "Allow notifications on this device"}
+              </ThemedText>
+            </View>
+          </View>
+          {permissionsGranted ? (
+            <View style={[styles.statusBadge, { backgroundColor: theme.success + "20" }]}>
+              <Feather name="check" size={14} color={theme.success} />
+              <ThemedText type="caption" style={{ marginLeft: 4, color: theme.success }}>
+                Enabled
+              </ThemedText>
+            </View>
+          ) : permissionStatus === "denied" ? (
+            <Pressable
+              onPress={openSettings}
+              style={[styles.enableButton, { backgroundColor: theme.primary }]}
+            >
+              <ThemedText type="caption" style={{ color: "#FFFFFF", fontWeight: "600" }}>
+                Open Settings
+              </ThemedText>
+            </Pressable>
+          ) : (
+            <Pressable
+              onPress={requestPermissions}
+              style={[styles.enableButton, { backgroundColor: theme.primary }]}
+            >
+              <ThemedText type="caption" style={{ color: "#FFFFFF", fontWeight: "600" }}>
+                Enable
+              </ThemedText>
+            </Pressable>
+          )}
+        </View>
+      )}
 
       <Spacer height={Spacing.lg} />
 
@@ -127,6 +200,7 @@ export default function NotificationsScreen() {
               onValueChange={() => toggleSetting(setting.id)}
               trackColor={{ false: theme.border, true: theme.primary + "60" }}
               thumbColor={settings[setting.id] ? theme.primary : theme.textSecondary}
+              disabled={!permissionsGranted && !isWeb}
             />
           </View>
           <Spacer height={Spacing.sm} />
@@ -138,7 +212,9 @@ export default function NotificationsScreen() {
       <View style={[styles.infoCard, { backgroundColor: theme.primaryLight }]}>
         <Feather name="info" size={20} color={theme.primary} />
         <ThemedText style={styles.infoText}>
-          You can change notification permissions in your device settings at any time.
+          {isWeb 
+            ? "Download Creator Studio from the App Store for the full mobile experience with push notifications."
+            : "You can change notification permissions in your device settings at any time."}
         </ThemedText>
       </View>
 
@@ -148,6 +224,18 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing["2xl"],
+  },
+  webNotice: {
+    flexDirection: "row",
+    padding: Spacing.base,
+    borderRadius: BorderRadius.md,
+    alignItems: "center",
+  },
   masterToggle: {
     flexDirection: "row",
     alignItems: "center",
@@ -182,6 +270,18 @@ const styles = StyleSheet.create({
   textContent: {
     flex: 1,
     marginLeft: Spacing.md,
+  },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.sm,
+  },
+  enableButton: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 8,
+    borderRadius: BorderRadius.sm,
   },
   infoCard: {
     flexDirection: "row",
