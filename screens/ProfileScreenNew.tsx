@@ -216,6 +216,12 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
         label="Privacy & Security"
         onPress={() => navigation.navigate("Privacy")}
       />
+      <Spacer height={Spacing.sm} />
+      <SettingsRow
+        icon="image"
+        label="Media Library"
+        onPress={() => navigation.navigate("MediaLibrary")}
+      />
 
       <Spacer height={Spacing.lg} />
 

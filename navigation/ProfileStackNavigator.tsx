@@ -8,6 +8,7 @@ import PrivacyScreen from "@/screens/PrivacyScreen";
 import HelpScreen from "@/screens/HelpScreen";
 import SupportScreen from "@/screens/SupportScreen";
 import AboutScreen from "@/screens/AboutScreen";
+import MediaLibraryScreen from "@/screens/MediaLibraryScreen";
 import { useTheme } from "@/hooks/useTheme";
 import { getCommonScreenOptions } from "@/navigation/screenOptions";
 
@@ -19,6 +20,7 @@ export type ProfileStackParamList = {
   Help: undefined;
   Support: undefined;
   About: undefined;
+  MediaLibrary: undefined;
 };
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
@@ -64,6 +66,11 @@ export default function ProfileStackNavigator() {
         name="About"
         component={AboutScreen}
         options={{ headerTitle: "About" }}
+      />
+      <Stack.Screen
+        name="MediaLibrary"
+        component={MediaLibraryScreen}
+        options={{ headerTitle: "Media Library" }}
       />
     </Stack.Navigator>
   );
