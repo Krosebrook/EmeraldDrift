@@ -9,11 +9,13 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ScreenKeyboardAwareScrollView } from "@/components/ScreenKeyboardAwareScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
+import { AIAssistantModal } from "@/components/AIAssistantModal";
 import { useTheme } from "@/hooks/useTheme";
 import { storage, ContentItem, PlatformConnection } from "@/utils/storage";
 import { Spacing, BorderRadius, Typography } from "@/constants/theme";
 import Spacer from "@/components/Spacer";
 import type { StudioStackParamList } from "@/navigation/StudioStackNavigator";
+import type { ContentIdea, CaptionSuggestion } from "@/services/aiContent";
 
 type StudioScreenProps = {
   navigation: NativeStackNavigationProp<StudioStackParamList, "Studio">;
@@ -35,6 +37,7 @@ export default function StudioScreen({ navigation }: StudioScreenProps) {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [connectedPlatforms, setConnectedPlatforms] = useState<PlatformConnection[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showAIModal, setShowAIModal] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -158,7 +161,7 @@ export default function StudioScreen({ navigation }: StudioScreenProps) {
       return;
     }
 
-    const connectedIds = connectedPlatforms.map((p) => p.platform);
+    const connectedIds = connectedPlatforms.map((p) => p.platform as string);
     const unconnectedSelected = selectedPlatforms.filter((p) => !connectedIds.includes(p));
 
     if (unconnectedSelected.length > 0) {
@@ -224,6 +227,31 @@ export default function StudioScreen({ navigation }: StudioScreenProps) {
     setSelectedPlatforms([]);
   };
 
+  const handleSelectIdea = (idea: ContentIdea) => {
+    setTitle(idea.title);
+    if (!caption.trim()) {
+      setCaption(idea.hook);
+    }
+  };
+
+  const handleSelectCaption = (captionData: CaptionSuggestion) => {
+    const fullCaption = `${captionData.caption}\n\n${captionData.callToAction}\n\n${captionData.hashtags.join(" ")}`;
+    setCaption(fullCaption);
+  };
+
+  const handleSelectHashtags = (hashtags: string[]) => {
+    const hashtagString = hashtags.join(" ");
+    if (caption.trim()) {
+      setCaption((prev) => `${prev}\n\n${hashtagString}`);
+    } else {
+      setCaption(hashtagString);
+    }
+  };
+
+  const handleImproveCaption = (improved: string) => {
+    setCaption(improved);
+  };
+
   const inputStyle = [
     styles.input,
     {
@@ -235,6 +263,22 @@ export default function StudioScreen({ navigation }: StudioScreenProps) {
 
   return (
     <ScreenKeyboardAwareScrollView>
+      <Pressable
+        onPress={() => setShowAIModal(true)}
+        style={({ pressed }) => [
+          styles.aiButton,
+          { backgroundColor: theme.primary, opacity: pressed ? 0.9 : 1 },
+        ]}
+      >
+        <Feather name="cpu" size={18} color="#FFFFFF" />
+        <ThemedText style={{ color: "#FFFFFF", marginLeft: 8, fontWeight: "600" }}>
+          AI Assistant
+        </ThemedText>
+        <Feather name="chevron-right" size={18} color="#FFFFFF" style={{ marginLeft: "auto" }} />
+      </Pressable>
+
+      <Spacer height={Spacing.lg} />
+
       <View style={styles.mediaSection}>
         {mediaUri ? (
           <View style={[styles.mediaPreview, { backgroundColor: theme.backgroundSecondary }]}>
@@ -402,11 +446,30 @@ export default function StudioScreen({ navigation }: StudioScreenProps) {
       </View>
 
       <Spacer height={Spacing.xl} />
+
+      <AIAssistantModal
+        visible={showAIModal}
+        onClose={() => setShowAIModal(false)}
+        currentTitle={title}
+        currentCaption={caption}
+        selectedPlatforms={selectedPlatforms}
+        onSelectIdea={handleSelectIdea}
+        onSelectCaption={handleSelectCaption}
+        onSelectHashtags={handleSelectHashtags}
+        onImproveCaption={handleImproveCaption}
+      />
     </ScreenKeyboardAwareScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  aiButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+  },
   mediaSection: {
     marginTop: Spacing.sm,
   },
