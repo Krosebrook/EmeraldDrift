@@ -222,6 +222,12 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
         label="Media Library"
         onPress={() => navigation.navigate("MediaLibrary")}
       />
+      <Spacer height={Spacing.sm} />
+      <SettingsRow
+        icon="users"
+        label="Team"
+        onPress={() => navigation.navigate("Team")}
+      />
 
       <Spacer height={Spacing.lg} />
 
