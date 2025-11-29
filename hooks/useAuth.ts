@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { storage } from "@/utils/storage";
 
 const AUTH_STORAGE_KEY = "@creator_studio_auth";
 const USER_STORAGE_KEY = "@creator_studio_user";
@@ -30,6 +31,7 @@ export function useAuth() {
       const userJson = await AsyncStorage.getItem(USER_STORAGE_KEY);
       if (userJson) {
         const user = JSON.parse(userJson) as User;
+        await storage.initializeDemoData();
         setState({
           user,
           isLoading: false,
@@ -71,6 +73,7 @@ export function useAuth() {
 
       await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
       await AsyncStorage.setItem(AUTH_STORAGE_KEY, "true");
+      await storage.initializeDemoData();
 
       setState({
         user,
@@ -101,6 +104,7 @@ export function useAuth() {
 
       await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
       await AsyncStorage.setItem(AUTH_STORAGE_KEY, "true");
+      await storage.initializeDemoData();
 
       setState({
         user,
