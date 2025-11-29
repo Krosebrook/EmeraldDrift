@@ -1,0 +1,252 @@
+import React, { useState, useCallback } from "react";
+import { StyleSheet, View, Pressable, RefreshControl, Alert, Platform } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import { useFocusEffect } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+
+import { ScreenFlatList } from "@/components/ScreenFlatList";
+import { ThemedText } from "@/components/ThemedText";
+import { useTheme } from "@/hooks/useTheme";
+import { storage, ContentItem } from "@/utils/storage";
+import { Spacing, BorderRadius } from "@/constants/theme";
+import type { DashboardStackParamList } from "@/navigation/DashboardStackNavigator";
+
+type ContentListScreenProps = {
+  navigation: NativeStackNavigationProp<DashboardStackParamList, "ContentList">;
+};
+
+type FilterType = "all" | "draft" | "scheduled" | "published";
+
+export default function ContentListScreen({ navigation }: ContentListScreenProps) {
+  const { theme } = useTheme();
+  const [content, setContent] = useState<ContentItem[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [filter, setFilter] = useState<FilterType>("all");
+
+  const loadContent = useCallback(async () => {
+    const data = await storage.getContent();
+    setContent(data);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadContent();
+    }, [loadContent])
+  );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadContent();
+    setRefreshing(false);
+  }, [loadContent]);
+
+  const handleDelete = (item: ContentItem) => {
+    Alert.alert(
+      "Delete Content",
+      "Are you sure you want to delete this content?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            await storage.deleteContent(item.id);
+            await loadContent();
+            if (Platform.OS !== "web") {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const filteredContent = content.filter((item) => {
+    if (filter === "all") return true;
+    return item.status === filter;
+  });
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
+
+  const getStatusColor = (status: ContentItem["status"]): string => {
+    switch (status) {
+      case "published": return theme.success;
+      case "scheduled": return theme.warning;
+      case "failed": return theme.error;
+      default: return theme.textSecondary;
+    }
+  };
+
+  const renderItem = ({ item }: { item: ContentItem }) => (
+    <Pressable
+      onPress={() => navigation.navigate("ContentDetail", { id: item.id })}
+      onLongPress={() => handleDelete(item)}
+      style={({ pressed }) => [
+        styles.contentCard,
+        { backgroundColor: theme.cardBackground, opacity: pressed ? 0.9 : 1 },
+      ]}
+    >
+      <View style={[styles.thumbnail, { backgroundColor: theme.backgroundSecondary }]}>
+        {item.mediaUri ? (
+          <Feather name="image" size={24} color={theme.textSecondary} />
+        ) : (
+          <Feather name="file-text" size={24} color={theme.textSecondary} />
+        )}
+      </View>
+      <View style={styles.contentInfo}>
+        <ThemedText numberOfLines={1} style={styles.contentTitle}>
+          {item.title || "Untitled"}
+        </ThemedText>
+        <ThemedText type="caption" secondary numberOfLines={1}>
+          {item.caption || "No caption"}
+        </ThemedText>
+        <View style={styles.contentMeta}>
+          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + "20" }]}>
+            <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
+            <ThemedText
+              type="caption"
+              style={{ color: getStatusColor(item.status), textTransform: "capitalize" }}
+            >
+              {item.status}
+            </ThemedText>
+          </View>
+          <ThemedText type="caption" secondary>
+            {formatDate(item.createdAt)}
+          </ThemedText>
+        </View>
+      </View>
+      <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+    </Pressable>
+  );
+
+  const ListHeader = () => (
+    <View style={styles.header}>
+      <View style={styles.filterContainer}>
+        {(["all", "draft", "scheduled", "published"] as FilterType[]).map((type) => (
+          <Pressable
+            key={type}
+            onPress={() => {
+              setFilter(type);
+              if (Platform.OS !== "web") {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }
+            }}
+            style={({ pressed }) => [
+              styles.filterButton,
+              {
+                backgroundColor: filter === type ? theme.primary : theme.cardBackground,
+                opacity: pressed ? 0.9 : 1,
+              },
+            ]}
+          >
+            <ThemedText
+              type="caption"
+              style={{
+                color: filter === type ? "#FFFFFF" : theme.text,
+                fontWeight: "600",
+                textTransform: "capitalize",
+              }}
+            >
+              {type}
+            </ThemedText>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+
+  const ListEmpty = () => (
+    <View style={[styles.emptyState, { backgroundColor: theme.cardBackground }]}>
+      <Feather name="inbox" size={48} color={theme.textSecondary} />
+      <ThemedText style={{ marginTop: Spacing.md, textAlign: "center" }}>
+        {filter === "all" ? "No content yet" : `No ${filter} content`}
+      </ThemedText>
+      <ThemedText type="caption" secondary style={{ textAlign: "center", marginTop: Spacing.xs }}>
+        {filter === "all"
+          ? "Create your first post in the Studio"
+          : `You don't have any ${filter} content`}
+      </ThemedText>
+    </View>
+  );
+
+  return (
+    <ScreenFlatList
+      data={filteredContent}
+      renderItem={renderItem}
+      keyExtractor={(item) => item.id}
+      ListHeaderComponent={ListHeader}
+      ListEmptyComponent={ListEmpty}
+      ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
+      }
+    />
+  );
+}
+
+const styles = StyleSheet.create({
+  header: {
+    marginBottom: Spacing.md,
+  },
+  filterContainer: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+  },
+  filterButton: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.sm,
+  },
+  contentCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+  },
+  thumbnail: {
+    width: 56,
+    height: 56,
+    borderRadius: BorderRadius.sm,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  contentInfo: {
+    flex: 1,
+    marginLeft: Spacing.md,
+  },
+  contentTitle: {
+    fontWeight: "600",
+    fontSize: 15,
+    marginBottom: 2,
+  },
+  contentMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: Spacing.xs,
+    gap: Spacing.sm,
+  },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.xs,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 4,
+  },
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: Spacing.xl,
+    borderRadius: BorderRadius.md,
+    marginTop: Spacing.lg,
+  },
+});
