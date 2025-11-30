@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from "react";
-import { StyleSheet, View, Pressable, RefreshControl, Dimensions } from "react-native";
+import React, { useState, useCallback, useMemo } from "react";
+import { StyleSheet, View, Pressable, RefreshControl, Dimensions, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -7,6 +7,9 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { useResponsive } from "@/hooks/useResponsive";
+import { useAuthContext } from "@/context/AuthContext";
+import { userStatsService, UserStats } from "@/services/userStats";
 import { storage, AnalyticsData, PlatformConnection } from "@/utils/storage";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import Spacer from "@/components/Spacer";
@@ -19,35 +22,42 @@ type AnalyticsScreenProps = {
 type TimeRange = "7d" | "30d" | "90d";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CHART_WIDTH = SCREEN_WIDTH - Spacing.xl * 2;
 
-function SimpleBarChart({ data, color }: { data: number[]; color: string }) {
+function SimpleBarChart({ data, color, label }: { data: number[]; color: string; label: string }) {
   const { theme } = useTheme();
+  const { isMobile, contentWidth } = useResponsive();
   const maxValue = Math.max(...data, 1);
-  const barWidth = (CHART_WIDTH - Spacing.sm * (data.length - 1)) / data.length;
+  const chartWidth = contentWidth - Spacing.lg;
+  const barWidth = (chartWidth - Spacing.sm * (data.length - 1)) / data.length;
+  const chartHeight = isMobile ? 120 : 160;
 
   return (
-    <View style={styles.chartContainer}>
-      <View style={styles.barsContainer}>
-        {data.map((value, index) => {
-          const height = (value / maxValue) * 160;
-          return (
-            <View
-              key={index}
-              style={[
-                styles.bar,
-                {
-                  width: barWidth,
-                  height: Math.max(height, 4),
-                  backgroundColor: color,
-                  opacity: 0.3 + (value / maxValue) * 0.7,
-                },
-              ]}
-            />
-          );
-        })}
+    <View>
+      <ThemedText type="subhead" style={{ marginBottom: Spacing.md, fontWeight: "600" }}>
+        {label}
+      </ThemedText>
+      <View style={[styles.chartContainer, { width: chartWidth }]}>
+        <View style={[styles.barsContainer, { height: chartHeight }]}>
+          {data.map((value, index) => {
+            const height = (value / maxValue) * chartHeight;
+            return (
+              <View
+                key={index}
+                style={[
+                  styles.bar,
+                  {
+                    width: Math.max(barWidth - Spacing.xs, 4),
+                    height: Math.max(height, 2),
+                    backgroundColor: color,
+                    opacity: 0.3 + (value / maxValue) * 0.7,
+                  },
+                ]}
+              />
+            );
+          })}
+        </View>
+        <View style={[styles.chartBaseline, { backgroundColor: theme.border }]} />
       </View>
-      <View style={[styles.chartBaseline, { backgroundColor: theme.border }]} />
     </View>
   );
 }
