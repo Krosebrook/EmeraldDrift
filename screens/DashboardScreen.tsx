@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { StyleSheet, View, Pressable, RefreshControl } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
@@ -8,7 +8,8 @@ import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuthContext } from "@/context/AuthContext";
-import { storage, PlatformConnection, ContentItem, AnalyticsData } from "@/utils/storage";
+import { storage, PlatformConnection, ContentItem } from "@/utils/storage";
+import { userStatsService, UserStats, UserActivity } from "@/services/userStats";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import Spacer from "@/components/Spacer";
 import type { DashboardStackParamList } from "@/navigation/DashboardStackNavigator";
@@ -184,19 +185,60 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
   const { user } = useAuthContext();
   const [platforms, setPlatforms] = useState<PlatformConnection[]>([]);
   const [content, setContent] = useState<ContentItem[]>([]);
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [activities, setActivities] = useState<UserActivity[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
-    const [platformsData, contentData, analyticsData] = await Promise.all([
+    if (!user) return;
+    
+    const [platformsData, contentData, statsData, activitiesData] = await Promise.all([
       storage.getPlatforms(),
       storage.getContent(),
-      storage.getAnalytics(),
+      userStatsService.getStats(user.id),
+      userStatsService.getActivities(user.id, 10),
     ]);
     setPlatforms(platformsData);
     setContent(contentData);
-    setAnalytics(analyticsData);
-  }, []);
+    setUserStats(statsData);
+    setActivities(activitiesData);
+    
+    const totalFollowersFromPlatforms = platformsData.reduce((sum, p) => sum + p.followerCount, 0);
+    const totalPostsCount = contentData.length;
+    const publishedPosts = contentData.filter(c => c.status === "published").length;
+    
+    const computedEngagementRate = totalFollowersFromPlatforms > 0 && totalPostsCount > 0
+      ? Math.min(((publishedPosts / totalPostsCount) * 100), 100)
+      : 0;
+    
+    const updatedStats = {
+      ...(statsData || {
+        totalFollowers: 0,
+        totalEngagement: 0,
+        totalViews: 0,
+        totalPosts: 0,
+        postsCreated: 0,
+        postsScheduled: 0,
+        postsPublished: 0,
+        postsDraft: 0,
+        mediaUploaded: 0,
+        platformsConnected: 0,
+        teamMembers: 1,
+        engagementRate: 0,
+        growthRate: 0,
+        lastUpdated: new Date().toISOString(),
+      }),
+      totalPosts: totalPostsCount,
+      postsPublished: publishedPosts,
+      postsScheduled: contentData.filter(c => c.status === "scheduled").length,
+      postsDraft: contentData.filter(c => c.status === "draft").length,
+      platformsConnected: platformsData.length,
+      totalFollowers: totalFollowersFromPlatforms,
+      engagementRate: computedEngagementRate,
+    };
+    await userStatsService.saveStats(user.id, updatedStats);
+    setUserStats(updatedStats);
+  }, [user]);
 
   useFocusEffect(
     useCallback(() => {
@@ -210,7 +252,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
     setRefreshing(false);
   }, [loadData]);
 
-  const totalFollowers = platforms.reduce((sum, p) => sum + p.followerCount, 0);
+  const totalFollowers = userStats?.totalFollowers || 0;
   const recentPosts = content.slice(0, 5);
 
   return (
@@ -233,26 +275,26 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
           icon="users"
           value={formatNumber(totalFollowers)}
           label="Followers"
-          trend={analytics?.growthRate || 0}
+          trend={userStats?.growthRate || 0}
           color={theme.primary}
         />
         <KPICard
           icon="heart"
-          value={formatNumber(analytics?.totalEngagement || 0)}
+          value={userStats?.engagementRate ? `${userStats.engagementRate.toFixed(1)}%` : "0%"}
           label="Engagement"
-          trend={12}
+          trend={userStats?.engagementRate ? Math.round(userStats.engagementRate) : 0}
           color={theme.error}
         />
         <KPICard
           icon="eye"
-          value={formatNumber(analytics?.totalViews || 0)}
+          value={formatNumber(userStats?.totalViews || 0)}
           label="Views"
-          trend={8}
+          trend={0}
           color={theme.success}
         />
         <KPICard
           icon="file-text"
-          value={content.length.toString()}
+          value={(userStats?.totalPosts || content.length).toString()}
           label="Posts"
           color={theme.warning}
         />

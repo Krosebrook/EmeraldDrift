@@ -1,6 +1,7 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
+import LandingScreen from "@/screens/LandingScreen";
 import LoginScreen from "@/screens/LoginScreen";
 import SignUpScreen from "@/screens/SignUpScreen";
 import ForgotPasswordScreen from "@/screens/ForgotPasswordScreen";
@@ -8,6 +9,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { getCommonScreenOptions } from "@/navigation/screenOptions";
 
 export type AuthStackParamList = {
+  Landing: undefined;
   Login: undefined;
   SignUp: undefined;
   ForgotPassword: undefined;
@@ -25,6 +27,7 @@ export default function AuthStackNavigator() {
         headerShown: false,
       }}
     >
+      <Stack.Screen name="Landing" component={LandingScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen
         name="SignUp"

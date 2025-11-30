@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { storage } from "@/utils/storage";
+import { userStatsService } from "@/services/userStats";
 
 const AUTH_STORAGE_KEY = "@creator_studio_auth";
 const USER_STORAGE_KEY = "@creator_studio_user";
@@ -11,6 +12,7 @@ export interface User {
   name: string;
   avatar?: string;
   createdAt: string;
+  isNewUser?: boolean;
 }
 
 interface AuthState {
@@ -31,9 +33,9 @@ export function useAuth() {
       const userJson = await AsyncStorage.getItem(USER_STORAGE_KEY);
       if (userJson) {
         const user = JSON.parse(userJson) as User;
-        await storage.initializeDemoData();
+        await userStatsService.initializeUser(user.id);
         setState({
-          user,
+          user: { ...user, isNewUser: false },
           isLoading: false,
           isAuthenticated: true,
         });
@@ -64,19 +66,29 @@ export function useAuth() {
       
       await new Promise((resolve) => setTimeout(resolve, 1000));
       
-      const user: User = {
-        id: `user_${Date.now()}`,
-        email,
-        name: email.split("@")[0],
-        createdAt: new Date().toISOString(),
-      };
+      const existingUserJson = await AsyncStorage.getItem(`${USER_STORAGE_KEY}_${email}`);
+      let user: User;
+      let isNewUser = false;
+      
+      if (existingUserJson) {
+        user = JSON.parse(existingUserJson);
+      } else {
+        user = {
+          id: `user_${Date.now()}`,
+          email,
+          name: email.split("@")[0],
+          createdAt: new Date().toISOString(),
+        };
+        isNewUser = true;
+        await AsyncStorage.setItem(`${USER_STORAGE_KEY}_${email}`, JSON.stringify(user));
+      }
 
-      await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+      await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify({ ...user, isNewUser }));
       await AsyncStorage.setItem(AUTH_STORAGE_KEY, "true");
-      await storage.initializeDemoData();
+      await userStatsService.initializeUser(user.id);
 
       setState({
-        user,
+        user: { ...user, isNewUser },
         isLoading: false,
         isAuthenticated: true,
       });
@@ -100,11 +112,13 @@ export function useAuth() {
         email,
         name,
         createdAt: new Date().toISOString(),
+        isNewUser: true,
       };
 
       await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+      await AsyncStorage.setItem(`${USER_STORAGE_KEY}_${email}`, JSON.stringify(user));
       await AsyncStorage.setItem(AUTH_STORAGE_KEY, "true");
-      await storage.initializeDemoData();
+      await userStatsService.initializeUser(user.id);
 
       setState({
         user,

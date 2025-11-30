@@ -153,6 +153,12 @@ interface AnalyticsData {
 - 2025-11-29: Enhanced team service with duplicate invitation prevention
 - 2025-11-29: Media Library batch operations optimized to single read/write
 - 2025-11-29: All screens verified with E2E Playwright tests (15 steps passed)
+- 2025-11-30: Added Landing page with hero section, feature highlights, platform badges
+- 2025-11-30: Created userStatsService for per-user data persistence and tracking
+- 2025-11-30: Implemented 3-step onboarding wizard (Welcome, Profile, Platforms)
+- 2025-11-30: Updated navigation flow: Landing → Auth → Onboarding (new users) → Main app
+- 2025-11-30: Dashboard now displays real user stats starting at zero for new users
+- 2025-11-30: E2E test verified complete user journey (16 steps passed)
 
 ## User Preferences
 - Clean code architecture with maximum depth
