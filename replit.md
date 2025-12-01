@@ -28,6 +28,7 @@ Creator Studio Lite is a production-ready mobile application built with Expo Rea
 ├── hooks/
 │   ├── useAuth.ts            # Authentication logic
 │   ├── useTheme.ts           # Theme access hook
+│   ├── useResponsive.ts      # Responsive design utilities (mobile/tablet/desktop)
 │   └── useScreenInsets.ts    # Safe area management
 ├── navigation/
 │   ├── RootNavigator.tsx     # Auth flow management
@@ -159,6 +160,11 @@ interface AnalyticsData {
 - 2025-11-30: Updated navigation flow: Landing → Auth → Onboarding (new users) → Main app
 - 2025-11-30: Dashboard now displays real user stats starting at zero for new users
 - 2025-11-30: E2E test verified complete user journey (16 steps passed)
+- 2025-12-01: Created useResponsive hook for adaptive layouts across mobile/tablet/desktop
+- 2025-12-01: Integrated responsive design into Dashboard, Studio, Analytics, and Profile screens
+- 2025-12-01: Added draft autosave to Studio with ref-based interval (guaranteed 30-second saves during continuous typing)
+- 2025-12-01: Updated Analytics charts with responsive sizing and labeled data
+- 2025-12-01: Fixed autosave to use formDataRef pattern preventing interval resets on keystrokes
 
 ## User Preferences
 - Clean code architecture with maximum depth
@@ -184,3 +190,15 @@ interface AnalyticsData {
 - isMountedRef prevents updates after unmount
 - All state updates gated by request ID comparison
 - Promise.all for parallel fetches reduces race window
+
+### Responsive Design System (useResponsive.ts)
+- Breakpoints: mobile (<480px), tablet (480-768px), desktop (>768px)
+- Returns: screenSize, isMobile, isTablet, isDesktop, numColumns, contentWidth
+- Used across all major screens for adaptive layouts
+- Charts and grids adjust sizing based on device type
+
+### Draft Autosave (StudioScreen)
+- 30-second autosave interval for drafts
+- Persists title, caption, media URI, and platform selection
+- Auto-recovery on next session if draft exists
+- Uses useRef for timer cleanup on unmount

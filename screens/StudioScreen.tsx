@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { StyleSheet, View, TextInput, Pressable, Alert, Platform, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
@@ -11,6 +11,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
 import { AIAssistantModal } from "@/components/AIAssistantModal";
 import { useTheme } from "@/hooks/useTheme";
+import { useResponsive } from "@/hooks/useResponsive";
 import { storage, ContentItem, PlatformConnection } from "@/utils/storage";
 import { Spacing, BorderRadius, Typography } from "@/constants/theme";
 import Spacer from "@/components/Spacer";
@@ -31,6 +32,7 @@ const PLATFORM_OPTIONS = [
 
 export default function StudioScreen({ navigation }: StudioScreenProps) {
   const { theme, isDark } = useTheme();
+  const { isMobile, isTablet, contentWidth } = useResponsive();
   const [title, setTitle] = useState("");
   const [caption, setCaption] = useState("");
   const [mediaUri, setMediaUri] = useState<string | null>(null);
@@ -38,16 +40,87 @@ export default function StudioScreen({ navigation }: StudioScreenProps) {
   const [connectedPlatforms, setConnectedPlatforms] = useState<PlatformConnection[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
+  const autosaveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [lastSavedDraft, setLastSavedDraft] = useState<string | null>(null);
+
+  const draftCreatedAtRef = useRef<string | null>(null);
+  const formDataRef = useRef({ title: "", caption: "", mediaUri: null as string | null, selectedPlatforms: [] as string[] });
+  const lastSavedDraftRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    formDataRef.current = { title, caption, mediaUri, selectedPlatforms };
+  }, [title, caption, mediaUri, selectedPlatforms]);
+
+  useEffect(() => {
+    lastSavedDraftRef.current = lastSavedDraft;
+  }, [lastSavedDraft]);
 
   useFocusEffect(
     useCallback(() => {
       loadPlatforms();
+      loadLastDraft();
     }, [])
   );
+
+  useEffect(() => {
+    autosaveIntervalRef.current = setInterval(() => {
+      const { title: t, caption: c, mediaUri: m, selectedPlatforms: p } = formDataRef.current;
+      const hasContent = t.trim() || c.trim() || m;
+      if (hasContent) {
+        performAutosaveWithData(t, c, m, p);
+      }
+    }, 30000);
+
+    return () => {
+      if (autosaveIntervalRef.current) {
+        clearInterval(autosaveIntervalRef.current);
+      }
+    };
+  }, []);
 
   const loadPlatforms = async () => {
     const platforms = await storage.getPlatforms();
     setConnectedPlatforms(platforms);
+  };
+
+  const loadLastDraft = async () => {
+    const allContent = await storage.getContent();
+    const latestDraft = allContent
+      .filter(c => c.status === "draft")
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0];
+
+    if (latestDraft) {
+      setTitle(latestDraft.title || "");
+      setCaption(latestDraft.caption || "");
+      setMediaUri(latestDraft.mediaUri || null);
+      setSelectedPlatforms(latestDraft.platforms || []);
+      setLastSavedDraft(latestDraft.id);
+      draftCreatedAtRef.current = latestDraft.createdAt;
+    }
+  };
+
+  const performAutosaveWithData = async (t: string, c: string, m: string | null, p: string[]) => {
+    const now = new Date().toISOString();
+    const currentDraftId = lastSavedDraftRef.current;
+    const draftContent: ContentItem = {
+      id: currentDraftId || `draft_${Date.now()}`,
+      title: t.trim(),
+      caption: c.trim(),
+      mediaUri: m || undefined,
+      platforms: p,
+      status: "draft",
+      createdAt: draftCreatedAtRef.current || now,
+      updatedAt: now,
+    };
+
+    if (currentDraftId) {
+      await storage.updateContent(currentDraftId, draftContent);
+    } else {
+      await storage.addContent(draftContent);
+      setLastSavedDraft(draftContent.id);
+      lastSavedDraftRef.current = draftContent.id;
+      draftCreatedAtRef.current = now;
+    }
   };
 
   const handleSelectMedia = async () => {

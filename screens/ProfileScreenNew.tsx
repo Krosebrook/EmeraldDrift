@@ -9,6 +9,7 @@ import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
+import { useResponsive } from "@/hooks/useResponsive";
 import { useAuthContext } from "@/context/AuthContext";
 import { storage, PlatformConnection } from "@/utils/storage";
 import { Spacing, BorderRadius, Typography } from "@/constants/theme";
@@ -56,6 +57,7 @@ function SettingsRow({ icon, label, value, onPress, showArrow = true, danger = f
 export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   const { theme, isDark } = useTheme();
   const { user, signOut, updateProfile, isLoading } = useAuthContext();
+  const { isMobile, contentWidth } = useResponsive();
   const [platforms, setPlatforms] = useState<PlatformConnection[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(user?.name || "");
@@ -139,7 +141,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
 
   return (
     <ScreenScrollView>
-      <View style={styles.profileHeader}>
+      <View style={[styles.profileHeader, { maxWidth: contentWidth, alignSelf: "center", width: "100%" }]}>
         <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
           <ThemedText style={styles.avatarText}>{getInitials(user?.name || "U")}</ThemedText>
         </View>

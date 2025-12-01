@@ -88,3 +88,6 @@ value = "1"
 path = "/*"
 name = "expo-sfv-version"
 value = "0"
+
+[objectStorage]
+defaultBucketID = "replit-objstore-c2f99fb2-5d41-4728-a16f-d0eb66c05797"

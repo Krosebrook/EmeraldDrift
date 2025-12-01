@@ -172,6 +172,7 @@ function PlatformStats({ platform, stats }: PlatformStatsProps) {
 
 export default function AnalyticsScreen({ navigation }: AnalyticsScreenProps) {
   const { theme } = useTheme();
+  const { isMobile, isTablet, contentWidth, numColumns } = useResponsive();
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [platforms, setPlatforms] = useState<PlatformConnection[]>([]);
@@ -240,42 +241,48 @@ export default function AnalyticsScreen({ navigation }: AnalyticsScreenProps) {
 
       <Spacer height={Spacing.lg} />
 
-      <View style={styles.metricsGrid}>
-        <MetricCard
-          icon="users"
-          label="Total Followers"
-          value={formatNumber(analytics?.totalFollowers || 0)}
-          change={analytics?.growthRate || 0}
-          color={theme.primary}
-        />
-        <MetricCard
-          icon="heart"
-          label="Engagement Rate"
-          value={`${(analytics?.totalEngagement || 0).toFixed(1)}%`}
-          change={12}
-          color={theme.error}
-        />
-        <MetricCard
-          icon="eye"
-          label="Total Views"
-          value={formatNumber(analytics?.totalViews || 0)}
-          change={8}
-          color={theme.success}
-        />
-        <MetricCard
-          icon="send"
-          label="Total Posts"
-          value={analytics?.totalPosts.toString() || "0"}
-          color={theme.warning}
-        />
+      <View style={[styles.metricsGrid, { maxWidth: contentWidth }]}>
+        <View style={{ width: isMobile ? "48%" : "23%", marginBottom: Spacing.sm }}>
+          <MetricCard
+            icon="users"
+            label="Total Followers"
+            value={formatNumber(analytics?.totalFollowers || 0)}
+            change={analytics?.growthRate || 0}
+            color={theme.primary}
+          />
+        </View>
+        <View style={{ width: isMobile ? "48%" : "23%", marginBottom: Spacing.sm }}>
+          <MetricCard
+            icon="heart"
+            label="Engagement Rate"
+            value={`${(analytics?.totalEngagement || 0).toFixed(1)}%`}
+            change={12}
+            color={theme.error}
+          />
+        </View>
+        <View style={{ width: isMobile ? "48%" : "23%", marginBottom: Spacing.sm }}>
+          <MetricCard
+            icon="eye"
+            label="Total Views"
+            value={formatNumber(analytics?.totalViews || 0)}
+            change={8}
+            color={theme.success}
+          />
+        </View>
+        <View style={{ width: isMobile ? "48%" : "23%", marginBottom: Spacing.sm }}>
+          <MetricCard
+            icon="send"
+            label="Total Posts"
+            value={analytics?.totalPosts.toString() || "0"}
+            color={theme.warning}
+          />
+        </View>
       </View>
 
       <Spacer height={Spacing.lg} />
 
       <View style={[styles.chartCard, { backgroundColor: theme.cardBackground }]}>
-        <ThemedText type="title3" style={styles.chartTitle}>Follower Growth</ThemedText>
-        <Spacer height={Spacing.base} />
-        <SimpleBarChart data={mockChartData} color={theme.primary} />
+        <SimpleBarChart data={mockChartData} color={theme.primary} label="Follower Growth" />
         <Spacer height={Spacing.sm} />
         <View style={styles.chartLabels}>
           {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
@@ -289,9 +296,7 @@ export default function AnalyticsScreen({ navigation }: AnalyticsScreenProps) {
       <Spacer height={Spacing.base} />
 
       <View style={[styles.chartCard, { backgroundColor: theme.cardBackground }]}>
-        <ThemedText type="title3" style={styles.chartTitle}>Engagement Rate</ThemedText>
-        <Spacer height={Spacing.base} />
-        <SimpleBarChart data={mockEngagementData} color={theme.success} />
+        <SimpleBarChart data={mockEngagementData} color={theme.success} label="Engagement Rate" />
         <Spacer height={Spacing.sm} />
         <View style={styles.chartLabels}>
           {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (

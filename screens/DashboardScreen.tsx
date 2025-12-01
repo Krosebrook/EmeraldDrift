@@ -7,6 +7,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { useResponsive } from "@/hooks/useResponsive";
 import { useAuthContext } from "@/context/AuthContext";
 import { storage, PlatformConnection, ContentItem } from "@/utils/storage";
 import { userStatsService, UserStats, UserActivity } from "@/services/userStats";
@@ -183,6 +184,7 @@ function formatDate(dateString: string): string {
 export default function DashboardScreen({ navigation }: DashboardScreenProps) {
   const { theme } = useTheme();
   const { user } = useAuthContext();
+  const { isMobile, isTablet, numColumns, contentWidth } = useResponsive();
   const [platforms, setPlatforms] = useState<PlatformConnection[]>([]);
   const [content, setContent] = useState<ContentItem[]>([]);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
@@ -270,34 +272,42 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
 
       <Spacer height={Spacing.lg} />
 
-      <View style={styles.kpiGrid}>
-        <KPICard
-          icon="users"
-          value={formatNumber(totalFollowers)}
-          label="Followers"
-          trend={userStats?.growthRate || 0}
-          color={theme.primary}
-        />
-        <KPICard
-          icon="heart"
-          value={userStats?.engagementRate ? `${userStats.engagementRate.toFixed(1)}%` : "0%"}
-          label="Engagement"
-          trend={userStats?.engagementRate ? Math.round(userStats.engagementRate) : 0}
-          color={theme.error}
-        />
-        <KPICard
-          icon="eye"
-          value={formatNumber(userStats?.totalViews || 0)}
-          label="Views"
-          trend={0}
-          color={theme.success}
-        />
-        <KPICard
-          icon="file-text"
-          value={(userStats?.totalPosts || content.length).toString()}
-          label="Posts"
-          color={theme.warning}
-        />
+      <View style={[styles.kpiGrid, { maxWidth: contentWidth }]}>
+        <View style={{ width: isMobile ? "48%" : "23%", marginBottom: Spacing.md }}>
+          <KPICard
+            icon="users"
+            value={formatNumber(totalFollowers)}
+            label="Followers"
+            trend={userStats?.growthRate || 0}
+            color={theme.primary}
+          />
+        </View>
+        <View style={{ width: isMobile ? "48%" : "23%", marginBottom: Spacing.md }}>
+          <KPICard
+            icon="heart"
+            value={userStats?.engagementRate ? `${userStats.engagementRate.toFixed(1)}%` : "0%"}
+            label="Engagement"
+            trend={userStats?.engagementRate ? Math.round(userStats.engagementRate) : 0}
+            color={theme.error}
+          />
+        </View>
+        <View style={{ width: isMobile ? "48%" : "23%", marginBottom: Spacing.md }}>
+          <KPICard
+            icon="eye"
+            value={formatNumber(userStats?.totalViews || 0)}
+            label="Views"
+            trend={0}
+            color={theme.success}
+          />
+        </View>
+        <View style={{ width: isMobile ? "48%" : "23%", marginBottom: Spacing.md }}>
+          <KPICard
+            icon="file-text"
+            value={(userStats?.totalPosts || content.length).toString()}
+            label="Posts"
+            color={theme.warning}
+          />
+        </View>
       </View>
 
       <Spacer height={Spacing.lg} />
