@@ -1,75 +1,46 @@
 # Creator Studio Lite
 
+> Production-ready mobile application for multi-platform content creation and publishing.
+
 ## Overview
 
-Creator Studio Lite is a production-ready mobile application built with Expo React Native for multi-platform content creation and publishing. The app enables creators to manage their social media presence across Instagram, TikTok, YouTube, LinkedIn, and Pinterest with AI-powered content generation, analytics dashboards, and real-time publishing capabilities.
+Creator Studio Lite is a comprehensive social media management platform built with Expo React Native. It enables creators to manage their presence across Instagram, TikTok, YouTube, LinkedIn, and Pinterest with AI-powered content generation, analytics dashboards, and team collaboration.
+
+### Core Features
+
+- **Content Studio**: Create, edit, and manage content with AI assistance
+- **Multi-Platform Publishing**: Publish to 5+ social platforms simultaneously
+- **Analytics Dashboard**: Real-time metrics for engagement and growth
+- **Team Collaboration**: Role-based permissions with workspace management
+- **Smart Scheduling**: Schedule posts with optimal timing recommendations
+- **Media Library**: Asset management with favorites and tagging
 
 ## Architecture
 
-### Core Modules
+### Module Structure
 
 ```
 ├── types/              # Centralized TypeScript definitions
-├── core/               # Core infrastructure (persistence, theme, platform config)
-├── repositories/       # Data access layer with typed repositories
-├── state/              # Reducer-based state management contexts
-├── shared/             # Shared hooks and utilities
-├── navigation/         # Navigation configuration and routes
+├── core/               # Core infrastructure (persistence, errors, validation)
+├── repositories/       # Data access layer (content, platform, analytics, etc.)
+├── state/              # State management contexts (Auth, Team)
+├── hooks/              # React hooks (useTheme, useResponsive, useAuth)
+├── services/           # External integrations (AI, notifications)
+├── navigation/         # Navigation configuration
 ├── components/         # Reusable UI components
 ├── screens/            # Screen components
-└── services/           # External service integrations
+└── constants/          # Design system (colors, spacing, typography)
 ```
-
-### Technology Stack
-- **Framework**: Expo SDK 54+ with React Native
-- **Navigation**: React Navigation 7 (bottom tabs + nested stacks)
-- **State Management**: Reducer-based Context API with typed actions
-- **Data Layer**: Repository pattern with AsyncStorage persistence
-- **UI**: SparkLabs Mobile Design Guidelines
 
 ### Key Patterns
 
-1. **Repository Pattern**: All data access through typed repositories in `repositories/`
-2. **Reducer State**: State contexts use useReducer with typed actions
-3. **Ref-Based Intervals**: Autosave uses refs to prevent interval resets
-4. **Race Prevention**: Request token pattern for async state updates
-
-## Directory Structure
-
-```
-├── types/index.ts              # All TypeScript interfaces and types
-├── core/
-│   ├── constants.ts            # Storage keys, API endpoints, limits
-│   ├── persistence.ts          # Typed persistence layer
-│   ├── platform.ts             # Platform configurations
-│   ├── theme.ts                # Design tokens (colors, spacing, typography)
-│   └── index.ts                # Core exports
-├── repositories/
-│   ├── contentRepository.ts    # Content CRUD with filtering/sorting
-│   ├── platformRepository.ts   # Platform connection management
-│   ├── analyticsRepository.ts  # Analytics data access
-│   ├── userRepository.ts       # User-scoped data (stats, onboarding)
-│   ├── mediaRepository.ts      # Media asset management
-│   ├── teamRepository.ts       # Team/workspace with permissions
-│   └── index.ts                # Repository exports
-├── state/
-│   ├── AuthState.tsx           # Authentication with reducer pattern
-│   ├── TeamState.tsx           # Team context with race prevention
-│   └── index.ts                # State exports
-├── shared/hooks/
-│   ├── useResponsive.ts        # Responsive design (mobile/tablet/desktop)
-│   ├── useTheme.ts             # Theme access hook
-│   ├── useScreenInsets.ts      # Safe area management
-│   └── index.ts                # Hook exports
-├── navigation/
-│   ├── routes.ts               # Route constants and param types
-│   ├── options.ts              # Screen option presets
-│   └── [Stack]Navigator.tsx    # Stack navigators
-├── components/                 # Reusable UI components
-├── screens/                    # Screen components
-├── services/                   # External integrations (AI, notifications)
-└── docs/                       # Architecture and contributing guides
-```
+| Pattern | Implementation |
+|---------|---------------|
+| Repository | Typed data access via `repositories/` |
+| Reducer State | `useReducer` with typed actions in `state/` |
+| Result Type | Explicit error handling in `core/result.ts` |
+| Race Prevention | Request token pattern for async operations |
+| Ref Intervals | Stable autosave without interval resets |
 
 ## Data Models
 
@@ -81,9 +52,21 @@ interface ContentItem {
   caption: string;
   mediaUri?: string;
   platforms: PlatformType[];
-  status: ContentStatus;
+  status: "draft" | "scheduled" | "published" | "failed";
   scheduledAt?: string;
   publishedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+### User
+```typescript
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  avatar?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -93,7 +76,7 @@ interface ContentItem {
 ```typescript
 interface PlatformConnection {
   id: string;
-  platform: PlatformType;
+  platform: "instagram" | "tiktok" | "youtube" | "linkedin" | "pinterest";
   username: string;
   displayName: string;
   connected: boolean;
@@ -102,99 +85,188 @@ interface PlatformConnection {
 }
 ```
 
-### UserStats
+## Development
+
+### Commands
+
+```bash
+npm run dev       # Start Expo development server
+npm run lint      # Run ESLint
+npm run build     # Build for production
+```
+
+### Key Imports
+
 ```typescript
-interface UserStats {
-  totalFollowers: number;
-  totalEngagement: number;
-  totalViews: number;
-  totalPosts: number;
-  postsCreated: number;
-  postsScheduled: number;
-  postsPublished: number;
-  engagementRate: number;
-  growthRate: number;
-  lastUpdated: string;
+// Hooks
+import { useTheme, useResponsive, useAuth } from "@/hooks";
+
+// Repositories
+import { contentRepository, platformRepository } from "@/repositories";
+
+// Core utilities
+import { AppError, logError } from "@/core/errors";
+import { ok, err, tryCatch } from "@/core/result";
+
+// Types
+import type { ContentItem, User, PlatformType } from "@/types";
+
+// Components
+import { Button, Card, ThemedText } from "@/components";
+
+// Theme
+import { Colors, Spacing, BorderRadius } from "@/constants/theme";
+```
+
+### Responsive Design
+
+```typescript
+const { isMobile, isTablet, isDesktop, contentWidth, cardWidth } = useResponsive();
+
+// Breakpoints: Mobile <480px, Tablet 480-768px, Desktop >768px
+// Grid columns: Mobile 2, Tablet 3, Desktop 4
+```
+
+### Repository Usage
+
+```typescript
+// Get filtered content
+const drafts = await contentRepository.getFiltered({ status: "draft" });
+
+// Create new content
+const content = await contentRepository.create({
+  title: "New Post",
+  caption: "Caption",
+  platforms: ["instagram"],
+  status: "draft",
+});
+
+// Update content
+await contentRepository.update(id, { title: "Updated" });
+
+// Domain operations
+await contentRepository.publish(id);
+await contentRepository.schedule(id, scheduledAt);
+```
+
+### Error Handling
+
+```typescript
+import { AppError, logError } from "@/core/errors";
+import { tryCatch, isOk } from "@/core/result";
+
+// Async with Result type
+const result = await tryCatch(
+  () => fetchData(id),
+  "Failed to fetch data"
+);
+
+if (isOk(result)) {
+  setData(result.data);
+} else {
+  showError(result.error.message);
+}
+
+// Error logging
+try {
+  await operation();
+} catch (error) {
+  logError(error, { context: "operationName" });
 }
 ```
-
-## Development Guidelines
-
-### Adding New Features
-1. Define types in `types/index.ts`
-2. Create repository in `repositories/` if data persistence needed
-3. Update state context if global state management needed
-4. Create screen/component with proper typing
-5. Add navigation route and options
-6. Update this documentation
-
-### Using Repositories
-```typescript
-import { contentRepository } from "@/repositories";
-
-const drafts = await contentRepository.getFiltered({ status: "draft" });
-await contentRepository.update(id, { title: "Updated" });
-```
-
-### Using State
-```typescript
-import { useAuth, useTeam } from "@/state";
-
-const { user, signIn, signOut } = useAuth();
-const { members, canPerformAction } = useTeam();
-```
-
-### Styling
-- Use `useTheme()` hook for theme colors
-- Reference `core/theme.ts` for spacing and typography
-- Use `useResponsive()` for adaptive layouts
-- No inline color values - always use theme tokens
 
 ## Design System
 
 ### SparkLabs Mobile Design Guidelines
-- **Primary Color**: #8B5CF6 (Brand Purple)
-- **Success**: #10B981
-- **Warning**: #F59E0B
-- **Error**: #EF4444
-- **Grid**: 8pt spacing system
-- **Typography**: System fonts with defined scale
 
-### Responsive Breakpoints
-| Screen Size | Width     | Columns | Card Width |
-|-------------|-----------|---------|------------|
-| Mobile      | < 480px   | 2       | 48%        |
-| Tablet      | 480-768px | 3       | 31%        |
-| Desktop     | > 768px   | 4       | 23%        |
+**Colors**:
+- Primary: `#8B5CF6` (Brand Purple)
+- Success: `#10B981`
+- Warning: `#F59E0B`
+- Error: `#EF4444`
 
-## Services Architecture
+**Spacing** (8pt grid):
+- `xs: 4`, `sm: 8`, `md: 12`, `base: 16`, `lg: 24`, `xl: 32`
 
-### Repository Layer
-- **contentRepository**: Content CRUD with status filtering and search
-- **platformRepository**: Platform connections with follower tracking
-- **analyticsRepository**: Analytics aggregation and platform stats
-- **userRepository**: User-scoped data with onboarding/tutorial state
-- **mediaRepository**: Media assets with favorites and tagging
-- **teamRepository**: Workspaces, members, invitations with role hierarchy
+**Typography**:
+- Display: 34px, Title1: 28px, Title2: 22px, Title3: 20px
+- Body: 17px, Caption: 12px
 
-### State Contexts
-- **AuthState**: User authentication with reducer pattern
-- **TeamState**: Team management with race-resistant updates
+### Component Usage
+
+```typescript
+// Text with variants
+<ThemedText type="title1">Heading</ThemedText>
+<ThemedText type="body" secondary>Secondary text</ThemedText>
+
+// Themed View
+<ThemedView style={styles.container}>
+  <Content />
+</ThemedView>
+
+// Button
+<Button onPress={handlePress}>Submit</Button>
+
+// Card
+<Card style={styles.card}>
+  <CardContent />
+</Card>
+```
+
+## Navigation
+
+### Route Structure
+
+```
+Root
+├── Auth (unauthenticated)
+│   ├── Landing, Login, SignUp, ForgotPassword
+└── Main (authenticated)
+    ├── Dashboard → ContentList, ContentDetail
+    ├── Studio
+    ├── Analytics → Schedule
+    └── Profile → Platforms, Team, MediaLibrary, Settings
+```
+
+### Type-Safe Navigation
+
+```typescript
+type DashboardStackParamList = {
+  Dashboard: undefined;
+  ContentDetail: { contentId: string };
+  ContentList: { filter?: ContentStatus };
+};
+
+const navigation = useNavigation<NativeStackNavigationProp<DashboardStackParamList>>();
+navigation.navigate("ContentDetail", { contentId: "123" });
+```
 
 ## Recent Changes
-- 2025-12-01: Major architecture refactor at maximum depth
-- 2025-12-01: Created centralized types module
-- 2025-12-01: Implemented repository pattern for all data access
-- 2025-12-01: Formalized state management with reducer pattern
-- 2025-12-01: Created core module with persistence, platform, theme
-- 2025-12-01: Centralized navigation routes and screen options
-- 2025-12-01: Added shared hooks (useResponsive, useTheme, useScreenInsets)
-- 2025-12-01: Created architecture and contributing documentation
-- 2025-12-01: Fixed autosave with ref-based interval pattern
+
+- **2025-12-11**: Production-grade architecture refactor at maximum depth
+  - Consolidated hooks into single `/hooks` directory
+  - Added Result type pattern (`core/result.ts`)
+  - Added comprehensive error handling (`core/errors.ts`)
+  - Added validation utilities (`core/validation.ts`)
+  - Updated documentation to production grade
+
+- **2025-12-01**: Initial architecture implementation
+  - Domain-driven module structure
+  - Repository pattern for data access
+  - Reducer-based state management
+  - Responsive design system
 
 ## User Preferences
+
 - Clean code architecture at maximum depth
 - SparkLabs Mobile Design Guidelines compliance
 - Production-ready implementation
 - Type safety throughout codebase
 - Separation of concerns with clear module boundaries
+- Comprehensive documentation
+
+## Documentation
+
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) - System architecture and ADRs
+- [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) - Development workflow and guidelines
+- [`design_guidelines.md`](design_guidelines.md) - UI/UX design specifications
