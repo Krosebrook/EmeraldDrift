@@ -1,52 +1,89 @@
 import { useWindowDimensions, Platform } from "react-native";
+import { useMemo } from "react";
+import type { ResponsiveConfig } from "@/types";
 
 export type ScreenSize = "mobile" | "tablet" | "desktop";
 
-export interface ResponsiveBreakpoints {
-  mobile: number;
-  tablet: number;
-  desktop: number;
-}
+export const BREAKPOINTS = {
+  MOBILE: 480,
+  TABLET: 768,
+  DESKTOP: 1024,
+  WIDE: 1200,
+} as const;
 
-const DEFAULT_BREAKPOINTS: ResponsiveBreakpoints = {
-  mobile: 480,
-  tablet: 768,
-  desktop: 1024,
-};
+export const GRID_COLUMNS = {
+  MOBILE: 2,
+  TABLET: 3,
+  DESKTOP: 4,
+} as const;
 
-export function useResponsive(breakpoints = DEFAULT_BREAKPOINTS) {
+export function useResponsive(): ResponsiveConfig & {
+  width: number;
+  height: number;
+  isSmallScreen: boolean;
+  isLargeScreen: boolean;
+  isNative: boolean;
+} {
   const { width, height } = useWindowDimensions();
 
-  const screenSize: ScreenSize =
-    width >= breakpoints.desktop
-      ? "desktop"
-      : width >= breakpoints.tablet
+  return useMemo(() => {
+    const isMobile = width < BREAKPOINTS.MOBILE;
+    const isTablet = width >= BREAKPOINTS.MOBILE && width < BREAKPOINTS.TABLET;
+    const isDesktop = width >= BREAKPOINTS.TABLET;
+
+    const screenSize: ScreenSize = isMobile
+      ? "mobile"
+      : isTablet
         ? "tablet"
-        : "mobile";
+        : "desktop";
 
-  const isMobile = screenSize === "mobile";
-  const isTablet = screenSize === "tablet";
-  const isDesktop = screenSize === "desktop";
-  const isSmallScreen = width < breakpoints.tablet;
-  const isLargeScreen = width >= breakpoints.desktop;
+    const numColumns = isMobile
+      ? GRID_COLUMNS.MOBILE
+      : isTablet
+        ? GRID_COLUMNS.TABLET
+        : GRID_COLUMNS.DESKTOP;
 
-  const numColumns = isDesktop ? 4 : isTablet ? 2 : 1;
-  const contentWidth = Math.min(width - 32, isDesktop ? 1200 : isTablet ? 768 : 480);
+    const contentWidth = isDesktop
+      ? Math.min(width * 0.8, BREAKPOINTS.WIDE)
+      : isTablet
+        ? width * 0.9
+        : width;
 
-  return {
-    width,
-    height,
-    screenSize,
-    isMobile,
-    isTablet,
-    isDesktop,
-    isSmallScreen,
-    isLargeScreen,
-    numColumns,
-    contentWidth,
-    breakpoints,
-    isNative: Platform.OS !== "web",
-  };
+    const cardWidth = isMobile ? "48%" : isTablet ? "31%" : "23%";
+
+    return {
+      width,
+      height,
+      screenSize,
+      isMobile,
+      isTablet,
+      isDesktop,
+      isSmallScreen: width < BREAKPOINTS.TABLET,
+      isLargeScreen: width >= BREAKPOINTS.DESKTOP,
+      numColumns,
+      contentWidth,
+      cardWidth,
+      isNative: Platform.OS !== "web",
+    };
+  }, [width, height]);
+}
+
+export function useGridLayout() {
+  const { screenSize, numColumns, cardWidth } = useResponsive();
+
+  return useMemo(
+    () => ({
+      numColumns,
+      cardWidth,
+      gap: screenSize === "mobile" ? 8 : screenSize === "tablet" ? 12 : 16,
+    }),
+    [screenSize, numColumns, cardWidth]
+  );
+}
+
+export function useContentWidth(): number {
+  const { contentWidth } = useResponsive();
+  return contentWidth;
 }
 
 export function getGridItemWidth(screenWidth: number, columns: number, gap: number): number {
@@ -59,7 +96,9 @@ export function getFontSizeForScreen(
   baseTablet: number,
   baseDesktop: number
 ): number {
-  if (screenWidth >= 1024) return baseDesktop;
-  if (screenWidth >= 768) return baseTablet;
+  if (screenWidth >= BREAKPOINTS.DESKTOP) return baseDesktop;
+  if (screenWidth >= BREAKPOINTS.TABLET) return baseTablet;
   return baseMobile;
 }
+
+export default useResponsive;

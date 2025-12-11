@@ -169,6 +169,21 @@ export const Fonts = Platform.select({
   },
 });
 
+export const ComponentSizes = {
+  headerCompact: 44,
+  headerLarge: 96,
+  tabBarHeight: 50,
+  buttonHeight: 50,
+  inputHeight: 44,
+  avatarSmall: 32,
+  avatarDefault: 40,
+  avatarLarge: 64,
+  iconContainer: 40,
+  chipHeight: 32,
+  cardHeight: 120,
+  chartHeight: 200,
+} as const;
+
 export const Shadows = {
   subtle: {
     shadowColor: "#000",
