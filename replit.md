@@ -1,85 +1,75 @@
 # Creator Studio Lite
 
 ## Overview
+
 Creator Studio Lite is a production-ready mobile application built with Expo React Native for multi-platform content creation and publishing. The app enables creators to manage their social media presence across Instagram, TikTok, YouTube, LinkedIn, and Pinterest with AI-powered content generation, analytics dashboards, and real-time publishing capabilities.
 
-## Project Architecture
+## Architecture
+
+### Core Modules
+
+```
+├── types/              # Centralized TypeScript definitions
+├── core/               # Core infrastructure (persistence, theme, platform config)
+├── repositories/       # Data access layer with typed repositories
+├── state/              # Reducer-based state management contexts
+├── shared/             # Shared hooks and utilities
+├── navigation/         # Navigation configuration and routes
+├── components/         # Reusable UI components
+├── screens/            # Screen components
+└── services/           # External service integrations
+```
 
 ### Technology Stack
 - **Framework**: Expo SDK 54+ with React Native
 - **Navigation**: React Navigation 7 (bottom tabs + nested stacks)
-- **State Management**: React Context API with custom hooks
-- **Storage**: AsyncStorage for local data persistence
-- **UI**: Custom component library following SparkLabs Mobile Design Guidelines
+- **State Management**: Reducer-based Context API with typed actions
+- **Data Layer**: Repository pattern with AsyncStorage persistence
+- **UI**: SparkLabs Mobile Design Guidelines
 
-### Directory Structure
+### Key Patterns
+
+1. **Repository Pattern**: All data access through typed repositories in `repositories/`
+2. **Reducer State**: State contexts use useReducer with typed actions
+3. **Ref-Based Intervals**: Autosave uses refs to prevent interval resets
+4. **Race Prevention**: Request token pattern for async state updates
+
+## Directory Structure
+
 ```
-├── App.tsx                    # Root component with providers
-├── components/                # Reusable UI components
-│   ├── Button.tsx            # Primary/secondary buttons
-│   ├── ScreenScrollView.tsx  # Safe area scroll container
-│   ├── ThemedText.tsx        # Typography component
-│   └── ThemedView.tsx        # Themed container
-├── constants/
-│   └── theme.ts              # Design tokens and colors
-├── context/
-│   ├── AuthContext.tsx       # Authentication state provider
-│   └── TeamContext.tsx       # Team/workspace state with race-resistant updates
-├── hooks/
-│   ├── useAuth.ts            # Authentication logic
-│   ├── useTheme.ts           # Theme access hook
-│   ├── useResponsive.ts      # Responsive design utilities (mobile/tablet/desktop)
-│   └── useScreenInsets.ts    # Safe area management
+├── types/index.ts              # All TypeScript interfaces and types
+├── core/
+│   ├── constants.ts            # Storage keys, API endpoints, limits
+│   ├── persistence.ts          # Typed persistence layer
+│   ├── platform.ts             # Platform configurations
+│   ├── theme.ts                # Design tokens (colors, spacing, typography)
+│   └── index.ts                # Core exports
+├── repositories/
+│   ├── contentRepository.ts    # Content CRUD with filtering/sorting
+│   ├── platformRepository.ts   # Platform connection management
+│   ├── analyticsRepository.ts  # Analytics data access
+│   ├── userRepository.ts       # User-scoped data (stats, onboarding)
+│   ├── mediaRepository.ts      # Media asset management
+│   ├── teamRepository.ts       # Team/workspace with permissions
+│   └── index.ts                # Repository exports
+├── state/
+│   ├── AuthState.tsx           # Authentication with reducer pattern
+│   ├── TeamState.tsx           # Team context with race prevention
+│   └── index.ts                # State exports
+├── shared/hooks/
+│   ├── useResponsive.ts        # Responsive design (mobile/tablet/desktop)
+│   ├── useTheme.ts             # Theme access hook
+│   ├── useScreenInsets.ts      # Safe area management
+│   └── index.ts                # Hook exports
 ├── navigation/
-│   ├── RootNavigator.tsx     # Auth flow management
-│   ├── MainTabNavigator.tsx  # 4-tab bottom navigation
-│   ├── DashboardStackNavigator.tsx
-│   ├── StudioStackNavigator.tsx
-│   ├── AnalyticsStackNavigator.tsx
-│   └── ProfileStackNavigator.tsx
-├── screens/                   # All app screens
-│   ├── DashboardScreen.tsx   # Home with KPIs and platforms
-│   ├── StudioScreen.tsx      # Content creation
-│   ├── AnalyticsScreen.tsx   # Metrics and charts
-│   ├── ProfileScreenNew.tsx  # User profile and settings
-│   ├── LoginScreen.tsx       # Authentication
-│   ├── SignUpScreen.tsx      # Registration
-│   └── [Additional screens]  # Settings, Help, etc.
-└── utils/
-    └── storage.ts            # AsyncStorage wrapper
+│   ├── routes.ts               # Route constants and param types
+│   ├── options.ts              # Screen option presets
+│   └── [Stack]Navigator.tsx    # Stack navigators
+├── components/                 # Reusable UI components
+├── screens/                    # Screen components
+├── services/                   # External integrations (AI, notifications)
+└── docs/                       # Architecture and contributing guides
 ```
-
-### Key Features
-1. **Dashboard**: KPI cards, platform connections, recent posts
-2. **Content Studio**: Create and schedule posts with media, AI-powered content generation
-3. **Analytics**: Engagement metrics, growth charts, platform stats
-4. **Profile**: User settings, account management
-5. **Team Collaboration**: Workspaces, role-based permissions (owner/admin/editor/viewer), member invitations
-6. **Media Library**: Asset management with favorites, filtering, batch operations
-
-### Navigation Structure
-- **Auth Stack**: Login, SignUp, ForgotPassword
-- **Main Tabs** (authenticated):
-  - Dashboard → Schedule, Platforms, ContentList, ContentDetail
-  - Studio (content creation)
-  - Analytics
-  - Profile → Settings, Help, Support, About, Notifications, Privacy
-
-## Design System
-
-### SparkLabs Mobile Design Guidelines
-- **Primary Color**: #8B5CF6 (Brand Purple)
-- **Success**: #10B981
-- **Warning**: #F59E0B
-- **Error**: #EF4444
-- **Grid**: 8pt spacing system
-- **Typography**: System fonts with defined scale (Display to Caption)
-
-### Component Patterns
-- Use `ScreenScrollView` for scrollable content with safe areas
-- Use `ScreenKeyboardAwareScrollView` for forms with inputs
-- Use `ThemedText` with type prop for typography variants
-- Use `Button` component for primary actions
 
 ## Data Models
 
@@ -90,8 +80,8 @@ interface ContentItem {
   title: string;
   caption: string;
   mediaUri?: string;
-  platforms: string[];
-  status: "draft" | "scheduled" | "published" | "failed";
+  platforms: PlatformType[];
+  status: ContentStatus;
   scheduledAt?: string;
   publishedAt?: string;
   createdAt: string;
@@ -103,102 +93,108 @@ interface ContentItem {
 ```typescript
 interface PlatformConnection {
   id: string;
-  platform: "instagram" | "tiktok" | "youtube" | "linkedin" | "pinterest";
+  platform: PlatformType;
   username: string;
   displayName: string;
-  avatar?: string;
   connected: boolean;
   connectedAt: string;
   followerCount: number;
 }
 ```
 
-### AnalyticsData
+### UserStats
 ```typescript
-interface AnalyticsData {
+interface UserStats {
   totalFollowers: number;
   totalEngagement: number;
   totalViews: number;
   totalPosts: number;
+  postsCreated: number;
+  postsScheduled: number;
+  postsPublished: number;
+  engagementRate: number;
   growthRate: number;
-  recentPosts: PostStats[];
-  platformStats: PlatformStats[];
+  lastUpdated: string;
 }
 ```
 
 ## Development Guidelines
 
-### Adding New Screens
-1. Create screen component in `screens/`
-2. Add to appropriate stack navigator
-3. Use `ScreenScrollView` or `ScreenKeyboardAwareScrollView` as root
-4. Follow SparkLabs design guidelines from `design_guidelines.md`
+### Adding New Features
+1. Define types in `types/index.ts`
+2. Create repository in `repositories/` if data persistence needed
+3. Update state context if global state management needed
+4. Create screen/component with proper typing
+5. Add navigation route and options
+6. Update this documentation
 
-### Authentication
-- AuthContext provides user state and auth methods
-- useAuthContext hook for accessing auth in components
-- AsyncStorage persists user session
+### Using Repositories
+```typescript
+import { contentRepository } from "@/repositories";
+
+const drafts = await contentRepository.getFiltered({ status: "draft" });
+await contentRepository.update(id, { title: "Updated" });
+```
+
+### Using State
+```typescript
+import { useAuth, useTeam } from "@/state";
+
+const { user, signIn, signOut } = useAuth();
+const { members, canPerformAction } = useTeam();
+```
 
 ### Styling
 - Use `useTheme()` hook for theme colors
-- Reference `constants/theme.ts` for spacing and typography
+- Reference `core/theme.ts` for spacing and typography
+- Use `useResponsive()` for adaptive layouts
 - No inline color values - always use theme tokens
 
-## Recent Changes
-- 2025-11-29: Initial production build complete
-- 2025-11-29: Implemented full authentication flow
-- 2025-11-29: Created all navigation stacks and screens
-- 2025-11-29: Fixed useScreenInsets hook for compatibility
-- 2025-11-29: Implemented Team Collaboration with role-based permissions
-- 2025-11-29: Added race-resistant TeamContext with request-token pattern
-- 2025-11-29: Enhanced team service with duplicate invitation prevention
-- 2025-11-29: Media Library batch operations optimized to single read/write
-- 2025-11-29: All screens verified with E2E Playwright tests (15 steps passed)
-- 2025-11-30: Added Landing page with hero section, feature highlights, platform badges
-- 2025-11-30: Created userStatsService for per-user data persistence and tracking
-- 2025-11-30: Implemented 3-step onboarding wizard (Welcome, Profile, Platforms)
-- 2025-11-30: Updated navigation flow: Landing → Auth → Onboarding (new users) → Main app
-- 2025-11-30: Dashboard now displays real user stats starting at zero for new users
-- 2025-11-30: E2E test verified complete user journey (16 steps passed)
-- 2025-12-01: Created useResponsive hook for adaptive layouts across mobile/tablet/desktop
-- 2025-12-01: Integrated responsive design into Dashboard, Studio, Analytics, and Profile screens
-- 2025-12-01: Added draft autosave to Studio with ref-based interval (guaranteed 30-second saves during continuous typing)
-- 2025-12-01: Updated Analytics charts with responsive sizing and labeled data
-- 2025-12-01: Fixed autosave to use formDataRef pattern preventing interval resets on keystrokes
+## Design System
 
-## User Preferences
-- Clean code architecture with maximum depth
-- SparkLabs Mobile Design Guidelines compliance
-- Production-ready implementation
+### SparkLabs Mobile Design Guidelines
+- **Primary Color**: #8B5CF6 (Brand Purple)
+- **Success**: #10B981
+- **Warning**: #F59E0B
+- **Error**: #EF4444
+- **Grid**: 8pt spacing system
+- **Typography**: System fonts with defined scale
+
+### Responsive Breakpoints
+| Screen Size | Width     | Columns | Card Width |
+|-------------|-----------|---------|------------|
+| Mobile      | < 480px   | 2       | 48%        |
+| Tablet      | 480-768px | 3       | 31%        |
+| Desktop     | > 768px   | 4       | 23%        |
 
 ## Services Architecture
 
-### teamService.ts
-- Workspace CRUD with ownership tracking
-- Role hierarchy enforcement (owner cannot be demoted/removed)
-- Invitation system with duplicate detection (already_member, already_invited errors)
-- Permission matrix for actions per role
+### Repository Layer
+- **contentRepository**: Content CRUD with status filtering and search
+- **platformRepository**: Platform connections with follower tracking
+- **analyticsRepository**: Analytics aggregation and platform stats
+- **userRepository**: User-scoped data with onboarding/tutorial state
+- **mediaRepository**: Media assets with favorites and tagging
+- **teamRepository**: Workspaces, members, invitations with role hierarchy
 
-### mediaLibrary.ts
-- Asset management with type filtering (image, video, audio, document)
-- Favorites with optimistic UI updates
-- Batch import using addAssetsBatch for O(1) storage writes
-- Date-based and type-based organization
+### State Contexts
+- **AuthState**: User authentication with reducer pattern
+- **TeamState**: Team management with race-resistant updates
 
-### TeamContext Race Condition Prevention
-- loadRequestRef counter tracks latest async request
-- isMountedRef prevents updates after unmount
-- All state updates gated by request ID comparison
-- Promise.all for parallel fetches reduces race window
+## Recent Changes
+- 2025-12-01: Major architecture refactor at maximum depth
+- 2025-12-01: Created centralized types module
+- 2025-12-01: Implemented repository pattern for all data access
+- 2025-12-01: Formalized state management with reducer pattern
+- 2025-12-01: Created core module with persistence, platform, theme
+- 2025-12-01: Centralized navigation routes and screen options
+- 2025-12-01: Added shared hooks (useResponsive, useTheme, useScreenInsets)
+- 2025-12-01: Created architecture and contributing documentation
+- 2025-12-01: Fixed autosave with ref-based interval pattern
 
-### Responsive Design System (useResponsive.ts)
-- Breakpoints: mobile (<480px), tablet (480-768px), desktop (>768px)
-- Returns: screenSize, isMobile, isTablet, isDesktop, numColumns, contentWidth
-- Used across all major screens for adaptive layouts
-- Charts and grids adjust sizing based on device type
-
-### Draft Autosave (StudioScreen)
-- 30-second autosave interval for drafts
-- Persists title, caption, media URI, and platform selection
-- Auto-recovery on next session if draft exists
-- Uses useRef for timer cleanup on unmount
+## User Preferences
+- Clean code architecture at maximum depth
+- SparkLabs Mobile Design Guidelines compliance
+- Production-ready implementation
+- Type safety throughout codebase
+- Separation of concerns with clear module boundaries
