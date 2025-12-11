@@ -272,8 +272,8 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
 
       <Spacer height={Spacing.lg} />
 
-      <View style={[styles.kpiGrid, { maxWidth: contentWidth }]}>
-        <View style={{ width: isMobile ? "48%" : "23%", marginBottom: Spacing.md }}>
+      <View style={[styles.kpiGrid, { maxWidth: contentWidth, alignSelf: "center", width: "100%" }]}>
+        <View style={[styles.kpiCardWrapper, { width: isMobile ? "48%" : isTablet ? "31%" : "23%" }]}>
           <KPICard
             icon="users"
             value={formatNumber(totalFollowers)}
@@ -282,7 +282,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
             color={theme.primary}
           />
         </View>
-        <View style={{ width: isMobile ? "48%" : "23%", marginBottom: Spacing.md }}>
+        <View style={[styles.kpiCardWrapper, { width: isMobile ? "48%" : isTablet ? "31%" : "23%" }]}>
           <KPICard
             icon="heart"
             value={userStats?.engagementRate ? `${userStats.engagementRate.toFixed(1)}%` : "0%"}
@@ -291,7 +291,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
             color={theme.error}
           />
         </View>
-        <View style={{ width: isMobile ? "48%" : "23%", marginBottom: Spacing.md }}>
+        <View style={[styles.kpiCardWrapper, { width: isMobile ? "48%" : isTablet ? "31%" : "23%" }]}>
           <KPICard
             icon="eye"
             value={formatNumber(userStats?.totalViews || 0)}
@@ -300,7 +300,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
             color={theme.success}
           />
         </View>
-        <View style={{ width: isMobile ? "48%" : "23%", marginBottom: Spacing.md }}>
+        <View style={[styles.kpiCardWrapper, { width: isMobile ? "48%" : isTablet ? "31%" : "23%" }]}>
           <KPICard
             icon="file-text"
             value={(userStats?.totalPosts || content.length).toString()}
@@ -407,7 +407,11 @@ const styles = StyleSheet.create({
   kpiGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
+    justifyContent: "flex-start",
     gap: Spacing.md,
+  },
+  kpiCardWrapper: {
+    marginBottom: Spacing.md,
   },
   kpiCard: {
     flex: 1,

@@ -545,19 +545,25 @@ const styles = StyleSheet.create({
   },
   mediaSection: {
     marginTop: Spacing.sm,
+    width: "100%",
   },
   mediaButtons: {
     flexDirection: "row",
     gap: Spacing.md,
+    flexWrap: "wrap",
   },
   mediaButton: {
     flex: 1,
+    minWidth: 140,
     aspectRatio: 16 / 9,
     borderRadius: BorderRadius.md,
     alignItems: "center",
     justifyContent: "center",
   },
   mediaPreview: {
+    width: "100%",
+    maxWidth: 400,
+    alignSelf: "center",
     aspectRatio: 16 / 9,
     borderRadius: BorderRadius.md,
     alignItems: "center",
@@ -573,6 +579,8 @@ const styles = StyleSheet.create({
   },
   fieldContainer: {
     width: "100%",
+    maxWidth: 600,
+    alignSelf: "center",
   },
   label: {
     marginBottom: Spacing.sm,
@@ -624,10 +632,15 @@ const styles = StyleSheet.create({
   },
   secondaryActions: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: Spacing.md,
+    maxWidth: 600,
+    alignSelf: "center",
+    width: "100%",
   },
   secondaryButton: {
     flex: 1,
+    minWidth: 120,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",

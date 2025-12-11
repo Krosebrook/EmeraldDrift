@@ -241,8 +241,8 @@ export default function AnalyticsScreen({ navigation }: AnalyticsScreenProps) {
 
       <Spacer height={Spacing.lg} />
 
-      <View style={[styles.metricsGrid, { maxWidth: contentWidth }]}>
-        <View style={{ width: isMobile ? "48%" : "23%", marginBottom: Spacing.sm }}>
+      <View style={[styles.metricsGrid, { maxWidth: contentWidth, alignSelf: "center", width: "100%" }]}>
+        <View style={[styles.metricCardWrapper, { width: isMobile ? "48%" : isTablet ? "31%" : "23%" }]}>
           <MetricCard
             icon="users"
             label="Total Followers"
@@ -251,7 +251,7 @@ export default function AnalyticsScreen({ navigation }: AnalyticsScreenProps) {
             color={theme.primary}
           />
         </View>
-        <View style={{ width: isMobile ? "48%" : "23%", marginBottom: Spacing.sm }}>
+        <View style={[styles.metricCardWrapper, { width: isMobile ? "48%" : isTablet ? "31%" : "23%" }]}>
           <MetricCard
             icon="heart"
             label="Engagement Rate"
@@ -260,7 +260,7 @@ export default function AnalyticsScreen({ navigation }: AnalyticsScreenProps) {
             color={theme.error}
           />
         </View>
-        <View style={{ width: isMobile ? "48%" : "23%", marginBottom: Spacing.sm }}>
+        <View style={[styles.metricCardWrapper, { width: isMobile ? "48%" : isTablet ? "31%" : "23%" }]}>
           <MetricCard
             icon="eye"
             label="Total Views"
@@ -269,7 +269,7 @@ export default function AnalyticsScreen({ navigation }: AnalyticsScreenProps) {
             color={theme.success}
           />
         </View>
-        <View style={{ width: isMobile ? "48%" : "23%", marginBottom: Spacing.sm }}>
+        <View style={[styles.metricCardWrapper, { width: isMobile ? "48%" : isTablet ? "31%" : "23%" }]}>
           <MetricCard
             icon="send"
             label="Total Posts"
@@ -360,10 +360,14 @@ const styles = StyleSheet.create({
   metricsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
+    justifyContent: "flex-start",
     gap: Spacing.sm,
   },
+  metricCardWrapper: {
+    marginBottom: Spacing.sm,
+  },
   metricCard: {
-    width: "48.5%",
+    width: "100%",
     flexDirection: "row",
     alignItems: "center",
     padding: Spacing.md,

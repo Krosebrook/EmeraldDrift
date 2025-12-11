@@ -7,6 +7,7 @@ import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
+import { useResponsive } from "@/hooks/useResponsive";
 import { Spacing, BorderRadius, Typography } from "@/constants/theme";
 import Spacer from "@/components/Spacer";
 import type { AuthStackParamList } from "@/navigation/AuthStackNavigator";
@@ -50,6 +51,7 @@ const PLATFORMS = [
 
 export default function LandingScreen({ navigation }: LandingScreenProps) {
   const { theme, isDark } = useTheme();
+  const { isMobile, isTablet, contentWidth } = useResponsive();
 
   return (
     <ScreenScrollView contentContainerStyle={styles.container}>
@@ -94,13 +96,16 @@ export default function LandingScreen({ navigation }: LandingScreenProps) {
         </ThemedText>
         <Spacer height={Spacing.lg} />
         
-        <View style={styles.featuresGrid}>
+        <View style={[styles.featuresGrid, { maxWidth: contentWidth, alignSelf: "center", width: "100%" }]}>
           {FEATURES.map((feature, index) => (
             <View
               key={feature.title}
               style={[
                 styles.featureCard,
-                { backgroundColor: theme.cardBackground },
+                { 
+                  backgroundColor: theme.cardBackground,
+                  width: isMobile ? "48%" : isTablet ? "31%" : "23%",
+                },
               ]}
             >
               <View style={[styles.featureIconContainer, { backgroundColor: theme.primaryLight }]}>
@@ -232,12 +237,13 @@ const styles = StyleSheet.create({
   featuresGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
+    justifyContent: "flex-start",
     gap: Spacing.md,
   },
   featureCard: {
-    width: (width - Spacing.base * 2 - Spacing.md) / 2,
     padding: Spacing.base,
     borderRadius: BorderRadius.md,
+    marginBottom: Spacing.sm,
   },
   featureIconContainer: {
     width: 48,
@@ -254,11 +260,14 @@ const styles = StyleSheet.create({
   },
   statsSection: {
     flexDirection: "row",
+    flexWrap: "wrap",
     paddingHorizontal: Spacing.base,
     gap: Spacing.md,
+    justifyContent: "center",
   },
   statsCard: {
     flex: 1,
+    minWidth: 100,
     alignItems: "center",
     paddingVertical: Spacing.lg,
     borderRadius: BorderRadius.md,
