@@ -9,7 +9,9 @@ import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
-import { storage, ContentItem } from "@/utils/storage";
+import { contentService } from "@/features";
+import { isOk } from "@/core/result";
+import type { PlatformType } from "@/features/shared/types";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import Spacer from "@/components/Spacer";
 import type { StudioStackParamList } from "@/navigation/StudioStackNavigator";
@@ -69,31 +71,35 @@ export default function ScheduleScreen({ navigation, route }: ScheduleScreenProp
     const [hours, minutes] = selectedTime.split(":").map(Number);
     scheduledDateTime.setHours(hours, minutes, 0, 0);
 
-    const newContent: ContentItem = {
-      id: `content_${Date.now()}`,
+    const createResult = await contentService.create({
       title,
       caption,
       mediaUri,
-      platforms,
-      status: "scheduled",
-      scheduledAt: scheduledDateTime.toISOString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+      platforms: platforms as PlatformType[],
+    });
 
-    await storage.addContent(newContent);
+    if (isOk(createResult)) {
+      const scheduleResult = await contentService.schedule(createResult.data.id, scheduledDateTime.toISOString());
+      
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
 
-    if (Platform.OS !== "web") {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setIsLoading(false);
+
+      if (isOk(scheduleResult)) {
+        Alert.alert(
+          "Scheduled!",
+          `Your content will be published on ${scheduledDateTime.toLocaleDateString()} at ${selectedTime}`,
+          [{ text: "OK", onPress: () => navigation.popToTop() }]
+        );
+      } else {
+        Alert.alert("Scheduling Failed", "Content was created but scheduling failed. Please try again.");
+      }
+    } else {
+      setIsLoading(false);
+      Alert.alert("Error", "Failed to create content. Please try again.");
     }
-
-    setIsLoading(false);
-
-    Alert.alert(
-      "Scheduled!",
-      `Your content will be published on ${scheduledDateTime.toLocaleDateString()} at ${selectedTime}`,
-      [{ text: "OK", onPress: () => navigation.popToTop() }]
-    );
   };
 
   const getScheduleDateTime = (): string => {

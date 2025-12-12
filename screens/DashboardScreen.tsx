@@ -9,7 +9,9 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useAuthContext } from "@/context/AuthContext";
-import { storage, PlatformConnection, ContentItem } from "@/utils/storage";
+import { contentService, platformService } from "@/features";
+import { isOk } from "@/core/result";
+import type { PlatformConnection, ContentItem } from "@/features/shared/types";
 import { userStatsService, UserStats, UserActivity } from "@/services/userStats";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import Spacer from "@/components/Spacer";
@@ -194,12 +196,16 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
   const loadData = useCallback(async () => {
     if (!user) return;
     
-    const [platformsData, contentData, statsData, activitiesData] = await Promise.all([
-      storage.getPlatforms(),
-      storage.getContent(),
+    const [platformsResult, contentResult, statsData, activitiesData] = await Promise.all([
+      platformService.getConnected(),
+      contentService.getAll(),
       userStatsService.getStats(user.id),
       userStatsService.getActivities(user.id, 10),
     ]);
+    
+    const platformsData = isOk(platformsResult) ? platformsResult.data : [];
+    const contentData = isOk(contentResult) ? contentResult.data : [];
+    
     setPlatforms(platformsData);
     setContent(contentData);
     setUserStats(statsData);

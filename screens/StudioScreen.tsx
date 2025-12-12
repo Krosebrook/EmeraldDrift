@@ -12,7 +12,9 @@ import { Button } from "@/components/Button";
 import { AIAssistantModal } from "@/components/AIAssistantModal";
 import { useTheme } from "@/hooks/useTheme";
 import { useResponsive } from "@/hooks/useResponsive";
-import { storage, ContentItem, PlatformConnection } from "@/utils/storage";
+import { contentService, platformService } from "@/features";
+import { isOk } from "@/core/result";
+import type { ContentItem, PlatformConnection, PlatformType } from "@/features/shared/types";
 import { Spacing, BorderRadius, Typography } from "@/constants/theme";
 import Spacer from "@/components/Spacer";
 import type { StudioStackParamList } from "@/navigation/StudioStackNavigator";
@@ -79,47 +81,45 @@ export default function StudioScreen({ navigation }: StudioScreenProps) {
   }, []);
 
   const loadPlatforms = async () => {
-    const platforms = await storage.getPlatforms();
-    setConnectedPlatforms(platforms);
+    const result = await platformService.getConnected();
+    if (isOk(result)) {
+      setConnectedPlatforms(result.data);
+    }
   };
 
   const loadLastDraft = async () => {
-    const allContent = await storage.getContent();
-    const latestDraft = allContent
-      .filter(c => c.status === "draft")
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0];
+    const result = await contentService.getFiltered({ status: "draft" });
+    if (isOk(result)) {
+      const drafts = result.data.sort((a, b) => 
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      );
+      const latestDraft = drafts[0];
 
-    if (latestDraft) {
-      setTitle(latestDraft.title || "");
-      setCaption(latestDraft.caption || "");
-      setMediaUri(latestDraft.mediaUri || null);
-      setSelectedPlatforms(latestDraft.platforms || []);
-      setLastSavedDraft(latestDraft.id);
-      draftCreatedAtRef.current = latestDraft.createdAt;
+      if (latestDraft) {
+        setTitle(latestDraft.title || "");
+        setCaption(latestDraft.caption || "");
+        setMediaUri(latestDraft.mediaUri || null);
+        setSelectedPlatforms(latestDraft.platforms || []);
+        setLastSavedDraft(latestDraft.id);
+        draftCreatedAtRef.current = latestDraft.createdAt;
+      }
     }
   };
 
   const performAutosaveWithData = async (t: string, c: string, m: string | null, p: string[]) => {
-    const now = new Date().toISOString();
     const currentDraftId = lastSavedDraftRef.current;
-    const draftContent: ContentItem = {
-      id: currentDraftId || `draft_${Date.now()}`,
+    
+    const result = await contentService.saveDraft(currentDraftId || `draft_${Date.now()}`, {
       title: t.trim(),
       caption: c.trim(),
       mediaUri: m || undefined,
-      platforms: p,
-      status: "draft",
-      createdAt: draftCreatedAtRef.current || now,
-      updatedAt: now,
-    };
+      platforms: p as PlatformType[],
+    });
 
-    if (currentDraftId) {
-      await storage.updateContent(currentDraftId, draftContent);
-    } else {
-      await storage.addContent(draftContent);
-      setLastSavedDraft(draftContent.id);
-      lastSavedDraftRef.current = draftContent.id;
-      draftCreatedAtRef.current = now;
+    if (isOk(result) && !currentDraftId) {
+      setLastSavedDraft(result.data.id);
+      lastSavedDraftRef.current = result.data.id;
+      draftCreatedAtRef.current = result.data.createdAt;
     }
   };
 
@@ -201,26 +201,25 @@ export default function StudioScreen({ navigation }: StudioScreenProps) {
 
     setIsLoading(true);
 
-    const newContent: ContentItem = {
-      id: `content_${Date.now()}`,
+    const result = await contentService.create({
       title: title.trim(),
       caption: caption.trim(),
       mediaUri: mediaUri || undefined,
-      platforms: selectedPlatforms,
-      status: "draft",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    await storage.addContent(newContent);
+      platforms: selectedPlatforms as PlatformType[],
+    });
 
     if (Platform.OS !== "web") {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
 
     setIsLoading(false);
-    resetForm();
-    Alert.alert("Draft Saved", "Your content has been saved as a draft.");
+    
+    if (isOk(result)) {
+      resetForm();
+      Alert.alert("Draft Saved", "Your content has been saved as a draft.");
+    } else {
+      Alert.alert("Error", "Failed to save draft. Please try again.");
+    }
   };
 
   const handlePublish = async () => {
@@ -251,27 +250,32 @@ export default function StudioScreen({ navigation }: StudioScreenProps) {
 
     setIsLoading(true);
 
-    const newContent: ContentItem = {
-      id: `content_${Date.now()}`,
+    const createResult = await contentService.create({
       title: title.trim(),
       caption: caption.trim(),
       mediaUri: mediaUri || undefined,
-      platforms: selectedPlatforms,
-      status: "published",
-      publishedAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+      platforms: selectedPlatforms as PlatformType[],
+    });
 
-    await storage.addContent(newContent);
-
-    if (Platform.OS !== "web") {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (isOk(createResult)) {
+      const publishResult = await contentService.publish(createResult.data.id);
+      
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      
+      setIsLoading(false);
+      
+      if (isOk(publishResult)) {
+        resetForm();
+        Alert.alert("Published!", `Your content has been published to ${selectedPlatforms.length} platform${selectedPlatforms.length > 1 ? "s" : ""}.`);
+      } else {
+        Alert.alert("Publishing Failed", "Content was created but publishing failed. Please try again from your drafts.");
+      }
+    } else {
+      setIsLoading(false);
+      Alert.alert("Error", "Failed to create content. Please try again.");
     }
-
-    setIsLoading(false);
-    resetForm();
-    Alert.alert("Published!", `Your content has been published to ${selectedPlatforms.length} platform${selectedPlatforms.length > 1 ? "s" : ""}.`);
   };
 
   const handleSchedule = () => {

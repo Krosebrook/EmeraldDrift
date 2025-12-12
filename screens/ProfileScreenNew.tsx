@@ -11,7 +11,9 @@ import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useAuthContext } from "@/context/AuthContext";
-import { storage, PlatformConnection } from "@/utils/storage";
+import { platformService } from "@/features";
+import { isOk } from "@/core/result";
+import type { PlatformConnection } from "@/features/shared/types";
 import { Spacing, BorderRadius, Typography } from "@/constants/theme";
 import Spacer from "@/components/Spacer";
 import type { ProfileStackParamList } from "@/navigation/ProfileStackNavigator";
@@ -70,8 +72,10 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   );
 
   const loadPlatforms = async () => {
-    const platformsData = await storage.getPlatforms();
-    setPlatforms(platformsData);
+    const result = await platformService.getConnected();
+    if (isOk(result)) {
+      setPlatforms(result.data);
+    }
   };
 
   const handleSaveName = async () => {
@@ -90,7 +94,6 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
     if (Platform.OS === "web") {
       const confirmed = window.confirm("Are you sure you want to sign out?");
       if (confirmed) {
-        storage.clearAll();
         signOut();
       }
     } else {
@@ -103,7 +106,6 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
             text: "Sign Out",
             style: "destructive",
             onPress: async () => {
-              await storage.clearAll();
               await signOut();
             },
           },

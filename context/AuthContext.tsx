@@ -1,10 +1,13 @@
 import React, { createContext, useContext, ReactNode } from "react";
-import { useAuth, User } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
+import type { User } from "@/features/shared/types";
+import type { AppError } from "@/core/errors";
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  error: AppError | null;
   signIn: (email: string, password: string) => Promise<boolean>;
   signUp: (email: string, password: string, name: string) => Promise<boolean>;
   signOut: () => Promise<void>;
@@ -36,3 +39,5 @@ export function useAuthContext() {
   }
   return context;
 }
+
+export type { User };

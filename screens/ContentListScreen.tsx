@@ -8,7 +8,9 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ScreenFlatList } from "@/components/ScreenFlatList";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
-import { storage, ContentItem } from "@/utils/storage";
+import { contentService } from "@/features";
+import { isOk } from "@/core/result";
+import type { ContentItem, ContentStatus } from "@/features/shared/types";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import type { DashboardStackParamList } from "@/navigation/DashboardStackNavigator";
 
@@ -25,8 +27,10 @@ export default function ContentListScreen({ navigation }: ContentListScreenProps
   const [filter, setFilter] = useState<FilterType>("all");
 
   const loadContent = useCallback(async () => {
-    const data = await storage.getContent();
-    setContent(data);
+    const result = await contentService.getAll();
+    if (isOk(result)) {
+      setContent(result.data);
+    }
   }, []);
 
   useFocusEffect(
@@ -51,7 +55,7 @@ export default function ContentListScreen({ navigation }: ContentListScreenProps
           text: "Delete",
           style: "destructive",
           onPress: async () => {
-            await storage.deleteContent(item.id);
+            await contentService.delete(item.id);
             await loadContent();
             if (Platform.OS !== "web") {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

@@ -8,7 +8,9 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
-import { storage, PlatformConnection } from "@/utils/storage";
+import { platformService } from "@/features";
+import { isOk } from "@/core/result";
+import type { PlatformConnection, PlatformType } from "@/features/shared/types";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import Spacer from "@/components/Spacer";
 
@@ -35,8 +37,10 @@ export default function PlatformsScreen({ navigation }: PlatformsScreenProps) {
   );
 
   const loadPlatforms = async () => {
-    const platforms = await storage.getPlatforms();
-    setConnectedPlatforms(platforms);
+    const result = await platformService.getConnected();
+    if (isOk(result)) {
+      setConnectedPlatforms(result.data);
+    }
   };
 
   const handleConnect = async (platformId: string) => {
@@ -47,24 +51,22 @@ export default function PlatformsScreen({ navigation }: PlatformsScreenProps) {
     const platformInfo = AVAILABLE_PLATFORMS.find((p) => p.id === platformId);
     if (!platformInfo) return;
 
-    const newConnection: PlatformConnection = {
-      id: `${platformId}_${Date.now()}`,
-      platform: platformId as PlatformConnection["platform"],
+    const result = await platformService.connect({
+      platform: platformId as PlatformType,
       username: `creator_${Math.random().toString(36).substr(2, 6)}`,
       displayName: `My ${platformInfo.name}`,
-      connected: true,
-      connectedAt: new Date().toISOString(),
       followerCount: Math.floor(Math.random() * 50000) + 1000,
-    };
+    });
 
-    await storage.connectPlatform(newConnection);
-    await loadPlatforms();
-
-    if (Platform.OS !== "web") {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (isOk(result)) {
+      await loadPlatforms();
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      Alert.alert("Connected!", `${platformInfo.name} has been connected successfully.`);
+    } else {
+      Alert.alert("Connection Failed", `Could not connect ${platformInfo.name}. Please try again.`);
     }
-
-    Alert.alert("Connected!", `${platformInfo.name} has been connected successfully.`);
   };
 
   const handleDisconnect = (platform: PlatformConnection) => {
@@ -79,10 +81,14 @@ export default function PlatformsScreen({ navigation }: PlatformsScreenProps) {
           text: "Disconnect",
           style: "destructive",
           onPress: async () => {
-            await storage.disconnectPlatform(platform.id);
-            await loadPlatforms();
-            if (Platform.OS !== "web") {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            const result = await platformService.disconnect(platform.platform);
+            if (isOk(result)) {
+              await loadPlatforms();
+              if (Platform.OS !== "web") {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              }
+            } else {
+              Alert.alert("Disconnect Failed", "Could not disconnect the platform. Please try again.");
             }
           },
         },

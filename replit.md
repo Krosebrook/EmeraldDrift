@@ -20,12 +20,17 @@ Creator Studio Lite is a comprehensive social media management platform built wi
 ### Module Structure
 
 ```
-├── types/              # Centralized TypeScript definitions
-├── core/               # Core infrastructure (persistence, errors, validation)
-├── repositories/       # Data access layer (content, platform, analytics, etc.)
-├── state/              # State management contexts (Auth, Team)
+├── features/           # Feature-first domain modules
+│   ├── shared/         # Shared types, repository factory, Result pattern
+│   ├── auth/           # Authentication (secure storage, session management)
+│   ├── content/        # Content management (CRUD, publish, schedule)
+│   ├── platforms/      # Platform connections (connect, disconnect)
+│   ├── analytics/      # Analytics snapshots and metrics
+│   └── team/           # Team collaboration and roles
+├── core/               # Core infrastructure (errors, result, validation)
+├── context/            # React contexts (Auth, Team)
 ├── hooks/              # React hooks (useTheme, useResponsive, useAuth)
-├── services/           # External integrations (AI, notifications)
+├── services/           # External integrations (AI, notifications, userStats)
 ├── navigation/         # Navigation configuration
 ├── components/         # Reusable UI components
 ├── screens/            # Screen components
@@ -98,18 +103,20 @@ npm run build     # Build for production
 ### Key Imports
 
 ```typescript
-// Hooks
-import { useTheme, useResponsive, useAuth } from "@/hooks";
+// Feature Services (primary import pattern)
+import { contentService, platformService, analyticsService } from "@/features";
+import { isOk, isErr } from "@/core/result";
 
-// Repositories
-import { contentRepository, platformRepository } from "@/repositories";
+// Feature Types
+import type { ContentItem, PlatformConnection, AnalyticsSnapshot } from "@/features/shared/types";
+
+// Hooks
+import { useTheme, useResponsive } from "@/hooks";
+import { useAuthContext } from "@/context/AuthContext";
 
 // Core utilities
 import { AppError, logError } from "@/core/errors";
 import { ok, err, tryCatch } from "@/core/result";
-
-// Types
-import type { ContentItem, User, PlatformType } from "@/types";
 
 // Components
 import { Button, Card, ThemedText } from "@/components";
@@ -127,26 +134,37 @@ const { isMobile, isTablet, isDesktop, contentWidth, cardWidth } = useResponsive
 // Grid columns: Mobile 2, Tablet 3, Desktop 4
 ```
 
-### Repository Usage
+### Feature Service Usage
 
 ```typescript
-// Get filtered content
-const drafts = await contentRepository.getFiltered({ status: "draft" });
+// All service methods return Result<T, AppError>
+import { contentService, platformService } from "@/features";
+import { isOk } from "@/core/result";
+
+// Get all content
+const result = await contentService.getAll();
+if (isOk(result)) {
+  setContent(result.data);
+}
 
 // Create new content
-const content = await contentRepository.create({
+const createResult = await contentService.create({
   title: "New Post",
   caption: "Caption",
   platforms: ["instagram"],
-  status: "draft",
 });
 
-// Update content
-await contentRepository.update(id, { title: "Updated" });
+// Domain operations with Result handling
+if (isOk(createResult)) {
+  await contentService.publish(createResult.data.id);
+  // or schedule
+  await contentService.schedule(createResult.data.id, scheduledAt);
+}
 
-// Domain operations
-await contentRepository.publish(id);
-await contentRepository.schedule(id, scheduledAt);
+// Platform connections
+const platformsResult = await platformService.getConnected();
+await platformService.connect({ platform: "instagram", username: "user" });
+await platformService.disconnect("instagram");
 ```
 
 ### Error Handling
@@ -242,6 +260,19 @@ navigation.navigate("ContentDetail", { contentId: "123" });
 ```
 
 ## Recent Changes
+
+- **2025-12-12**: Feature-first architecture refactor completed
+  - Migrated all screens from deprecated `utils/storage.ts` to feature modules
+  - Implemented `features/` directory with domain services:
+    - `features/content/` - Content CRUD, publish, schedule operations
+    - `features/platforms/` - Platform connections management
+    - `features/analytics/` - Analytics snapshot retrieval
+    - `features/auth/` - Secure authentication with expo-secure-store
+    - `features/shared/` - Shared types, repository factory, Result pattern
+  - All services return `Result<T, AppError>` for explicit error handling
+  - Unified import pattern via `@/features` barrel export
+  - Deleted deprecated `utils/storage.ts`
+  - Updated 8 screens: Dashboard, Studio, Analytics, Platforms, ContentList, ContentDetail, Schedule, Profile
 
 - **2025-12-12**: Google Play Store 2025 compliance preparation
   - Added account deletion feature (mandatory for Google Play)

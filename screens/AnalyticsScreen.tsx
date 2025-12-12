@@ -10,7 +10,9 @@ import { useTheme } from "@/hooks/useTheme";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useAuthContext } from "@/context/AuthContext";
 import { userStatsService, UserStats } from "@/services/userStats";
-import { storage, AnalyticsData, PlatformConnection } from "@/utils/storage";
+import { analyticsService, platformService } from "@/features";
+import { isOk } from "@/core/result";
+import type { AnalyticsSnapshot, PlatformConnection } from "@/features/shared/types";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import Spacer from "@/components/Spacer";
 import type { AnalyticsStackParamList } from "@/navigation/AnalyticsStackNavigator";
@@ -174,17 +176,22 @@ export default function AnalyticsScreen({ navigation }: AnalyticsScreenProps) {
   const { theme } = useTheme();
   const { isMobile, isTablet, contentWidth, numColumns } = useResponsive();
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsSnapshot | null>(null);
   const [platforms, setPlatforms] = useState<PlatformConnection[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
-    const [analyticsData, platformsData] = await Promise.all([
-      storage.getAnalytics(),
-      storage.getPlatforms(),
+    const [analyticsResult, platformsResult] = await Promise.all([
+      analyticsService.getSnapshot(),
+      platformService.getConnected(),
     ]);
-    setAnalytics(analyticsData);
-    setPlatforms(platformsData);
+    
+    if (isOk(analyticsResult)) {
+      setAnalytics(analyticsResult.data);
+    }
+    if (isOk(platformsResult)) {
+      setPlatforms(platformsResult.data);
+    }
   }, []);
 
   useFocusEffect(

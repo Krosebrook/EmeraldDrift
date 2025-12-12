@@ -9,7 +9,9 @@ import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
-import { storage, ContentItem } from "@/utils/storage";
+import { contentService } from "@/features";
+import { isOk } from "@/core/result";
+import type { ContentItem } from "@/features/shared/types";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import Spacer from "@/components/Spacer";
 import type { DashboardStackParamList } from "@/navigation/DashboardStackNavigator";
@@ -29,9 +31,10 @@ export default function ContentDetailScreen({ navigation, route }: ContentDetail
   }, [id]);
 
   const loadContent = async () => {
-    const allContent = await storage.getContent();
-    const item = allContent.find((c) => c.id === id);
-    setContent(item || null);
+    const result = await contentService.getById(id);
+    if (isOk(result)) {
+      setContent(result.data);
+    }
   };
 
   const handleDelete = () => {
@@ -45,7 +48,7 @@ export default function ContentDetailScreen({ navigation, route }: ContentDetail
           style: "destructive",
           onPress: async () => {
             if (content) {
-              await storage.deleteContent(content.id);
+              await contentService.delete(content.id);
               if (Platform.OS !== "web") {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
               }
@@ -68,10 +71,7 @@ export default function ContentDetailScreen({ navigation, route }: ContentDetail
         {
           text: "Publish",
           onPress: async () => {
-            await storage.updateContent(content.id, {
-              status: "published",
-              publishedAt: new Date().toISOString(),
-            });
+            await contentService.publish(content.id);
             if (Platform.OS !== "web") {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             }
