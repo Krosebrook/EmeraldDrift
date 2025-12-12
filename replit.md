@@ -243,6 +243,13 @@ navigation.navigate("ContentDetail", { contentId: "123" });
 
 ## Recent Changes
 
+- **2025-12-12**: Google Play Store 2025 compliance preparation
+  - Added account deletion feature (mandatory for Google Play)
+  - Created `eas.json` for EAS Build configuration
+  - Updated `app.json` with Android permissions and versionCode
+  - Added privacy policy document (`docs/PRIVACY_POLICY.md`)
+  - Enhanced SettingsScreen with Danger Zone section
+
 - **2025-12-11**: Production-grade architecture refactor at maximum depth
   - Consolidated hooks into single `/hooks` directory
   - Added Result type pattern (`core/result.ts`)
@@ -269,4 +276,25 @@ navigation.navigate("ContentDetail", { contentId: "123" });
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) - System architecture and ADRs
 - [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) - Development workflow and guidelines
+- [`docs/PRIVACY_POLICY.md`](docs/PRIVACY_POLICY.md) - Privacy policy for Google Play
 - [`design_guidelines.md`](design_guidelines.md) - UI/UX design specifications
+
+## Google Play Store Requirements
+
+### API Level 35 (Android 15) Compliance
+- Target SDK configured for API Level 35
+- AAB (Android App Bundle) format for production builds
+- EAS Build configuration in `eas.json`
+
+### Mandatory Features
+- Account deletion: Settings → Danger Zone → Delete Account
+- Privacy policy: Available in-app and at `docs/PRIVACY_POLICY.md`
+- Data export: Settings → Data & Storage → Export Data
+
+### Pre-Submission Checklist
+1. Create Google Play Developer account ($25 one-time fee)
+2. Generate signing key with Play App Signing
+3. Complete Data Safety form in Play Console
+4. Run 14-day closed testing with 20+ testers
+5. Submit privacy policy URL
+6. Complete content rating questionnaire

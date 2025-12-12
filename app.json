@@ -10,7 +10,12 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.creatorstudio.app"
+      "bundleIdentifier": "com.creatorstudio.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Creator Studio needs camera access to capture photos and videos for your content.",
+        "NSPhotoLibraryUsageDescription": "Creator Studio needs photo library access to select media for your posts.",
+        "NSPhotoLibraryAddUsageDescription": "Creator Studio needs permission to save generated content to your photo library."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +26,18 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.creatorstudio.app"
+      "package": "com.creatorstudio.app",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED",
+        "POST_NOTIFICATIONS"
+      ]
     },
     "web": {
       "output": "single",
@@ -40,10 +56,30 @@
           }
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Creator Studio needs photo library access to select media for your posts.",
+          "cameraPermission": "Creator Studio needs camera access to capture photos and videos for your content."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#8B5CF6"
+        }
+      ]
     ],
     "experiments": {
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "creator-studio-lite"
+      }
+    },
+    "owner": "creatorstudio"
   }
 }

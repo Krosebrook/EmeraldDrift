@@ -124,7 +124,7 @@ export default function AboutScreen() {
           Made with love for creators everywhere
         </ThemedText>
         <ThemedText type="caption" secondary style={{ textAlign: "center", marginTop: Spacing.xs }}>
-          2024 Creator Studio. All rights reserved.
+          2025 Creator Studio. All rights reserved.
         </ThemedText>
       </View>
 
