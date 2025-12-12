@@ -354,6 +354,22 @@ export default function StudioScreen({ navigation }: StudioScreenProps) {
         <Feather name="chevron-right" size={18} color="#FFFFFF" style={{ marginLeft: "auto" }} />
       </Pressable>
 
+      <Spacer height={Spacing.base} />
+
+      <Pressable
+        onPress={() => navigation.navigate("DesignStudio")}
+        style={({ pressed }) => [
+          styles.aiButton,
+          { backgroundColor: theme.success, opacity: pressed ? 0.9 : 1 },
+        ]}
+      >
+        <Feather name="grid" size={18} color="#FFFFFF" />
+        <ThemedText style={{ color: "#FFFFFF", marginLeft: 8, fontWeight: "600" }}>
+          Design Studio (POD)
+        </ThemedText>
+        <Feather name="chevron-right" size={18} color="#FFFFFF" style={{ marginLeft: "auto" }} />
+      </Pressable>
+
       <Spacer height={Spacing.lg} />
 
       <View style={styles.mediaSection}>

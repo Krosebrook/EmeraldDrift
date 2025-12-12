@@ -4,8 +4,12 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import StudioScreen from "@/screens/StudioScreen";
 import ScheduleScreen from "@/screens/ScheduleScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
+import DesignStudioScreen from "@/screens/DesignStudioScreen";
+import PublishDesignScreen from "@/screens/PublishDesignScreen";
+import PlatformSettingsScreen from "@/screens/PlatformSettingsScreen";
 import { useTheme } from "@/hooks/useTheme";
 import { getCommonScreenOptions } from "@/navigation/screenOptions";
+import type { DesignPlatform } from "@/features";
 
 export type StudioStackParamList = {
   Studio: undefined;
@@ -16,6 +20,9 @@ export type StudioStackParamList = {
     platforms: string[];
   };
   Settings: undefined;
+  DesignStudio: undefined;
+  PublishDesign: { designId: string };
+  PlatformSettings: { platform: DesignPlatform };
 };
 
 const Stack = createNativeStackNavigator<StudioStackParamList>();
@@ -41,6 +48,21 @@ export default function StudioStackNavigator() {
         name="Settings"
         component={SettingsScreen}
         options={{ headerTitle: "Settings" }}
+      />
+      <Stack.Screen
+        name="DesignStudio"
+        component={DesignStudioScreen}
+        options={{ headerTitle: "Design Studio" }}
+      />
+      <Stack.Screen
+        name="PublishDesign"
+        component={PublishDesignScreen}
+        options={{ headerTitle: "Publish Design" }}
+      />
+      <Stack.Screen
+        name="PlatformSettings"
+        component={PlatformSettingsScreen}
+        options={{ headerTitle: "Platform Settings" }}
       />
     </Stack.Navigator>
   );

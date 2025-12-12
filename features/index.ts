@@ -14,3 +14,23 @@ export type { AnalyticsRepository, AnalyticsService, AnalyticsSummary, TimeRange
 
 export { teamRepository, teamService } from "./team";
 export type { TeamRepository, TeamRole, TeamService, InviteMemberInput, TeamStats } from "./team";
+
+export { designRepository, designService, PLATFORM_TEMPLATES, PLATFORM_INFO, CATEGORY_INFO } from "./designs";
+export type { 
+  DesignRepository, 
+  DesignService, 
+  DesignStats,
+  ProductDesign,
+  DesignTemplate,
+  DesignPlatform,
+  ProductCategory,
+  DesignStatus,
+  GenerationSource,
+  DesignDimensions,
+  AIGenerationRequest,
+  AIGenerationResult,
+  PlatformConfig,
+  UploadTarget,
+  PublishResult,
+  ProductVariant,
+} from "./designs";
