@@ -218,6 +218,19 @@ export const userRepository = {
       USER_STORAGE_KEYS.TUTORIAL,
     ]);
   },
+
+  async deleteAllUserData(userId: string): Promise<void> {
+    const storage = createUserStorage(userId);
+    await storage.clearAll([
+      USER_STORAGE_KEYS.STATS,
+      USER_STORAGE_KEYS.ACTIVITIES,
+      USER_STORAGE_KEYS.PLATFORM_STATS,
+      USER_STORAGE_KEYS.ONBOARDING,
+      USER_STORAGE_KEYS.TUTORIAL,
+      USER_STORAGE_KEYS.PREFERENCES,
+      USER_STORAGE_KEYS.NOTIFICATIONS,
+    ]);
+  },
 };
 
 export default userRepository;

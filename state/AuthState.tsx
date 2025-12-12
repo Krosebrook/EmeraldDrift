@@ -69,6 +69,7 @@ interface AuthContextValue extends AuthState {
   signIn: (email: string, password: string) => Promise<boolean>;
   signUp: (email: string, password: string, name: string) => Promise<boolean>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<boolean>;
   updateUser: (updates: Partial<User>) => Promise<void>;
   completeOnboardingStep: (step: keyof OnboardingState["steps"]) => Promise<void>;
   clearError: () => void;
@@ -164,6 +165,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const deleteAccount = useCallback(async (): Promise<boolean> => {
+    if (!state.user) return false;
+    
+    dispatch({ type: "AUTH_LOADING" });
+    try {
+      const userId = state.user.id;
+      
+      await AsyncStorage.removeItem(STORAGE_KEYS.USER);
+      await AsyncStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+      await AsyncStorage.removeItem(STORAGE_KEYS.CONTENT);
+      await AsyncStorage.removeItem(STORAGE_KEYS.PLATFORMS);
+      await AsyncStorage.removeItem(STORAGE_KEYS.ANALYTICS);
+      await AsyncStorage.removeItem(STORAGE_KEYS.SCHEDULED_POSTS);
+      await AsyncStorage.removeItem(STORAGE_KEYS.MEDIA_LIBRARY);
+      await AsyncStorage.removeItem(STORAGE_KEYS.WORKSPACES);
+      await AsyncStorage.removeItem(STORAGE_KEYS.TEAM_MEMBERS);
+      await AsyncStorage.removeItem(STORAGE_KEYS.INVITATIONS);
+      
+      await userRepository.deleteAllUserData(userId);
+      
+      dispatch({ type: "AUTH_LOGOUT" });
+      return true;
+    } catch {
+      dispatch({ type: "AUTH_FAILURE", payload: "Failed to delete account" });
+      return false;
+    }
+  }, [state.user]);
+
   const updateUser = useCallback(async (updates: Partial<User>) => {
     if (!state.user) return;
     try {
@@ -198,6 +227,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn,
     signUp,
     signOut,
+    deleteAccount,
     updateUser,
     completeOnboardingStep,
     clearError,

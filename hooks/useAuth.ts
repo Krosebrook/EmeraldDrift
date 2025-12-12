@@ -147,6 +147,42 @@ export function useAuth() {
     }
   }, []);
 
+  const deleteAccount = useCallback(async (): Promise<boolean> => {
+    try {
+      if (!state.user) return false;
+      
+      setState((prev) => ({ ...prev, isLoading: true }));
+
+      const keysToRemove = [
+        USER_STORAGE_KEY,
+        AUTH_STORAGE_KEY,
+        `${USER_STORAGE_KEY}_${state.user.email}`,
+        "@creator_studio_content",
+        "@creator_studio_platforms",
+        "@creator_studio_analytics",
+        "@creator_studio_scheduled",
+        "@creator_studio_media_library",
+        "@creator_studio_workspaces",
+        "@creator_studio_team_members",
+        "@creator_studio_invitations",
+      ];
+      
+      await AsyncStorage.multiRemove(keysToRemove);
+      
+      setState({
+        user: null,
+        isLoading: false,
+        isAuthenticated: false,
+      });
+
+      return true;
+    } catch (error) {
+      console.error("Delete account failed:", error);
+      setState((prev) => ({ ...prev, isLoading: false }));
+      return false;
+    }
+  }, [state.user]);
+
   const updateProfile = useCallback(async (updates: Partial<User>): Promise<boolean> => {
     try {
       if (!state.user) return false;
@@ -171,6 +207,7 @@ export function useAuth() {
     signIn,
     signUp,
     signOut,
+    deleteAccount,
     updateProfile,
     reload: loadUser,
   };
