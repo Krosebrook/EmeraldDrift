@@ -1,5 +1,6 @@
 import React, { ReactNode } from "react";
-import { StyleSheet, Pressable, ViewStyle, StyleProp } from "react-native";
+import { StyleSheet, Pressable, ViewStyle, StyleProp, View, ActivityIndicator } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -11,12 +12,19 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { BorderRadius, Spacing } from "@/constants/theme";
 
+type FeatherIconName = React.ComponentProps<typeof Feather>["name"];
+
 export interface ButtonProps {
   onPress?: () => void;
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
   disabled?: boolean;
-  variant?: "primary" | "secondary";
+  loading?: boolean;
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
+  size?: "sm" | "md" | "lg";
+  leftIcon?: FeatherIconName;
+  rightIcon?: FeatherIconName;
+  fullWidth?: boolean;
 }
 
 const springConfig: WithSpringConfig = {
@@ -27,6 +35,12 @@ const springConfig: WithSpringConfig = {
   energyThreshold: 0.001,
 };
 
+const SIZES = {
+  sm: { height: 36, paddingHorizontal: 12, fontSize: 14, iconSize: 14 },
+  md: { height: Spacing.buttonHeight, paddingHorizontal: 16, fontSize: 16, iconSize: 18 },
+  lg: { height: 56, paddingHorizontal: 24, fontSize: 18, iconSize: 20 },
+};
+
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function Button({
@@ -34,69 +48,128 @@ export function Button({
   children,
   style,
   disabled = false,
+  loading = false,
   variant = "primary",
+  size = "md",
+  leftIcon,
+  rightIcon,
+  fullWidth = false,
 }: ButtonProps) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
+  const sizeConfig = SIZES[size];
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
   const handlePressIn = () => {
-    if (!disabled) {
+    if (!disabled && !loading) {
       scale.value = withSpring(0.98, springConfig);
     }
   };
 
   const handlePressOut = () => {
-    if (!disabled) {
+    if (!disabled && !loading) {
       scale.value = withSpring(1, springConfig);
     }
   };
 
-  const isPrimary = variant === "primary";
-  const backgroundColor = isPrimary ? theme.link : "transparent";
-  const textColor = isPrimary ? theme.buttonText : theme.link;
-  const borderWidth = isPrimary ? 0 : 2;
-  const borderColor = isPrimary ? undefined : theme.link;
+  const getStyles = (): { bg: string; text: string; border?: string } => {
+    switch (variant) {
+      case "primary":
+        return { bg: theme.primary, text: "#FFFFFF" };
+      case "secondary":
+        return { bg: theme.backgroundSecondary, text: theme.text };
+      case "outline":
+        return { bg: "transparent", text: theme.primary, border: theme.primary };
+      case "ghost":
+        return { bg: "transparent", text: theme.primary };
+      case "danger":
+        return { bg: theme.error, text: "#FFFFFF" };
+      default:
+        return { bg: theme.primary, text: "#FFFFFF" };
+    }
+  };
+
+  const colors = getStyles();
+  const isDisabled = disabled || loading;
 
   return (
     <AnimatedPressable
-      onPress={disabled ? undefined : onPress}
+      onPress={isDisabled ? undefined : onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      disabled={disabled}
+      disabled={isDisabled}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: isDisabled }}
       style={[
         styles.button,
         {
-          backgroundColor,
-          borderWidth,
-          borderColor,
-          opacity: disabled ? 0.5 : 1,
+          height: sizeConfig.height,
+          paddingHorizontal: sizeConfig.paddingHorizontal,
+          backgroundColor: colors.bg,
+          borderWidth: colors.border ? 1.5 : 0,
+          borderColor: colors.border,
+          opacity: isDisabled ? 0.5 : 1,
+          alignSelf: fullWidth ? "stretch" : "auto",
         },
         style,
         animatedStyle,
       ]}
     >
-      <ThemedText
-        type="body"
-        style={[styles.buttonText, { color: textColor }]}
-      >
-        {children}
-      </ThemedText>
+      {loading ? (
+        <ActivityIndicator size="small" color={colors.text} />
+      ) : (
+        <View style={styles.content}>
+          {leftIcon ? (
+            <Feather
+              name={leftIcon}
+              size={sizeConfig.iconSize}
+              color={colors.text}
+              style={styles.leftIcon}
+            />
+          ) : null}
+          <ThemedText
+            type="body"
+            style={[
+              styles.buttonText,
+              { color: colors.text, fontSize: sizeConfig.fontSize },
+            ]}
+          >
+            {children}
+          </ThemedText>
+          {rightIcon ? (
+            <Feather
+              name={rightIcon}
+              size={sizeConfig.iconSize}
+              color={colors.text}
+              style={styles.rightIcon}
+            />
+          ) : null}
+        </View>
+      )}
     </AnimatedPressable>
   );
 }
 
 const styles = StyleSheet.create({
   button: {
-    height: Spacing.buttonHeight,
     borderRadius: BorderRadius.full,
     alignItems: "center",
     justifyContent: "center",
   },
+  content: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   buttonText: {
     fontWeight: "600",
+  },
+  leftIcon: {
+    marginRight: Spacing.sm,
+  },
+  rightIcon: {
+    marginLeft: Spacing.sm,
   },
 });
