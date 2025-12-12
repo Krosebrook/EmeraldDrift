@@ -56,7 +56,7 @@ function SettingsRow({ icon, label, value, onPress, showArrow = true, danger = f
 
 export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   const { theme, isDark } = useTheme();
-  const { user, signOut, updateProfile, isLoading } = useAuthContext();
+  const { user, signOut, deleteAccount, updateProfile, isLoading } = useAuthContext();
   const { isMobile, contentWidth } = useResponsive();
   const [platforms, setPlatforms] = useState<PlatformConnection[]>([]);
   const [isEditing, setIsEditing] = useState(false);
@@ -87,39 +87,60 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   };
 
   const handleSignOut = () => {
-    Alert.alert(
-      "Sign Out",
-      "Are you sure you want to sign out?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Sign Out",
-          style: "destructive",
-          onPress: async () => {
-            await storage.clearAll();
-            await signOut();
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm("Are you sure you want to sign out?");
+      if (confirmed) {
+        storage.clearAll();
+        signOut();
+      }
+    } else {
+      Alert.alert(
+        "Sign Out",
+        "Are you sure you want to sign out?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Sign Out",
+            style: "destructive",
+            onPress: async () => {
+              await storage.clearAll();
+              await signOut();
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(
-      "Delete Account",
-      "This action cannot be undone. All your data will be permanently deleted.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            await storage.clearAll();
-            await signOut();
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm(
+        "Delete Account?\n\nThis action cannot be undone. All your data will be permanently deleted."
+      );
+      if (confirmed) {
+        const finalConfirm = window.confirm(
+          "Final Confirmation\n\nAre you absolutely sure? This will permanently delete your account and all data."
+        );
+        if (finalConfirm) {
+          deleteAccount();
+        }
+      }
+    } else {
+      Alert.alert(
+        "Delete Account",
+        "This action cannot be undone. All your data will be permanently deleted.",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: async () => {
+              await deleteAccount();
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const getInitials = (name: string): string => {

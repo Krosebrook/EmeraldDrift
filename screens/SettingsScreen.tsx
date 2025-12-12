@@ -66,45 +66,71 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = async () => {
-    Alert.alert(
-      "Sign Out",
-      "Are you sure you want to sign out?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Sign Out",
-          onPress: async () => {
-            setIsSigningOut(true);
-            if (Platform.OS !== "web") {
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm("Are you sure you want to sign out?");
+      if (confirmed) {
+        setIsSigningOut(true);
+        await signOut();
+        setIsSigningOut(false);
+      }
+    } else {
+      Alert.alert(
+        "Sign Out",
+        "Are you sure you want to sign out?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Sign Out",
+            onPress: async () => {
+              setIsSigningOut(true);
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            }
-            await signOut();
-            setIsSigningOut(false);
+              await signOut();
+              setIsSigningOut(false);
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const handleDeleteAccount = async () => {
-    Alert.alert(
-      "Delete Account",
-      "This action cannot be undone. All your data, content, and settings will be permanently deleted. Are you sure you want to continue?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => confirmDeleteAccount(),
-        },
-      ]
-    );
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm(
+        "Delete Account?\n\nThis action cannot be undone. All your data, content, and settings will be permanently deleted."
+      );
+      if (confirmed) {
+        const finalConfirm = window.confirm(
+          "Final Confirmation\n\nAre you absolutely sure? This will permanently delete your account and all data."
+        );
+        if (finalConfirm) {
+          setIsDeleting(true);
+          const success = await deleteAccount();
+          if (!success) {
+            setIsDeleting(false);
+            window.alert("Failed to delete account. Please try again later.");
+          }
+        }
+      }
+    } else {
+      Alert.alert(
+        "Delete Account",
+        "This action cannot be undone. All your data, content, and settings will be permanently deleted. Are you sure you want to continue?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: () => confirmDeleteAccount(),
+          },
+        ]
+      );
+    }
   };
 
   const confirmDeleteAccount = () => {
     Alert.alert(
       "Final Confirmation",
-      "Type DELETE in the next prompt to confirm account deletion. This will remove all your data permanently.",
+      "This will remove all your data permanently. Are you sure?",
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -112,16 +138,12 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
           style: "destructive",
           onPress: async () => {
             setIsDeleting(true);
-            if (Platform.OS !== "web") {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-            }
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
             
             const success = await deleteAccount();
             
             if (success) {
-              if (Platform.OS !== "web") {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              }
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             } else {
               setIsDeleting(false);
               Alert.alert("Error", "Failed to delete account. Please try again later.");

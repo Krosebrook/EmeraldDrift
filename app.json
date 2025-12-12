@@ -30,8 +30,8 @@
       "versionCode": 1,
       "permissions": [
         "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO",
         "INTERNET",
         "ACCESS_NETWORK_STATE",
         "VIBRATE",

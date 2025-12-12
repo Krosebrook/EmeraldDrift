@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { storage } from "@/utils/storage";
 import { userStatsService } from "@/services/userStats";
+import { userRepository } from "@/repositories/userRepository";
 
 const AUTH_STORAGE_KEY = "@creator_studio_auth";
 const USER_STORAGE_KEY = "@creator_studio_user";
@@ -152,6 +153,8 @@ export function useAuth() {
       if (!state.user) return false;
       
       setState((prev) => ({ ...prev, isLoading: true }));
+
+      await userRepository.deleteAllUserData(state.user.id);
 
       const keysToRemove = [
         USER_STORAGE_KEY,
