@@ -9,9 +9,10 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useAuthContext } from "@/context/AuthContext";
-import { contentService, platformService } from "@/features";
+import { contentService, platformService, designService } from "@/features";
 import { isOk } from "@/core/result";
 import type { PlatformConnection, ContentItem } from "@/features/shared/types";
+import type { DesignStats } from "@/features";
 import { userStatsService, UserStats, UserActivity } from "@/services/userStats";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import Spacer from "@/components/Spacer";
@@ -191,25 +192,29 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
   const [content, setContent] = useState<ContentItem[]>([]);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [activities, setActivities] = useState<UserActivity[]>([]);
+  const [designStats, setDesignStats] = useState<DesignStats | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!user) return;
     
-    const [platformsResult, contentResult, statsData, activitiesData] = await Promise.all([
+    const [platformsResult, contentResult, statsData, activitiesData, designStatsResult] = await Promise.all([
       platformService.getConnected(),
       contentService.getAll(),
       userStatsService.getStats(user.id),
       userStatsService.getActivities(user.id, 10),
+      designService.getStats(),
     ]);
     
     const platformsData = isOk(platformsResult) ? platformsResult.data : [];
     const contentData = isOk(contentResult) ? contentResult.data : [];
+    const designStatsData = isOk(designStatsResult) ? designStatsResult.data : null;
     
     setPlatforms(platformsData);
     setContent(contentData);
     setUserStats(statsData);
     setActivities(activitiesData);
+    setDesignStats(designStatsData);
     
     const totalFollowersFromPlatforms = platformsData.reduce((sum, p) => sum + p.followerCount, 0);
     const totalPostsCount = contentData.length;
@@ -396,6 +401,63 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
             Tap the Studio tab to create your first post
           </ThemedText>
         </Pressable>
+      )}
+
+      <Spacer height={Spacing.lg} />
+
+      {designStats && designStats.totalDesigns > 0 && (
+        <>
+          <View style={styles.sectionHeader}>
+            <ThemedText type="title3">Product Designs</ThemedText>
+            <Pressable
+              onPress={() => navigation.navigate("Studio", { screen: "DesignList" } as any)}
+              style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+            >
+              <ThemedText type="link">See All</ThemedText>
+            </Pressable>
+          </View>
+
+          <Spacer height={Spacing.md} />
+
+          <View style={[styles.kpiGrid, { maxWidth: contentWidth, alignSelf: "center", width: "100%" }]}>
+            <View style={[styles.kpiCardWrapper, { width: isMobile ? "48%" : isTablet ? "31%" : "23%" }]}>
+              <KPICard
+                icon="grid"
+                value={designStats.totalDesigns.toString()}
+                label="Total Designs"
+                color={theme.primary}
+                onPress={() => navigation.navigate("Studio", { screen: "DesignList" } as any)}
+              />
+            </View>
+            <View style={[styles.kpiCardWrapper, { width: isMobile ? "48%" : isTablet ? "31%" : "23%" }]}>
+              <KPICard
+                icon="check-circle"
+                value={designStats.byStatus.ready.toString()}
+                label="Ready"
+                color={theme.success}
+                onPress={() => navigation.navigate("Studio", { screen: "DesignList" } as any)}
+              />
+            </View>
+            <View style={[styles.kpiCardWrapper, { width: isMobile ? "48%" : isTablet ? "31%" : "23%" }]}>
+              <KPICard
+                icon="send"
+                value={designStats.publishedCount.toString()}
+                label="Published"
+                color={theme.warning}
+                onPress={() => navigation.navigate("Studio", { screen: "DesignList" } as any)}
+              />
+            </View>
+            <View style={[styles.kpiCardWrapper, { width: isMobile ? "48%" : isTablet ? "31%" : "23%" }]}>
+              <KPICard
+                icon="loader"
+                value={designStats.byStatus.generating.toString()}
+                label="Generating"
+                color={theme.error}
+                onPress={() => navigation.navigate("Studio", { screen: "DesignList" } as any)}
+              />
+            </View>
+          </View>
+        </>
       )}
 
       <Spacer height={Spacing.xl} />
