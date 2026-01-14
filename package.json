@@ -1,7 +1,33 @@
 {
-  "name": "my-app",
+  "name": "emerald-drift",
+  "displayName": "Creator Studio Lite",
+  "version": "2.0.0",
+  "description": "A production-ready mobile application for multi-platform content creation and social media management",
   "main": "index.js",
-  "version": "1.0.0",
+  "author": "EmeraldDrift Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Krosebrook/EmeraldDrift.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Krosebrook/EmeraldDrift/issues"
+  },
+  "homepage": "https://github.com/Krosebrook/EmeraldDrift#readme",
+  "keywords": [
+    "social-media",
+    "content-creation",
+    "instagram",
+    "tiktok",
+    "youtube",
+    "linkedin",
+    "pinterest",
+    "analytics",
+    "scheduling",
+    "react-native",
+    "expo",
+    "mobile-app"
+  ],
   "scripts": {
     "dev": "EXPO_PACKAGER_PROXY_URL=https://$REPLIT_DEV_DOMAIN REACT_NATIVE_PACKAGER_HOSTNAME=$REPLIT_DEV_DOMAIN npx expo start",
     "start": "npx expo start",
@@ -10,7 +36,11 @@
     "web": "npx expo start --web",
     "lint": "npx expo lint",
     "check:format": "prettier --check \"**/*.{js,ts,tsx,css,json}\"",
-    "format": "prettier --write \"**/*.{js,ts,tsx,css,json}\""
+    "format": "prettier --write \"**/*.{js,ts,tsx,css,json}\"",
+    "test": "echo \"No test suite configured yet\" && exit 0",
+    "build:android": "eas build --platform android --profile production",
+    "build:ios": "eas build --platform ios --profile production",
+    "build:web": "npx expo export:web"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
