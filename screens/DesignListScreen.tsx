@@ -151,7 +151,7 @@ export default function DesignListScreen({ navigation }: DesignListScreenProps) 
             
             <View style={styles.metaRow}>
               <View style={styles.badge}>
-                <Feather name={categoryInfo.icon as any} size={12} color={theme.textSecondary} />
+                <Feather name={categoryInfo.icon as keyof typeof Feather.glyphMap} size={12} color={theme.textSecondary} />
                 <ThemedText type="caption" secondary style={styles.badgeText}>
                   {categoryInfo.name}
                 </ThemedText>
@@ -167,7 +167,7 @@ export default function DesignListScreen({ navigation }: DesignListScreenProps) 
             <Spacer height={Spacing.xs} />
             
             <View style={styles.statusRow}>
-              <Feather name={statusIcon as any} size={14} color={statusColor} />
+              <Feather name={statusIcon as keyof typeof Feather.glyphMap} size={14} color={statusColor} />
               <ThemedText type="caption" style={{ color: statusColor, marginLeft: 4 }}>
                 {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
               </ThemedText>
@@ -275,8 +275,8 @@ export default function DesignListScreen({ navigation }: DesignListScreenProps) 
         data={filteredDesigns}
         keyExtractor={(item) => item.id}
         renderItem={renderDesignCard}
-        numColumns={isMobile ? 1 : 2}
-        key={isMobile ? "mobile" : "desktop"}
+        numColumns={numColumns}
+        key={numColumns}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={loading ? null : renderEmpty}
         onRefresh={loadDesigns}

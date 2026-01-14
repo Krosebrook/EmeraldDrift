@@ -22,7 +22,7 @@ import type { StudioStackParamList } from "@/navigation/StudioStackNavigator";
 
 type DesignDetailScreenProps = {
   navigation: NativeStackNavigationProp<StudioStackParamList, "DesignDetail">;
-  route: RouteProp<{ DesignDetail: { designId: string } }, "DesignDetail">;
+  route: RouteProp<StudioStackParamList, "DesignDetail">;
 };
 
 export default function DesignDetailScreen({ navigation, route }: DesignDetailScreenProps) {
