@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import { StyleSheet, View, Alert, Platform, Linking } from "react-native";
+import { StyleSheet, View, Alert, Platform } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import * as MediaLibrary from "expo-media-library";
+import { File, Paths } from "expo-file-system";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { ScreenKeyboardAwareScrollView } from "@/components/ScreenKeyboardAwareScrollView";
@@ -182,18 +184,31 @@ export default function MerchStudioScreen({ navigation }: MerchStudioScreenProps
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        Alert.alert("Success", "Download started!");
       } else {
-        Alert.alert(
-          "Download",
-          "Your mockup has been generated! Use the share button to save it to your device.",
-          [{ text: "OK" }]
-        );
-      }
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+        if (status !== "granted") {
+          Alert.alert(
+            "Permission Required",
+            "Please allow access to your photo library to save mockups."
+          );
+          return;
+        }
 
-      if (Platform.OS !== "web") {
+        const base64Data = mockupResult.mockupImage.replace(/^data:image\/\w+;base64,/, "");
+        const fileName = `mockup-${selectedProduct?.id || "design"}-${Date.now()}.png`;
+        const file = new File(Paths.cache, fileName);
+        
+        const uint8Array = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
+        await file.write(uint8Array);
+
+        await MediaLibrary.createAssetAsync(file.uri);
+        
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Alert.alert("Saved!", "Mockup saved to your photo library.");
       }
     } catch (err) {
+      console.error("Download error:", err);
       Alert.alert("Download Failed", "Could not save the mockup. Please try again.");
     }
   };
@@ -209,16 +224,27 @@ export default function MerchStudioScreen({ navigation }: MerchStudioScreenProps
             text: "Check out my product mockup!",
           });
         } else {
-          Alert.alert("Share", "Copy the mockup image to share it.");
+          Alert.alert("Share", "Right-click the image to copy or save it.");
         }
       } else {
-        Alert.alert(
-          "Share",
-          "Mockup generated successfully! Long-press the image to save or share.",
-          [{ text: "OK" }]
-        );
+        const base64Data = mockupResult.mockupImage.replace(/^data:image\/\w+;base64,/, "");
+        const fileName = `mockup-share-${Date.now()}.png`;
+        const file = new File(Paths.cache, fileName);
+        
+        const uint8Array = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
+        await file.write(uint8Array);
+
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+        if (status === "granted") {
+          await MediaLibrary.createAssetAsync(file.uri);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          Alert.alert("Saved!", "Mockup saved to your photo library. You can share it from there.");
+        } else {
+          Alert.alert("Save to Gallery", "Enable photo library access in Settings to save mockups.");
+        }
       }
     } catch (err) {
+      console.error("Share error:", err);
       Alert.alert("Share Failed", "Could not share the mockup.");
     }
   };

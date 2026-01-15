@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { StyleSheet, View, Pressable, Alert, Platform, ActivityIndicator, TextInput, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import * as SecureStore from "expo-secure-store";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { ScreenScrollView } from "@/components/ScreenScrollView";
@@ -10,10 +9,9 @@ import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuthContext } from "@/context/AuthContext";
+import { merchService } from "@/features";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import Spacer from "@/components/Spacer";
-
-const GEMINI_API_KEY_STORAGE = "gemini_api_key";
 
 type SettingsScreenProps = {
   navigation: NativeStackNavigationProp<any, "Settings">;
@@ -79,10 +77,8 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
 
   const checkGeminiApiKey = async () => {
     try {
-      if (Platform.OS !== "web") {
-        const key = await SecureStore.getItemAsync(GEMINI_API_KEY_STORAGE);
-        setHasGeminiKey(!!key);
-      }
+      const hasKey = await merchService.hasGeminiApiKey();
+      setHasGeminiKey(hasKey);
     } catch {
       setHasGeminiKey(false);
     }
@@ -96,9 +92,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
 
     setIsSavingApiKey(true);
     try {
-      if (Platform.OS !== "web") {
-        await SecureStore.setItemAsync(GEMINI_API_KEY_STORAGE, apiKeyInput.trim());
-      }
+      await merchService.setGeminiApiKey(apiKeyInput.trim());
       setHasGeminiKey(true);
       setShowApiKeyModal(false);
       setApiKeyInput("");
@@ -133,9 +127,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
 
     if (await confirmRemove()) {
       try {
-        if (Platform.OS !== "web") {
-          await SecureStore.deleteItemAsync(GEMINI_API_KEY_STORAGE);
-        }
+        await merchService.removeGeminiApiKey();
         setHasGeminiKey(false);
         if (Platform.OS !== "web") {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

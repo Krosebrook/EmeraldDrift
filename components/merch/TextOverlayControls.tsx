@@ -23,13 +23,13 @@ const FONTS = [
   { id: "rounded", name: "Rounded", family: "Arial Rounded MT Bold" },
 ];
 
-const COLORS = [
-  "#FFFFFF",
-  "#000000",
-  "#8B5CF6",
-  "#EF4444",
-  "#F59E0B",
-  "#10B981",
+const getColors = (theme: any) => [
+  theme.text,
+  theme.backgroundDefault,
+  theme.primary,
+  theme.error,
+  theme.warning,
+  theme.success,
   "#3B82F6",
   "#EC4899",
 ];
@@ -48,6 +48,7 @@ function TextOverlayItem({
   onRemove: () => void;
 }) {
   const { theme } = useTheme();
+  const availableColors = getColors(theme);
 
   return (
     <View style={[styles.overlayItem, { backgroundColor: theme.backgroundSecondary }]}>
@@ -140,21 +141,21 @@ function TextOverlayItem({
           Color
         </ThemedText>
         <View style={styles.colorOptions}>
-          {COLORS.map((color) => (
+          {availableColors.map((color, index) => (
             <Pressable
-              key={color}
+              key={`${color}-${index}`}
               onPress={() => onUpdate({ color })}
               style={[
                 styles.colorOption,
                 { backgroundColor: color },
-                overlay.color === color && styles.colorOptionSelected,
+                overlay.color === color && { borderColor: theme.primary },
               ]}
             >
               {overlay.color === color && (
                 <Feather
                   name="check"
                   size={12}
-                  color={color === "#FFFFFF" ? "#000000" : "#FFFFFF"}
+                  color={index === 0 ? theme.backgroundDefault : theme.text}
                 />
               )}
             </Pressable>
@@ -363,8 +364,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "transparent",
   },
-  colorOptionSelected: {
-    borderColor: "#8B5CF6",
+  colorOptionActive: {
+    borderWidth: 2,
   },
   styleOptions: {
     flexDirection: "row",

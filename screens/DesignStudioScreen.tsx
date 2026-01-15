@@ -283,8 +283,8 @@ export default function DesignStudioScreen({ navigation }: DesignStudioScreenPro
           style={[styles.modeCard, { backgroundColor: theme.cardBackground }]}
           onPress={() => navigation.navigate("MerchStudio")}
         >
-          <View style={[styles.modeIcon, { backgroundColor: "#F97316" + "20" }]}>
-            <Feather name="shopping-bag" size={32} color="#F97316" />
+          <View style={[styles.modeIcon, { backgroundColor: theme.warning + "20" }]}>
+            <Feather name="shopping-bag" size={32} color={theme.warning} />
           </View>
           <ThemedText style={styles.modeTitle}>Merch Studio</ThemedText>
           <ThemedText secondary type="caption" style={styles.modeDescription}>
