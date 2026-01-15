@@ -1,5 +1,6 @@
-import React from "react";
-import { View, StyleSheet, Image, Pressable } from "react-native";
+import React, { useState } from "react";
+import { View, StyleSheet, Pressable } from "react-native";
+import { Image } from "expo-image";
 import { Feather } from "@expo/vector-icons";
 import Animated, {
   useAnimatedStyle,
@@ -8,6 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
+import { Skeleton } from "@/components/Skeleton";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import type { MerchProduct } from "@/features/merch/types";
@@ -23,6 +25,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 export function ProductCard({ product, selected = false, onSelect }: ProductCardProps) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
+  const [isLoading, setIsLoading] = useState(true);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -51,11 +54,21 @@ export function ProductCard({ product, selected = false, onSelect }: ProductCard
         animatedStyle,
       ]}
     >
-      <Image
-        source={{ uri: product.placeholderImage }}
-        style={styles.image}
-        resizeMode="cover"
-      />
+      <View style={styles.imageWrapper}>
+        {isLoading && (
+          <View style={styles.imagePlaceholder}>
+            <Skeleton width="100%" height={120} borderRadius={0} />
+          </View>
+        )}
+        <Image
+          source={{ uri: product.placeholderImage }}
+          style={[styles.image, isLoading && styles.imageHidden]}
+          contentFit="cover"
+          transition={200}
+          onLoadEnd={() => setIsLoading(false)}
+          cachePolicy="memory-disk"
+        />
+      </View>
 
       {selected && (
         <View style={[styles.checkBadge, { backgroundColor: theme.primary }]}>
@@ -87,10 +100,25 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     marginBottom: Spacing.sm,
   },
+  imageWrapper: {
+    position: "relative",
+    width: "100%",
+    height: 120,
+  },
+  imagePlaceholder: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   image: {
     width: "100%",
     height: 120,
     backgroundColor: "#f0f0f0",
+  },
+  imageHidden: {
+    opacity: 0,
   },
   checkBadge: {
     position: "absolute",

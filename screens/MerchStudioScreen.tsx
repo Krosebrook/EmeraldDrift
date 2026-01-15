@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { StyleSheet, View, Alert, Platform } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { StyleSheet, View, Alert, Platform, Linking } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as MediaLibrary from "expo-media-library";
@@ -11,15 +11,13 @@ import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
 import {
   ProductGrid,
-  ProductGridCompact,
   StyleSelector,
-  StyleSelectorCompact,
   MerchPreview,
   UploadArea,
   TextOverlayControls,
 } from "@/components/merch";
 import { useTheme } from "@/hooks/useTheme";
-import { merchService, getErrorSuggestion } from "@/features";
+import { merchService, getErrorSuggestion, preferencesService } from "@/features";
 import type {
   MerchProduct,
   MerchProductType,
@@ -173,6 +171,43 @@ export default function MerchStudioScreen({ navigation }: MerchStudioScreenProps
     handleGenerate();
   };
 
+  const saveImageToLibrary = async (base64Image: string, fileName: string): Promise<boolean> => {
+    const { status, canAskAgain } = await MediaLibrary.requestPermissionsAsync();
+    
+    if (status !== "granted") {
+      if (!canAskAgain && Platform.OS !== "web") {
+        Alert.alert(
+          "Permission Required",
+          "Photo library access is needed to save mockups. Please enable it in Settings.",
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Open Settings",
+              onPress: async () => {
+                try {
+                  await Linking.openSettings();
+                } catch {}
+              },
+            },
+          ]
+        );
+      } else {
+        Alert.alert(
+          "Permission Required",
+          "Please allow access to your photo library to save mockups."
+        );
+      }
+      return false;
+    }
+
+    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
+    const file = new File(Paths.cache, fileName);
+    await file.write(base64Data, { encoding: "base64" });
+
+    await MediaLibrary.createAssetAsync(file.uri);
+    return true;
+  };
+
   const handleDownload = async () => {
     if (!mockupResult?.mockupImage) return;
 
@@ -186,26 +221,13 @@ export default function MerchStudioScreen({ navigation }: MerchStudioScreenProps
         document.body.removeChild(link);
         Alert.alert("Success", "Download started!");
       } else {
-        const { status } = await MediaLibrary.requestPermissionsAsync();
-        if (status !== "granted") {
-          Alert.alert(
-            "Permission Required",
-            "Please allow access to your photo library to save mockups."
-          );
-          return;
-        }
-
-        const base64Data = mockupResult.mockupImage.replace(/^data:image\/\w+;base64,/, "");
         const fileName = `mockup-${selectedProduct?.id || "design"}-${Date.now()}.png`;
-        const file = new File(Paths.cache, fileName);
+        const saved = await saveImageToLibrary(mockupResult.mockupImage, fileName);
         
-        const uint8Array = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
-        await file.write(uint8Array);
-
-        await MediaLibrary.createAssetAsync(file.uri);
-        
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Alert.alert("Saved!", "Mockup saved to your photo library.");
+        if (saved) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          Alert.alert("Saved!", "Mockup saved to your photo library.");
+        }
       }
     } catch (err) {
       console.error("Download error:", err);
@@ -227,20 +249,12 @@ export default function MerchStudioScreen({ navigation }: MerchStudioScreenProps
           Alert.alert("Share", "Right-click the image to copy or save it.");
         }
       } else {
-        const base64Data = mockupResult.mockupImage.replace(/^data:image\/\w+;base64,/, "");
         const fileName = `mockup-share-${Date.now()}.png`;
-        const file = new File(Paths.cache, fileName);
+        const saved = await saveImageToLibrary(mockupResult.mockupImage, fileName);
         
-        const uint8Array = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
-        await file.write(uint8Array);
-
-        const { status } = await MediaLibrary.requestPermissionsAsync();
-        if (status === "granted") {
-          await MediaLibrary.createAssetAsync(file.uri);
+        if (saved) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           Alert.alert("Saved!", "Mockup saved to your photo library. You can share it from there.");
-        } else {
-          Alert.alert("Save to Gallery", "Enable photo library access in Settings to save mockups.");
         }
       }
     } catch (err) {

@@ -35,7 +35,7 @@ export type {
   ProductVariant,
 } from "./designs";
 
-export { merchService, getErrorSuggestion, geminiService, MERCH_PRODUCTS, getProductById, getProductsByCategory, getPopularProducts, getAllCategories } from "./merch";
+export { merchService, getErrorSuggestion, geminiService, preferencesService, MERCH_PRODUCTS, getProductById, getProductsByCategory, getPopularProducts, getAllCategories } from "./merch";
 export type {
   MerchService,
   MerchProduct,
