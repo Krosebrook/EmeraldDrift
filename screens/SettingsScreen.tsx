@@ -1,15 +1,19 @@
-import React, { useState } from "react";
-import { StyleSheet, View, Pressable, Alert, Platform, ActivityIndicator } from "react-native";
+import React, { useState, useEffect } from "react";
+import { StyleSheet, View, Pressable, Alert, Platform, ActivityIndicator, TextInput, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import * as SecureStore from "expo-secure-store";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
+import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuthContext } from "@/context/AuthContext";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import Spacer from "@/components/Spacer";
+
+const GEMINI_API_KEY_STORAGE = "gemini_api_key";
 
 type SettingsScreenProps = {
   navigation: NativeStackNavigationProp<any, "Settings">;
@@ -64,6 +68,83 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
   const { user, signOut, deleteAccount } = useAuthContext();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [hasGeminiKey, setHasGeminiKey] = useState(false);
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [apiKeyInput, setApiKeyInput] = useState("");
+  const [isSavingApiKey, setIsSavingApiKey] = useState(false);
+
+  useEffect(() => {
+    checkGeminiApiKey();
+  }, []);
+
+  const checkGeminiApiKey = async () => {
+    try {
+      if (Platform.OS !== "web") {
+        const key = await SecureStore.getItemAsync(GEMINI_API_KEY_STORAGE);
+        setHasGeminiKey(!!key);
+      }
+    } catch {
+      setHasGeminiKey(false);
+    }
+  };
+
+  const handleSaveApiKey = async () => {
+    if (!apiKeyInput.trim()) {
+      Alert.alert("Error", "Please enter your API key.");
+      return;
+    }
+
+    setIsSavingApiKey(true);
+    try {
+      if (Platform.OS !== "web") {
+        await SecureStore.setItemAsync(GEMINI_API_KEY_STORAGE, apiKeyInput.trim());
+      }
+      setHasGeminiKey(true);
+      setShowApiKeyModal(false);
+      setApiKeyInput("");
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      Alert.alert("Success", "Gemini API key saved securely.");
+    } catch {
+      Alert.alert("Error", "Failed to save API key. Please try again.");
+    } finally {
+      setIsSavingApiKey(false);
+    }
+  };
+
+  const handleRemoveApiKey = async () => {
+    const confirmRemove = () => {
+      return new Promise<boolean>((resolve) => {
+        if (Platform.OS === "web") {
+          resolve(window.confirm("Remove Gemini API key?"));
+        } else {
+          Alert.alert(
+            "Remove API Key",
+            "This will disable AI mockup generation. Continue?",
+            [
+              { text: "Cancel", onPress: () => resolve(false), style: "cancel" },
+              { text: "Remove", onPress: () => resolve(true), style: "destructive" },
+            ]
+          );
+        }
+      });
+    };
+
+    if (await confirmRemove()) {
+      try {
+        if (Platform.OS !== "web") {
+          await SecureStore.deleteItemAsync(GEMINI_API_KEY_STORAGE);
+        }
+        setHasGeminiKey(false);
+        if (Platform.OS !== "web") {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+      } catch {
+        Alert.alert("Error", "Failed to remove API key.");
+      }
+    }
+  };
 
   const handleSignOut = async () => {
     if (Platform.OS === "web") {
@@ -178,6 +259,18 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
         label="Privacy & Security"
         description="Manage your data and privacy settings"
         onPress={() => navigation.navigate("Privacy")}
+      />
+
+      <Spacer height={Spacing.lg} />
+
+      <ThemedText type="title3" style={styles.sectionTitle}>AI & Integrations</ThemedText>
+      <Spacer height={Spacing.sm} />
+
+      <SettingsRow
+        icon="cpu"
+        label="Gemini API Key"
+        description={hasGeminiKey ? "Key configured - AI mockups enabled" : "Add key to enable AI mockups"}
+        onPress={() => hasGeminiKey ? handleRemoveApiKey() : setShowApiKeyModal(true)}
       />
 
       <Spacer height={Spacing.lg} />
@@ -300,6 +393,64 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
       </View>
 
       <Spacer height={Spacing.xl} />
+
+      <Modal
+        visible={showApiKeyModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowApiKeyModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: theme.cardBackground }]}>
+            <View style={styles.modalHeader}>
+              <ThemedText type="title3">Add Gemini API Key</ThemedText>
+              <Pressable onPress={() => setShowApiKeyModal(false)} hitSlop={8}>
+                <Feather name="x" size={24} color={theme.text} />
+              </Pressable>
+            </View>
+
+            <ThemedText type="body" secondary style={styles.modalDescription}>
+              Get your API key from Google AI Studio to enable AI-powered mockup generation.
+            </ThemedText>
+
+            <TextInput
+              style={[
+                styles.apiKeyInput,
+                {
+                  backgroundColor: theme.backgroundSecondary,
+                  color: theme.text,
+                  borderColor: theme.border,
+                },
+              ]}
+              value={apiKeyInput}
+              onChangeText={setApiKeyInput}
+              placeholder="Enter your Gemini API key"
+              placeholderTextColor={theme.textSecondary}
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+
+            <View style={styles.modalActions}>
+              <Button
+                variant="secondary"
+                onPress={() => setShowApiKeyModal(false)}
+                style={{ flex: 1 }}
+              >
+                Cancel
+              </Button>
+              <Spacer width={Spacing.sm} />
+              <Button
+                onPress={handleSaveApiKey}
+                disabled={isSavingApiKey || !apiKeyInput.trim()}
+                style={{ flex: 1 }}
+              >
+                {isSavingApiKey ? "Saving..." : "Save Key"}
+              </Button>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScreenScrollView>
   );
 }
@@ -331,5 +482,38 @@ const styles = StyleSheet.create({
   },
   footerText: {
     marginBottom: Spacing.xs,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: Spacing.lg,
+  },
+  modalContent: {
+    width: "100%",
+    maxWidth: 400,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  modalDescription: {
+    marginBottom: Spacing.lg,
+  },
+  apiKeyInput: {
+    borderWidth: 1,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.md,
+    fontSize: 16,
+    marginBottom: Spacing.lg,
+  },
+  modalActions: {
+    flexDirection: "row",
   },
 });

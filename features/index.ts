@@ -34,3 +34,22 @@ export type {
   PublishResult,
   ProductVariant,
 } from "./designs";
+
+export { merchService, getErrorSuggestion, geminiService, MERCH_PRODUCTS, getProductById, getProductsByCategory, getPopularProducts, getAllCategories } from "./merch";
+export type {
+  MerchService,
+  MerchProduct,
+  MerchProductType,
+  StylePreference,
+  MerchGenerationRequest,
+  MerchGenerationResult,
+  MerchDesignState,
+  TextOverlay,
+  AIProvider,
+  AspectRatio,
+  ImageSize,
+  GeminiModel,
+  CacheStats,
+  UsageMetrics,
+} from "./merch";
+export { STYLE_INFO, CATEGORY_INFO as MERCH_CATEGORY_INFO } from "./merch";

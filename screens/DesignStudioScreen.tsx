@@ -276,6 +276,21 @@ export default function DesignStudioScreen({ navigation }: DesignStudioScreenPro
             Upload your own design files from your device
           </ThemedText>
         </Pressable>
+
+        <Spacer height={Spacing.base} />
+
+        <Pressable
+          style={[styles.modeCard, { backgroundColor: theme.cardBackground }]}
+          onPress={() => navigation.navigate("MerchStudio")}
+        >
+          <View style={[styles.modeIcon, { backgroundColor: "#F97316" + "20" }]}>
+            <Feather name="shopping-bag" size={32} color="#F97316" />
+          </View>
+          <ThemedText style={styles.modeTitle}>Merch Studio</ThemedText>
+          <ThemedText secondary type="caption" style={styles.modeDescription}>
+            Create product mockups with AI (T-shirts, mugs, posters & more)
+          </ThemedText>
+        </Pressable>
       </View>
 
       {recentDesigns.length > 0 ? (

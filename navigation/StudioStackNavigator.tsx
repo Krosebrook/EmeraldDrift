@@ -5,6 +5,7 @@ import StudioScreen from "@/screens/StudioScreen";
 import ScheduleScreen from "@/screens/ScheduleScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
 import DesignStudioScreen from "@/screens/DesignStudioScreen";
+import MerchStudioScreen from "@/screens/MerchStudioScreen";
 import PublishDesignScreen from "@/screens/PublishDesignScreen";
 import PlatformSettingsScreen from "@/screens/PlatformSettingsScreen";
 import { useTheme } from "@/hooks/useTheme";
@@ -21,6 +22,7 @@ export type StudioStackParamList = {
   };
   Settings: undefined;
   DesignStudio: undefined;
+  MerchStudio: undefined;
   PublishDesign: { designId: string };
   PlatformSettings: { platform: DesignPlatform };
 };
@@ -53,6 +55,11 @@ export default function StudioStackNavigator() {
         name="DesignStudio"
         component={DesignStudioScreen}
         options={{ headerTitle: "Design Studio" }}
+      />
+      <Stack.Screen
+        name="MerchStudio"
+        component={MerchStudioScreen}
+        options={{ headerTitle: "Merch Studio" }}
       />
       <Stack.Screen
         name="PublishDesign"
