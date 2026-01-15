@@ -370,6 +370,22 @@ export default function StudioScreen({ navigation }: StudioScreenProps) {
         <Feather name="chevron-right" size={18} color="#FFFFFF" style={{ marginLeft: "auto" }} />
       </Pressable>
 
+      <Spacer height={Spacing.base} />
+
+      <Pressable
+        onPress={() => navigation.navigate("DesignList")}
+        style={({ pressed }) => [
+          styles.aiButton,
+          { backgroundColor: theme.backgroundDefault, borderWidth: 2, borderColor: theme.success, opacity: pressed ? 0.9 : 1 },
+        ]}
+      >
+        <Feather name="folder" size={18} color={theme.success} />
+        <ThemedText style={{ color: theme.success, marginLeft: 8, fontWeight: "600" }}>
+          My Designs
+        </ThemedText>
+        <Feather name="chevron-right" size={18} color={theme.success} style={{ marginLeft: "auto" }} />
+      </Pressable>
+
       <Spacer height={Spacing.lg} />
 
       <View style={styles.mediaSection}>

@@ -329,6 +329,19 @@ export default function DesignStudioScreen({ navigation }: DesignStudioScreenPro
               </View>
             </Card>
           ))}
+          <Spacer height={Spacing.base} />
+          <Pressable
+            onPress={() => navigation.navigate("DesignList")}
+            style={({ pressed }) => [
+              styles.viewAllButton,
+              { borderColor: theme.primary, opacity: pressed ? 0.9 : 1 },
+            ]}
+          >
+            <ThemedText style={{ color: theme.primary, fontWeight: "600" }}>
+              View All Designs
+            </ThemedText>
+            <Feather name="arrow-right" size={18} color={theme.primary} />
+          </Pressable>
         </>
       ) : null}
     </View>
@@ -737,5 +750,14 @@ const styles = StyleSheet.create({
   },
   resultButton: {
     flex: 1,
+  },
+  viewAllButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 2,
+    gap: Spacing.xs,
   },
 });
