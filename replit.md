@@ -14,6 +14,7 @@ Creator Studio Lite is a comprehensive social media management platform built wi
 - **Team Collaboration**: Role-based permissions with workspace management
 - **Smart Scheduling**: Schedule posts with optimal timing recommendations
 - **Media Library**: Asset management with favorites and tagging
+- **Merch Studio (PoDGen)**: AI-powered product mockup generator using Google Gemini for Print-on-Demand merchandise visualization
 
 ## Architecture
 
@@ -26,7 +27,8 @@ Creator Studio Lite is a comprehensive social media management platform built wi
 │   ├── content/        # Content management (CRUD, publish, schedule)
 │   ├── platforms/      # Platform connections (connect, disconnect)
 │   ├── analytics/      # Analytics snapshots and metrics
-│   └── team/           # Team collaboration and roles
+│   ├── team/           # Team collaboration and roles
+│   └── merch/          # Merch Studio with Gemini AI mockup generation
 ├── core/               # Core infrastructure (errors, result, validation)
 ├── context/            # React contexts (Auth, Team)
 ├── hooks/              # React hooks (useTheme, useResponsive, useAuth)
