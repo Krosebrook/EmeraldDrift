@@ -21,9 +21,11 @@ Creator Studio Lite is a comprehensive social media management platform built wi
 ### Module Structure
 
 ```
+├── server/             # Express backend for Replit Auth
+│   └── index.js        # Server with session management and auth endpoints
 ├── features/           # Feature-first domain modules
 │   ├── shared/         # Shared types, repository factory, Result pattern
-│   ├── auth/           # Authentication (secure storage, session management)
+│   ├── auth/           # Authentication (Replit OAuth, secure storage, API client)
 │   ├── content/        # Content management (CRUD, publish, schedule)
 │   ├── platforms/      # Platform connections (connect, disconnect)
 │   ├── analytics/      # Analytics snapshots and metrics
@@ -240,7 +242,7 @@ try {
 ```
 Root
 ├── Auth (unauthenticated)
-│   ├── Landing, Login, SignUp, ForgotPassword
+│   ├── Landing, Login, SignUp, ForgotPassword, ReplitAuth (modal)
 └── Main (authenticated)
     ├── Dashboard → ContentList, ContentDetail
     ├── Studio
@@ -262,6 +264,16 @@ navigation.navigate("ContentDetail", { contentId: "123" });
 ```
 
 ## Recent Changes
+
+- **2026-01-16**: Replit Authentication Integration
+  - Added Express backend server (`server/index.js`) on port 3001 with session management
+  - Integrated `@replit/repl-auth` package for OAuth authentication
+  - Created API client service (`features/auth/api.ts`) for mobile-backend communication
+  - Built WebView-based OAuth login screen (`ReplitAuthScreen.tsx`) with modal presentation
+  - Updated auth service with hybrid approach: Replit Auth primary, local storage fallback
+  - Added "Sign in with Replit" button to LoginScreen with Replit brand color (#F26207)
+  - Backend endpoints: `/api/auth/me`, `/api/auth/login`, `/api/auth/logout`, `/api/health`
+  - Session management: express-session with 7-day cookie expiry
 
 - **2025-12-12**: Feature-first architecture refactor completed
   - Migrated all screens from deprecated `utils/storage.ts` to feature modules
