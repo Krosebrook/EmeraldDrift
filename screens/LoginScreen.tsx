@@ -180,24 +180,16 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
         <Spacer height={Spacing.lg} />
 
-        <View style={styles.socialButtons}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.socialButton,
-              { backgroundColor: theme.backgroundDefault, opacity: pressed ? 0.9 : 1 },
-            ]}
-          >
-            <Feather name="smartphone" size={20} color={theme.text} />
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [
-              styles.socialButton,
-              { backgroundColor: theme.backgroundDefault, opacity: pressed ? 0.9 : 1 },
-            ]}
-          >
-            <Feather name="mail" size={20} color={theme.text} />
-          </Pressable>
-        </View>
+        <Pressable
+          style={({ pressed }) => [
+            styles.replitButton,
+            { backgroundColor: "#F26207", opacity: pressed ? 0.9 : 1 },
+          ]}
+          onPress={() => navigation.navigate("ReplitAuth")}
+        >
+          <Feather name="code" size={20} color="#FFFFFF" />
+          <ThemedText style={styles.replitButtonText}>Sign in with Replit</ThemedText>
+        </Pressable>
       </View>
 
       <Spacer height={Spacing.xl} />
@@ -283,12 +275,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: Spacing.md,
   },
-  socialButton: {
-    width: 56,
-    height: 56,
-    borderRadius: BorderRadius.md,
+  replitButton: {
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: Spacing.sm,
+    height: Spacing.buttonHeight,
+    borderRadius: BorderRadius.md,
+  },
+  replitButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+    fontSize: 16,
   },
   footer: {
     flexDirection: "row",

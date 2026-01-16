@@ -5,6 +5,7 @@ import LandingScreen from "@/screens/LandingScreen";
 import LoginScreen from "@/screens/LoginScreen";
 import SignUpScreen from "@/screens/SignUpScreen";
 import ForgotPasswordScreen from "@/screens/ForgotPasswordScreen";
+import ReplitAuthScreen from "@/screens/ReplitAuthScreen";
 import { useTheme } from "@/hooks/useTheme";
 import { getCommonScreenOptions } from "@/navigation/screenOptions";
 
@@ -13,6 +14,7 @@ export type AuthStackParamList = {
   Login: undefined;
   SignUp: undefined;
   ForgotPassword: undefined;
+  ReplitAuth: undefined;
 };
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
@@ -45,6 +47,14 @@ export default function AuthStackNavigator() {
           headerShown: true,
           headerTitle: "",
           headerBackTitle: "Back",
+        }}
+      />
+      <Stack.Screen
+        name="ReplitAuth"
+        component={ReplitAuthScreen}
+        options={{
+          headerShown: false,
+          presentation: "modal",
         }}
       />
     </Stack.Navigator>
