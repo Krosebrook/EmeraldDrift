@@ -102,6 +102,11 @@ npm run dev
 - [**Testing Guide**](docs/TESTING.md) - Testing strategies and best practices
 - [**Deployment Guide**](docs/DEPLOYMENT.md) - Build and release process
 
+### Mobile Platform Guides
+- [**Google Play Store Guide**](docs/GOOGLE_PLAY_STORE.md) - Complete Play Store submission and compliance
+- [**Android Configuration**](docs/ANDROID_CONFIGURATION.md) - Native Android setup and configuration
+- [**Release Checklist**](docs/RELEASE_CHECKLIST.md) - Pre-release verification and quality assurance
+
 ### Additional Resources
 - [Design Guidelines](design_guidelines.md) - UI/UX specifications and design system
 - [Privacy Policy](docs/PRIVACY_POLICY.md) - Data handling and privacy practices
