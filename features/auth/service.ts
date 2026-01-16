@@ -1,10 +1,23 @@
 import { ok, err, isOk, AsyncResult } from "@/core/result";
 import { AppError } from "@/core/errors";
 import { authRepository, AuthTokens } from "./repository";
+import { authApi, ReplitUser } from "./api";
 import type { User } from "@/features/shared/types";
 
 function generateId(): string {
   return `user_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+}
+
+function replitUserToUser(replitUser: ReplitUser): User {
+  const now = new Date().toISOString();
+  return {
+    id: replitUser.id,
+    email: `${replitUser.name}@replit.user`,
+    name: replitUser.name,
+    avatar: replitUser.profileImage,
+    createdAt: now,
+    updatedAt: now,
+  };
 }
 
 export interface AuthState {
@@ -61,6 +74,14 @@ export interface AuthService {
 
 export const authService: AuthService = {
   async initialize(): AsyncResult<User | null, AppError> {
+    const apiResult = await authApi.getMe();
+    if (isOk(apiResult) && apiResult.data) {
+      const user = replitUserToUser(apiResult.data);
+      await authRepository.saveUser(user);
+      await authRepository.saveTokens({ accessToken: `replit_${apiResult.data.id}` });
+      return ok(user);
+    }
+
     const userResult = await authRepository.getUser();
     if (!isOk(userResult)) return userResult;
 
@@ -137,6 +158,7 @@ export const authService: AuthService = {
   },
 
   async logout(): AsyncResult<void, AppError> {
+    await authApi.logout();
     return authRepository.deleteTokens();
   },
 
