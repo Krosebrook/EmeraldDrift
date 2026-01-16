@@ -87,3 +87,12 @@ value = "0"
 
 [objectStorage]
 defaultBucketID = "replit-objstore-c2f99fb2-5d41-4728-a16f-d0eb66c05797"
+
+[userenv]
+
+[userenv.shared]
+REDIS_REST_API_READONLY = "AkUHAAIgcDIq2OadEkSPb-Lpwh_xBKdpwYowlnvXOujQ4Uyrly5jmA"
+REDIS_URL = "rediss://default:AUUHAAIncDJmM2ZlMTUwMjA2YTg0MzA0YTQ4MmEyY2E1NTQ5MjU1NnAyMTc2NzE@suitable-raven-17671.upstash.io:6379"
+GOOGLE_RECAPTCHA_SITE_KEY = "6LdS7oIrAAAAACZ94jq80_tm4eQpVTnCVydRLcF9"
+HCAPTCHA_SITE_KEY = "e09264cc-86c0-413c-a6f6-8d629ed671c0"
+STRIPE_TEST_PUSHABLE_SECRET = "pk_test_51SnpmjGR4O94PwZMsbm9qlF95uJWM4wiLgt7IA6NEPlKpgFinwGgMvAFPpZGq4M17YLIzKhPxM3BxZEaxZwlgYBJ004tGDDZ9f"
