@@ -95,15 +95,18 @@ npm run dev
 
 ## 📖 Documentation
 
+> **📚 [Complete Documentation Index](docs/INDEX.md)** - Navigate all documentation by role and topic
+
 ### Core Documentation
 - [**Architecture Guide**](docs/ARCHITECTURE.md) - System design, module structure, and ADRs
 - [**Contributing Guide**](docs/CONTRIBUTING.md) - Development workflow and coding standards
 - [**API Documentation**](docs/API.md) - Feature services and repository APIs
 - [**Testing Guide**](docs/TESTING.md) - Testing strategies and best practices
-- [**Deployment Guide**](docs/DEPLOYMENT.md) - Build and release process
+- [**Deployment Guide**](docs/DEPLOYMENT.md) - Build and release process overview
 
 ### Mobile Platform Guides
 - [**Google Play Store Guide**](docs/GOOGLE_PLAY_STORE.md) - Complete Play Store submission and compliance
+- [**Apple App Store Guide**](docs/APP_STORE_SUBMISSION.md) - Complete App Store submission for iOS
 - [**Android Configuration**](docs/ANDROID_CONFIGURATION.md) - Native Android setup and configuration
 - [**Release Checklist**](docs/RELEASE_CHECKLIST.md) - Pre-release verification and quality assurance
 

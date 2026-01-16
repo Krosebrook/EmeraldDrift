@@ -157,6 +157,8 @@ Build process takes 10-20 minutes. Monitor progress at [expo.dev/accounts/[accou
 
 ## Google Play Store
 
+> 📱 **For comprehensive Android/Play Store submission guide, see [GOOGLE_PLAY_STORE.md](GOOGLE_PLAY_STORE.md)**
+
 ### Initial Setup
 
 #### 1. Create App in Play Console
@@ -360,6 +362,8 @@ Google Play supports multiple release tracks:
 ---
 
 ## Apple App Store
+
+> 📱 **For comprehensive iOS/App Store submission guide, see [APP_STORE_SUBMISSION.md](APP_STORE_SUBMISSION.md)**
 
 ### Initial Setup
 
