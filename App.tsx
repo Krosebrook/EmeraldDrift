@@ -9,7 +9,9 @@ import { StatusBar } from "expo-status-bar";
 import RootNavigator from "@/navigation/RootNavigator";
 import { AuthProvider } from "@/context/AuthContext";
 import { TeamProvider } from "@/context/TeamContext";
+import { OfflineProvider } from "@/context/OfflineContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 
 export default function App() {
   return (
@@ -19,9 +21,12 @@ export default function App() {
           <KeyboardProvider>
             <AuthProvider>
               <TeamProvider>
-                <NavigationContainer>
-                  <RootNavigator />
-                </NavigationContainer>
+                <OfflineProvider>
+                  <NavigationContainer>
+                    <RootNavigator />
+                    <OfflineIndicator position="bottom" />
+                  </NavigationContainer>
+                </OfflineProvider>
               </TeamProvider>
             </AuthProvider>
             <StatusBar style="auto" />

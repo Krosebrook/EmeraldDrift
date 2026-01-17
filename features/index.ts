@@ -53,3 +53,14 @@ export type {
   UsageMetrics,
 } from "./merch";
 export { STYLE_INFO, CATEGORY_INFO as MERCH_CATEGORY_INFO } from "./merch";
+
+export { offlineStorage, syncQueue, syncService } from "./offline";
+export type {
+  NetworkStatus,
+  SyncOperation,
+  SyncOperationType,
+  SyncStatus,
+  OfflineState,
+  ConflictResolution,
+  SyncResult,
+} from "./offline";
