@@ -26,6 +26,7 @@ Creator Studio Lite is a comprehensive social media management platform built wi
 ├── features/           # Feature-first domain modules
 │   ├── shared/         # Shared types, repository factory, Result pattern
 │   ├── auth/           # Authentication (Replit OAuth, secure storage, API client)
+│   ├── offline/        # Offline mode (storage, sync queue, sync service)
 │   ├── content/        # Content management (CRUD, publish, schedule)
 │   ├── platforms/      # Platform connections (connect, disconnect)
 │   ├── analytics/      # Analytics snapshots and metrics
@@ -264,6 +265,18 @@ navigation.navigate("ContentDetail", { contentId: "123" });
 ```
 
 ## Recent Changes
+
+- **2026-01-17**: Offline Mode with Smart Sync
+  - Network status detection using `@react-native-community/netinfo`
+  - Offline storage service for local data persistence (`features/offline/storage.ts`)
+  - Sync queue manager for pending operations (`features/offline/syncQueue.ts`)
+  - Sync service with conflict resolution (`features/offline/syncService.ts`)
+  - Offline context provider for app-wide state (`context/OfflineContext.tsx`)
+  - Offline indicator UI component shows pending changes and sync button
+  - Sync notification component shows sync results (success/failure)
+  - `useOfflineContent` hook for offline-aware content operations
+  - Auto-sync when returning online or app foregrounded
+  - Queue operations offline, execute when back online
 
 - **2026-01-16**: Replit Authentication Integration
   - Added Express backend server (`server/index.js`) on port 3001 with session management

@@ -12,6 +12,7 @@ import { TeamProvider } from "@/context/TeamContext";
 import { OfflineProvider } from "@/context/OfflineContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { SyncNotification } from "@/components/SyncNotification";
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
                   <NavigationContainer>
                     <RootNavigator />
                     <OfflineIndicator position="bottom" />
+                    <SyncNotification />
                   </NavigationContainer>
                 </OfflineProvider>
               </TeamProvider>
