@@ -76,11 +76,15 @@ export function TeamProvider({ children }: TeamProviderProps) {
     setError(null);
 
     try {
-      const workspace = await teamService.initializeDefaultWorkspace(
-        user.id,
-        user.name,
-        user.email
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Team initialization timeout")), 10000)
       );
+
+      const workspace = await Promise.race([
+        teamService.initializeDefaultWorkspace(user.id, user.name, user.email),
+        timeoutPromise
+      ]) as any;
 
       if (requestId !== loadRequestRef.current || !isMountedRef.current) return;
 
@@ -115,6 +119,11 @@ export function TeamProvider({ children }: TeamProviderProps) {
       if (requestId !== loadRequestRef.current || !isMountedRef.current) return;
       console.error("Error loading team data:", err);
       setError("Failed to load team data");
+      // Set defaults even on error to allow app to continue
+      setCurrentWorkspace(null);
+      setWorkspaces([]);
+      setMembers([]);
+      setUserRole(null);
     } finally {
       if (requestId === loadRequestRef.current && isMountedRef.current) {
         setIsLoading(false);

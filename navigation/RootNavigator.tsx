@@ -75,6 +75,18 @@ export default function RootNavigator() {
     }
   }, [isAuthenticated, isLoading, user]);
 
+  // Add a maximum timeout to prevent infinite loading
+  useEffect(() => {
+    const maxLoadingTimeout = setTimeout(() => {
+      if (!isInitialized) {
+        console.warn("Force initializing app after timeout");
+        setIsInitialized(true);
+      }
+    }, 15000); // 15 second maximum
+
+    return () => clearTimeout(maxLoadingTimeout);
+  }, [isInitialized]);
+
   const completeOnboarding = useCallback(() => {
     setNeedsOnboarding(false);
   }, []);

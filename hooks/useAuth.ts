@@ -17,7 +17,16 @@ export function useAuth() {
   const loadUser = useCallback(async () => {
     dispatch({ type: "SET_LOADING", payload: true });
     try {
-      const result = await authService.initialize();
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Auth initialization timeout")), 10000)
+      );
+      
+      const result = await Promise.race([
+        authService.initialize(),
+        timeoutPromise
+      ]) as any;
+      
       if (isOk(result)) {
         dispatch({ type: "SET_USER", payload: result.data });
       } else {
