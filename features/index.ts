@@ -107,3 +107,39 @@ export type {
   WorkflowConnection,
   AgentOrchestrationResult,
 } from "./agents";
+
+export { 
+  unifiedMarketplaceService,
+  printifyService,
+  shopifyService,
+  etsyService,
+  wooCommerceService,
+  amazonService,
+  tiktokShopService
+} from "./marketplaces";
+export type { 
+  UnifiedMarketplaceService,
+  MarketplaceType,
+  MarketplaceConnection,
+  MarketplaceProduct,
+  MarketplaceOrder,
+  MarketplaceAnalytics,
+  SyncResult 
+} from "./marketplaces/service";
+
+export { orderListenerService } from "./orders";
+export type {
+  OrderEventType,
+  OrderEvent,
+  OrderEventHandler,
+  OrderListenerService
+} from "./orders/service";
+
+export { inventoryManagerService } from "./inventory";
+export type {
+  InventoryItem,
+  InventoryAlert,
+  InventoryAdjustment,
+  InventorySummary,
+  InventoryManagerService
+} from "./inventory/service";
