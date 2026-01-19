@@ -21,16 +21,22 @@
 
 ## Overview
 
-Creator Studio Lite is a production-ready mobile application built with Expo React Native for multi-platform content creation and publishing. The application enables creators to manage their social media presence across Instagram, TikTok, YouTube, LinkedIn, and Pinterest.
+Creator Studio Lite is a production-ready mobile application built with Expo React Native for multi-platform content creation, publishing, and e-commerce integration. The application enables creators to manage their social media presence across Instagram, TikTok, YouTube, LinkedIn, and Pinterest, while also selling products through 7+ e-commerce marketplaces.
 
 ### Core Capabilities
 
 - **Content Creation**: AI-powered content generation with draft management
-- **Multi-Platform Publishing**: Simultaneous posting across 5+ platforms
+- **Multi-Platform Publishing**: Simultaneous posting across 5+ social platforms
+- **E-Commerce Integration**: Unified management of 7 marketplaces (Shopify, Etsy, Amazon, Printify, TikTok Shop, WooCommerce)
+- **Merch Studio**: AI-powered product mockup generation for 18+ product types
+- **Design Studio**: Platform-specific design creation for 8+ digital platforms
+- **Agent Orchestration**: Create and chain autonomous AI agents for complex workflows
+- **AI Content Generation**: Advanced content generation for 8 content types
 - **Analytics Dashboard**: Real-time engagement metrics and growth tracking
 - **Team Collaboration**: Role-based permissions and workspace management
 - **Media Library**: Asset management with favorites and tagging
 - **Smart Scheduling**: Optimal posting time recommendations
+- **Offline Support**: Full offline mode with automatic sync
 
 ### Technical Stack
 
@@ -42,6 +48,8 @@ Creator Studio Lite is a production-ready mobile application built with Expo Rea
 | Persistence | AsyncStorage with Repository pattern |
 | Styling | StyleSheet with design tokens |
 | Type Safety | TypeScript 5.x strict mode |
+| AI Services | Google Gemini (merch/design) |
+| E-Commerce | Shopify, Etsy, Amazon, Printify, WooCommerce, TikTok Shop |
 
 ---
 
@@ -95,10 +103,94 @@ creator-studio-lite/
 │   ├── errors.ts               # Error classes and utilities
 │   ├── validation.ts           # Validation rules and utilities
 │   ├── platform.ts             # Platform configurations
-│   ├── theme.ts                # Design tokens (deprecated, use constants/theme)
+│   ├── http.ts                 # HTTP client utilities
+│   ├── cache.ts                # Caching utilities
+│   ├── featureFlags.ts         # Feature flag management
 │   └── index.ts                # Core module exports
 │
-├── repositories/               # Data access layer
+├── features/                   # Feature-first domain modules
+│   ├── shared/                 # Shared utilities and types
+│   │   ├── types.ts            # Common type definitions
+│   │   ├── repository.ts       # Repository factory
+│   │   ├── service.ts          # Service base classes
+│   │   └── utils.ts            # Shared utilities
+│   │
+│   ├── auth/                   # Authentication and session management
+│   │   ├── repository.ts       # Auth data persistence
+│   │   ├── service.ts          # Auth service
+│   │   └── index.ts            # Feature exports
+│   │
+│   ├── content/                # Content CRUD, publish, schedule
+│   │   ├── repository.ts       # Content persistence
+│   │   ├── service.ts          # Content operations
+│   │   └── index.ts            # Feature exports
+│   │
+│   ├── platforms/              # Social media platform connections
+│   │   ├── repository.ts       # Platform connection storage
+│   │   ├── service.ts          # Platform operations
+│   │   └── index.ts            # Feature exports
+│   │
+│   ├── marketplaces/           # E-commerce marketplace integrations
+│   │   ├── types/              # Marketplace type definitions
+│   │   ├── services/           # Platform-specific services
+│   │   │   ├── baseMarketplace.ts   # Abstract base service
+│   │   │   ├── shopify.ts           # Shopify integration
+│   │   │   ├── etsy.ts              # Etsy integration
+│   │   │   ├── amazon.ts            # Amazon integration
+│   │   │   ├── printify.ts          # Printify POD integration
+│   │   │   ├── woocommerce.ts       # WooCommerce integration
+│   │   │   └── tiktokShop.ts        # TikTok Shop integration
+│   │   ├── service.ts          # Unified marketplace service
+│   │   └── index.ts            # Feature exports
+│   │
+│   ├── merch/                  # Merchandise design and mockups
+│   │   ├── data/               # Product catalog
+│   │   ├── services/           # Merch-specific services
+│   │   │   ├── geminiService.ts     # Google Gemini integration
+│   │   │   └── preferencesService.ts # User preferences
+│   │   ├── types.ts            # Merch type definitions
+│   │   ├── service.ts          # Merch service
+│   │   └── index.ts            # Feature exports
+│   │
+│   ├── designs/                # Multi-platform design studio
+│   │   ├── repository.ts       # Design persistence
+│   │   ├── service.ts          # Design operations
+│   │   └── index.ts            # Feature exports
+│   │
+│   ├── agents/                 # AI agent orchestration
+│   │   ├── repository.ts       # Agent & workflow storage
+│   │   ├── service.ts          # Orchestration service
+│   │   └── index.ts            # Feature exports
+│   │
+│   ├── ai-generator/           # Advanced AI content generation
+│   │   ├── repository.ts       # Generation history
+│   │   ├── service.ts          # AI generation service
+│   │   └── index.ts            # Feature exports
+│   │
+│   ├── prompts/                # Prompt template management
+│   │   ├── repository.ts       # Prompt storage
+│   │   ├── service.ts          # Prompt operations
+│   │   └── index.ts            # Feature exports
+│   │
+│   ├── offline/                # Offline sync and conflict resolution
+│   │   ├── storage.ts          # Offline storage
+│   │   ├── syncQueue.ts        # Operation queue
+│   │   ├── syncService.ts      # Sync orchestration
+│   │   └── index.ts            # Feature exports
+│   │
+│   ├── analytics/              # Analytics snapshots and metrics
+│   │   ├── repository.ts       # Analytics persistence
+│   │   ├── service.ts          # Analytics operations
+│   │   └── index.ts            # Feature exports
+│   │
+│   ├── team/                   # Team collaboration and roles
+│   │   ├── repository.ts       # Team storage
+│   │   ├── service.ts          # Team operations
+│   │   └── index.ts            # Feature exports
+│   │
+│   └── index.ts                # All feature exports
+│
+├── repositories/               # Legacy repositories (deprecated)
 │   ├── contentRepository.ts    # Content CRUD with filtering/sorting
 │   ├── platformRepository.ts   # Platform connection management
 │   ├── analyticsRepository.ts  # Analytics data aggregation
@@ -145,8 +237,15 @@ creator-studio-lite/
 │   ├── ScreenScrollView.tsx    # Safe area scroll container
 │   └── ...                     # Other components
 │
-├── screens/                    # Screen components
-│   └── [Feature]Screen.tsx     # Feature screens
+├── screens/                    # Screen components (32 screens)
+│   ├── DashboardScreen.tsx     # Main dashboard
+│   ├── StudioScreen.tsx        # Content studio
+│   ├── MerchStudioScreen.tsx   # Merch mockup generation
+│   ├── DesignStudioScreen.tsx  # Design creation
+│   ├── AgentOrchestratorScreen.tsx  # Agent management
+│   ├── AIGeneratorScreen.tsx   # AI content generation
+│   ├── PromptStudioScreen.tsx  # Prompt templates
+│   └── [Feature]Screen.tsx     # Other feature screens
 │
 └── constants/                  # Design system constants
     └── theme.ts                # Colors, spacing, typography, shadows
@@ -158,8 +257,25 @@ creator-studio-lite/
 |--------|---------------|
 | `types/` | Single source of truth for TypeScript types |
 | `core/` | Framework-agnostic infrastructure |
-| `repositories/` | Data access with business logic |
+| `features/` | Feature-first domain modules with service + repository pattern |
+| `features/shared/` | Common utilities and base classes |
+| `features/auth/` | Authentication and session management |
+| `features/content/` | Social media content operations |
+| `features/platforms/` | Social media platform connections |
+| `features/marketplaces/` | E-commerce marketplace integrations |
+| `features/merch/` | Merchandise mockup generation |
+| `features/designs/` | Platform-specific design creation |
+| `features/agents/` | AI agent orchestration |
+| `features/ai-generator/` | Advanced AI content generation |
+| `features/prompts/` | Prompt template management |
+| `features/offline/` | Offline sync and conflict resolution |
+| `repositories/` | Legacy data access (being migrated to features/) |
 | `state/` | Global state management |
+| `hooks/` | Reusable React logic |
+| `services/` | External API integrations |
+| `navigation/` | Route configuration and transitions |
+| `components/` | Presentational UI elements |
+| `screens/` | Feature containers with layouts |
 | `hooks/` | Reusable React logic |
 | `services/` | External API integrations |
 | `navigation/` | Route configuration and transitions |
@@ -497,6 +613,334 @@ function App() {
 **Context**: Duplicate hooks in multiple locations  
 **Decision**: Single `/hooks` directory as source of truth  
 **Consequences**: Reduced duplication, clear import paths
+
+---
+
+## Marketplace Integration Architecture
+
+### Overview
+
+The marketplace integration system provides a unified interface for managing products, orders, and analytics across 7 e-commerce platforms.
+
+### Architecture Diagram
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│           Unified Marketplace Service (Facade)                │
+├──────────────────────────────────────────────────────────────┤
+│  • getAllConnections()  • getAllProducts()                    │
+│  • getAggregatedAnalytics()  • syncAll()                      │
+└─────────┬────────────────────────────────────────────────────┘
+          │
+          ▼
+┌──────────────────────────────────────────────────────────────┐
+│              Base Marketplace Service (Abstract)              │
+├──────────────────────────────────────────────────────────────┤
+│  Interface: connect(), getProducts(), getOrders(),            │
+│            updateInventory(), handleWebhook()                 │
+└─────────┬────────────────────────────────────────────────────┘
+          │
+          ├─────────────────┬─────────────────┬─────────────────┐
+          ▼                 ▼                 ▼                 ▼
+  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+  │   Shopify    │  │     Etsy     │  │    Amazon    │  │  TikTok Shop │
+  │   Service    │  │   Service    │  │   Service    │  │   Service    │
+  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘
+  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+  │   Printify   │  │ WooCommerce  │  │   (Future)   │
+  │   Service    │  │   Service    │  │              │
+  └──────────────┘  └──────────────┘  └──────────────┘
+```
+
+### Key Components
+
+1. **Unified Marketplace Service**: Facade providing consistent API across all marketplaces
+2. **Base Marketplace Service**: Abstract base class with common functionality
+3. **Platform-Specific Services**: Implementations for each marketplace
+4. **Webhook Handler**: Processes real-time events from marketplaces
+5. **Sync Manager**: Handles product/order synchronization
+
+### Data Flow
+
+```
+User Action → Unified Service → Platform Service → API Call → Platform
+                                      ↓
+                              Local Repository
+                                      ↓
+                               Cache & Sync Queue
+```
+
+### Key Design Patterns
+
+- **Facade Pattern**: Unified interface abstracts complexity
+- **Strategy Pattern**: Pluggable marketplace implementations
+- **Repository Pattern**: Consistent data access layer
+- **Observer Pattern**: Webhook event handling
+
+---
+
+## Design Studio Architecture
+
+### Overview
+
+The Design Studio enables creation of platform-specific designs with AI-powered image generation.
+
+### Architecture Diagram
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                    Design Studio Service                      │
+├──────────────────────────────────────────────────────────────┤
+│  create() | generateAIImage() | publish() | export()         │
+└─────────┬────────────────────────────────────────────────────┘
+          │
+    ┌─────┴──────┐
+    │            │
+    ▼            ▼
+┌─────────┐  ┌────────────────┐
+│ Design  │  │ AI Image Gen   │
+│Repository│ │ Service        │
+└─────────┘  │ (Gemini/OpenAI)│
+             └────────────────┘
+    │            │
+    └────────┬───┘
+             ▼
+    ┌─────────────────┐
+    │ Platform Config │
+    │   - Amazon KDP  │
+    │   - Etsy        │
+    │   - Instagram   │
+    │   - Pinterest   │
+    │   - Shopify     │
+    │   - etc.        │
+    └─────────────────┘
+```
+
+### Design Workflow
+
+1. **Select Platform & Template**: User chooses target platform
+2. **Generate Base Design**: AI creates initial design or uses template
+3. **Customize**: User adds text, adjusts colors, positioning
+4. **Preview**: Real-time preview with platform-specific dimensions
+5. **Export/Publish**: Download or publish directly to platform
+
+### Platform-Specific Dimensions
+
+Each platform has predefined dimension requirements:
+
+```typescript
+const PLATFORM_INFO = {
+  amazon_kdp: {
+    dimensions: { width: 6, height: 9, unit: 'inches' },
+    dpi: 300,
+    formats: ['PDF', 'JPEG']
+  },
+  etsy: {
+    dimensions: { width: 2000, height: 2000, unit: 'pixels' },
+    formats: ['PNG', 'JPEG']
+  },
+  // ...
+};
+```
+
+---
+
+## Agent Orchestration Architecture
+
+### Overview
+
+The Agent Orchestration system allows creation of autonomous AI agents that can be chained into workflows.
+
+### Architecture Diagram
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                 Agent Orchestration Service                   │
+├──────────────────────────────────────────────────────────────┤
+│  createAgent() | createWorkflow() | executeTask()             │
+│  executeWorkflow() | getAgentStats()                          │
+└─────────┬────────────────────────────────────────────────────┘
+          │
+    ┌─────┴──────┐
+    │            │
+    ▼            ▼
+┌─────────┐  ┌────────────────┐
+│ Agent   │  │   Workflow     │
+│Repository│ │   Executor     │
+└─────────┘  └────────────────┘
+    │            │
+    │            ▼
+    │    ┌──────────────────┐
+    │    │ Task Scheduler   │
+    │    │ - Parallel       │
+    │    │ - Sequential     │
+    │    │ - Conditional    │
+    │    └──────────────────┘
+    │            │
+    └────────┬───┘
+             ▼
+    ┌─────────────────┐
+    │ Agent Executor  │
+    │                 │
+    │ Capabilities:   │
+    │ - Text Gen      │
+    │ - Code Gen      │
+    │ - Data Analysis │
+    │ - Image Gen     │
+    │ - Translation   │
+    │ - etc.          │
+    └─────────────────┘
+```
+
+### Agent Capabilities
+
+Each agent has one or more capabilities:
+
+```typescript
+interface Agent {
+  id: string;
+  name: string;
+  capabilities: AgentCapability[];
+  config: {
+    temperature: number;
+    maxTokens: number;
+    model: string;
+  };
+}
+```
+
+### Workflow Execution
+
+Workflows can execute agents:
+- **Sequentially**: One after another
+- **Parallel**: Multiple agents simultaneously
+- **Conditionally**: Based on previous results
+
+```typescript
+interface WorkflowConnection {
+  from: string;  // Agent ID
+  to: string;    // Agent ID
+  condition: 'always' | 'on_success' | 'on_failure' | 'conditional';
+}
+```
+
+### Performance Tracking
+
+System tracks execution metrics:
+- Execution count per agent
+- Average execution time
+- Token usage and costs
+- Success/failure rates
+
+---
+
+## Offline Sync Architecture
+
+### Overview
+
+The offline sync system ensures data consistency when the app operates without network connectivity.
+
+### Architecture Diagram
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                      Application Layer                        │
+├──────────────────────────────────────────────────────────────┤
+│                 (User performs actions)                       │
+└─────────┬────────────────────────────────────────────────────┘
+          │
+          ▼
+┌──────────────────────────────────────────────────────────────┐
+│                   Network Status Monitor                      │
+├──────────────────────────────────────────────────────────────┤
+│  Online: Execute immediately                                  │
+│  Offline: Queue operation                                     │
+└─────────┬────────────────────────────────────────────────────┘
+          │
+          ├────────────┬─────────────┐
+          ▼            ▼             ▼
+   ┌──────────┐  ┌──────────┐  ┌──────────┐
+   │  Local   │  │  Sync    │  │ Conflict │
+   │ Storage  │  │  Queue   │  │ Resolver │
+   └──────────┘  └──────────┘  └──────────┘
+          │            │             │
+          └────────────┴─────────────┘
+                       │
+                       ▼ (When online)
+              ┌─────────────────┐
+              │  Sync Service   │
+              │                 │
+              │ - Batch sync    │
+              │ - Retry logic   │
+              │ - Validation    │
+              └─────────────────┘
+```
+
+### Sync Operations
+
+All modifying operations are tracked:
+
+```typescript
+interface SyncOperation {
+  id: string;
+  type: SyncOperationType;  // 'create' | 'update' | 'delete'
+  entityType: string;       // 'content' | 'product' | etc.
+  entityId: string;
+  data: any;
+  timestamp: string;
+  status: 'pending' | 'syncing' | 'synced' | 'failed';
+  retryCount: number;
+}
+```
+
+### Conflict Resolution
+
+When conflicts occur (e.g., same entity modified offline and online):
+
+```typescript
+type ConflictResolution = 
+  | 'use_local'      // Prefer offline changes
+  | 'use_remote'     // Prefer server changes
+  | 'merge'          // Attempt intelligent merge
+  | 'manual';        // Require user decision
+```
+
+### Sync Strategy
+
+1. **Optimistic Updates**: Apply changes locally immediately
+2. **Queue Operations**: Store for later sync when offline
+3. **Auto-Retry**: Retry failed operations with exponential backoff
+4. **Conflict Detection**: Compare timestamps and checksums
+5. **User Notification**: Alert user of sync status
+
+---
+
+## Merch Studio Architecture
+
+### Overview
+
+Merch Studio generates AI-powered product mockups using Google Gemini.
+
+### Key Components
+
+1. **Merch Service**: Handles mockup generation requests
+2. **Gemini Service**: Integrates with Google Gemini API
+3. **Cache System**: Caches responses to reduce API costs
+4. **Usage Tracker**: Monitors token usage and costs
+
+### Generation Flow
+
+```
+User Input → Merch Service → Gemini API → Image Generation
+                                ↓
+                         Cache Response
+                                ↓
+                         Return Mockup URL
+```
+
+### Product Catalog
+
+18+ product types supported with specific print areas and formats.
 
 ---
 
