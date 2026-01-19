@@ -1,6 +1,7 @@
 import { ok, err, AsyncResult } from "@/core/result";
 import { AppError } from "@/core/errors";
 import Constants from "expo-constants";
+import { Platform } from "react-native";
 
 export interface ReplitUser {
   id: string;
@@ -22,21 +23,45 @@ interface LoginResponse {
   user: ReplitUser;
 }
 
+const AUTH_TIMEOUT_MS = 5000;
+
 function getApiBaseUrl(): string {
-  if (__DEV__) {
-    const devDomain = Constants.expoConfig?.extra?.REPLIT_DEV_DOMAIN;
-    if (devDomain) {
-      return `https://${devDomain}`;
-    }
-    return "http://localhost:3001";
+  const devDomain = Constants.expoConfig?.extra?.REPLIT_DEV_DOMAIN;
+  if (devDomain) {
+    return `https://${devDomain}`;
   }
+  
+  if (Platform.OS === "web" && typeof window !== "undefined") {
+    return window.location.origin;
+  }
+  
   return "";
+}
+
+async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs: number = AUTH_TIMEOUT_MS): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    return response;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 export const authApi = {
   async getMe(): AsyncResult<ReplitUser | null, AppError> {
+    const baseUrl = getApiBaseUrl();
+    if (!baseUrl) {
+      return ok(null);
+    }
+    
     try {
-      const response = await fetch(`${getApiBaseUrl()}/api/auth/me`, {
+      const response = await fetchWithTimeout(`${baseUrl}/api/auth/me`, {
         credentials: "include",
       });
 
@@ -50,13 +75,23 @@ export const authApi = {
       const data: AuthResponse = await response.json();
       return ok(data.user);
     } catch (error) {
-      return err(AppError.network(error instanceof Error ? error.message : "Failed to check auth"));
+      if (error instanceof Error && error.name === "AbortError") {
+        console.warn("Auth check timed out, proceeding without auth");
+        return ok(null);
+      }
+      console.warn("Auth check failed:", error);
+      return ok(null);
     }
   },
 
   async login(): AsyncResult<ReplitUser, AppError> {
+    const baseUrl = getApiBaseUrl();
+    if (!baseUrl) {
+      return err(AppError.network("Unable to determine API URL"));
+    }
+    
     try {
-      const response = await fetch(`${getApiBaseUrl()}/api/auth/login`, {
+      const response = await fetchWithTimeout(`${baseUrl}/api/auth/login`, {
         credentials: "include",
       });
 
@@ -74,13 +109,21 @@ export const authApi = {
 
       return ok(data.user);
     } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return err(AppError.network("Login request timed out"));
+      }
       return err(AppError.network(error instanceof Error ? error.message : "Failed to login"));
     }
   },
 
   async logout(): AsyncResult<void, AppError> {
+    const baseUrl = getApiBaseUrl();
+    if (!baseUrl) {
+      return ok(undefined);
+    }
+    
     try {
-      const response = await fetch(`${getApiBaseUrl()}/api/auth/logout`, {
+      const response = await fetchWithTimeout(`${baseUrl}/api/auth/logout`, {
         method: "POST",
         credentials: "include",
       });
@@ -91,7 +134,8 @@ export const authApi = {
 
       return ok(undefined);
     } catch (error) {
-      return err(AppError.network(error instanceof Error ? error.message : "Failed to logout"));
+      console.warn("Logout failed:", error);
+      return ok(undefined);
     }
   },
 
