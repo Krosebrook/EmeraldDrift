@@ -10,10 +10,12 @@ import { ScreenKeyboardAwareScrollView } from "@/components/ScreenKeyboardAwareS
 import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
 import { AIAssistantModal } from "@/components/AIAssistantModal";
+import { FeatureErrorBoundary } from "@/components/FeatureErrorBoundary";
 import { useTheme } from "@/hooks/useTheme";
 import { useResponsive } from "@/hooks/useResponsive";
 import { contentService, platformService } from "@/features";
 import { isOk } from "@/core/result";
+import { validateContentCreate, getCharacterCount, CONTENT_LIMITS } from "@/core/contentValidation";
 import type { ContentItem, PlatformConnection, PlatformType } from "@/features/shared/types";
 import { Spacing, BorderRadius, Typography } from "@/constants/theme";
 import Spacer from "@/components/Spacer";
@@ -42,6 +44,7 @@ export default function StudioScreen({ navigation }: StudioScreenProps) {
   const [connectedPlatforms, setConnectedPlatforms] = useState<PlatformConnection[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{ title?: string; caption?: string; platforms?: string }>({});
   const autosaveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [lastSavedDraft, setLastSavedDraft] = useState<string | null>(null);
 
@@ -186,11 +189,26 @@ export default function StudioScreen({ navigation }: StudioScreenProps) {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+    clearFieldError("platforms");
     setSelectedPlatforms((prev) =>
       prev.includes(platformId)
         ? prev.filter((id) => id !== platformId)
         : [...prev, platformId]
     );
+  };
+
+  const validateForm = (): boolean => {
+    const validation = validateContentCreate({
+      title: title.trim(),
+      caption: caption.trim(),
+      platforms: selectedPlatforms as PlatformType[],
+    });
+    setFieldErrors(validation.fieldErrors);
+    return validation.valid;
+  };
+
+  const clearFieldError = (field: "title" | "caption" | "platforms") => {
+    setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
   const handleSaveDraft = async () => {
@@ -216,6 +234,7 @@ export default function StudioScreen({ navigation }: StudioScreenProps) {
     
     if (isOk(result)) {
       resetForm();
+      setFieldErrors({});
       Alert.alert("Draft Saved", "Your content has been saved as a draft.");
     } else {
       Alert.alert("Error", "Failed to save draft. Please try again.");
@@ -223,13 +242,10 @@ export default function StudioScreen({ navigation }: StudioScreenProps) {
   };
 
   const handlePublish = async () => {
-    if (selectedPlatforms.length === 0) {
-      Alert.alert("Select Platforms", "Please select at least one platform to publish to.");
-      return;
-    }
-
-    if (!title.trim() && !caption.trim()) {
-      Alert.alert("Add Content", "Please add a title or caption to publish.");
+    if (!validateForm()) {
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
       return;
     }
 
@@ -279,13 +295,10 @@ export default function StudioScreen({ navigation }: StudioScreenProps) {
   };
 
   const handleSchedule = () => {
-    if (selectedPlatforms.length === 0) {
-      Alert.alert("Select Platforms", "Please select at least one platform to schedule.");
-      return;
-    }
-
-    if (!title.trim() && !caption.trim()) {
-      Alert.alert("Add Content", "Please add a title or caption to schedule.");
+    if (!validateForm()) {
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
       return;
     }
 
@@ -302,7 +315,11 @@ export default function StudioScreen({ navigation }: StudioScreenProps) {
     setCaption("");
     setMediaUri(null);
     setSelectedPlatforms([]);
+    setFieldErrors({});
   };
+
+  const titleCharInfo = getCharacterCount(title, CONTENT_LIMITS.TITLE_MAX);
+  const captionCharInfo = getCharacterCount(caption, CONTENT_LIMITS.CAPTION_MAX);
 
   const handleSelectIdea = (idea: ContentIdea) => {
     setTitle(idea.title);
@@ -433,39 +450,88 @@ export default function StudioScreen({ navigation }: StudioScreenProps) {
       <Spacer height={Spacing.lg} />
 
       <View style={styles.fieldContainer}>
-        <ThemedText type="subhead" style={styles.label}>Title</ThemedText>
+        <View style={styles.labelRow}>
+          <ThemedText type="subhead" style={styles.label}>Title</ThemedText>
+          <ThemedText
+            type="caption"
+            style={[
+              styles.charCountInline,
+              { color: titleCharInfo.isOverLimit ? theme.error : theme.textSecondary },
+            ]}
+          >
+            {title.length}/{CONTENT_LIMITS.TITLE_MAX}
+          </ThemedText>
+        </View>
         <TextInput
-          style={inputStyle}
+          style={[
+            inputStyle,
+            fieldErrors.title ? { borderColor: theme.error } : null,
+          ]}
           value={title}
-          onChangeText={setTitle}
+          onChangeText={(text) => {
+            setTitle(text);
+            clearFieldError("title");
+          }}
           placeholder="Add a catchy title..."
           placeholderTextColor={theme.placeholder}
-          maxLength={100}
+          maxLength={CONTENT_LIMITS.TITLE_MAX}
         />
+        {fieldErrors.title ? (
+          <ThemedText type="caption" style={[styles.errorText, { color: theme.error }]}>
+            {fieldErrors.title}
+          </ThemedText>
+        ) : null}
       </View>
 
       <Spacer height={Spacing.base} />
 
       <View style={styles.fieldContainer}>
-        <ThemedText type="subhead" style={styles.label}>Caption</ThemedText>
+        <View style={styles.labelRow}>
+          <ThemedText type="subhead" style={styles.label}>Caption</ThemedText>
+          <ThemedText
+            type="caption"
+            style={[
+              styles.charCountInline,
+              { color: captionCharInfo.isOverLimit ? theme.error : theme.textSecondary },
+            ]}
+          >
+            {caption.length}/{CONTENT_LIMITS.CAPTION_MAX}
+          </ThemedText>
+        </View>
         <TextInput
-          style={[inputStyle, styles.captionInput]}
+          style={[
+            inputStyle,
+            styles.captionInput,
+            fieldErrors.caption ? { borderColor: theme.error } : null,
+          ]}
           value={caption}
-          onChangeText={setCaption}
+          onChangeText={(text) => {
+            setCaption(text);
+            clearFieldError("caption");
+          }}
           placeholder="Write your caption..."
           placeholderTextColor={theme.placeholder}
           multiline
           textAlignVertical="top"
-          maxLength={2200}
+          maxLength={CONTENT_LIMITS.CAPTION_MAX}
         />
-        <ThemedText type="caption" secondary style={styles.charCount}>
-          {caption.length}/2200
-        </ThemedText>
+        {fieldErrors.caption ? (
+          <ThemedText type="caption" style={[styles.errorText, { color: theme.error }]}>
+            {fieldErrors.caption}
+          </ThemedText>
+        ) : null}
       </View>
 
       <Spacer height={Spacing.lg} />
 
-      <ThemedText type="subhead" style={styles.label}>Platforms</ThemedText>
+      <View style={styles.labelRow}>
+        <ThemedText type="subhead" style={styles.label}>Platforms</ThemedText>
+        {fieldErrors.platforms ? (
+          <ThemedText type="caption" style={{ color: theme.error }}>
+            {fieldErrors.platforms}
+          </ThemedText>
+        ) : null}
+      </View>
       <Spacer height={Spacing.sm} />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.platformScroll}>
         {PLATFORM_OPTIONS.map((platform) => {
@@ -619,7 +685,6 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   label: {
-    marginBottom: Spacing.sm,
     fontWeight: "600",
   },
   input: {
@@ -636,6 +701,18 @@ const styles = StyleSheet.create({
   },
   charCount: {
     textAlign: "right",
+    marginTop: Spacing.xs,
+  },
+  labelRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.sm,
+  },
+  charCountInline: {
+    fontSize: 12,
+  },
+  errorText: {
     marginTop: Spacing.xs,
   },
   platformScroll: {

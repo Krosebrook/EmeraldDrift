@@ -8,3 +8,4 @@ export * from "./platform";
 export * from "./result";
 export * from "./theme";
 export * from "./validation";
+export * from "./contentValidation";

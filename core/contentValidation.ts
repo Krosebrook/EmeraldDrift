@@ -175,7 +175,7 @@ export function getCharacterCount(text: string, maxLength: number): { count: num
   };
 }
 
-export const LIMITS = {
+export const CONTENT_LIMITS = {
   TITLE_MAX: MAX_TITLE_LENGTH,
   CAPTION_MAX: MAX_CAPTION_LENGTH,
   TITLE_MIN: MIN_TITLE_LENGTH,
