@@ -9,6 +9,7 @@ export enum ErrorCode {
   SERVER_ERROR = "SERVER_ERROR",
   PERSISTENCE_ERROR = "PERSISTENCE_ERROR",
   UNKNOWN_ERROR = "UNKNOWN_ERROR",
+  NOT_IMPLEMENTED = "NOT_IMPLEMENTED",
 }
 
 export interface AppErrorOptions {

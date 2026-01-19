@@ -9,6 +9,7 @@ import {
   sanitizeString,
   clamp 
 } from "@/core/inputValidation";
+import { unifiedAI } from "@/services/unifiedAI";
 import { aiGeneratorRepository } from "./repository";
 import type { 
   GenerationRequest, 
@@ -105,7 +106,25 @@ Please format the content professionally and make it ready for immediate use.`;
       };
 
       const prompt = this.buildPrompt(sanitizedRequest);
-      const generatedText = await simulateAIGeneration(prompt, sanitizedRequest);
+      
+      const fallbackContent = generateFallbackContent(sanitizedRequest);
+      const aiResult = await unifiedAI.generateWithFallback(
+        prompt, 
+        {
+          systemPrompt: `You are an expert content creator specializing in ${sanitizedRequest.contentType} content. 
+Generate engaging, high-quality content that resonates with ${sanitizedRequest.audience} audiences.
+Use a ${sanitizedRequest.tone} tone throughout. Format the content professionally and make it ready for immediate use.`,
+          temperature: 0.8,
+          maxTokens: Math.max(sanitizedRequest.wordCount * 2, 1000),
+        },
+        fallbackContent
+      );
+      
+      if (!aiResult.success) {
+        return err(aiResult.error);
+      }
+
+      const generatedText = aiResult.data.content;
       
       const content: GeneratedContent = {
         id: generateId(),
@@ -113,7 +132,7 @@ Please format the content professionally and make it ready for immediate use.`;
         content: generatedText,
         wordCount: countWords(generatedText),
         generatedAt: new Date().toISOString(),
-        model: "gpt-4",
+        model: aiResult.data.model,
         isFavorite: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -178,12 +197,7 @@ Please format the content professionally and make it ready for immediate use.`;
   },
 };
 
-async function simulateAIGeneration(
-  prompt: string, 
-  request: GenerationRequest
-): Promise<string> {
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-  
+function generateFallbackContent(request: GenerationRequest): string {
   const templates: Record<string, string> = {
     marketing: `# ${request.topic}
 

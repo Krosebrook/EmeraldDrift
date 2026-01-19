@@ -1,19 +1,28 @@
-# Creator Studio Lite
+# POD Generator & E-Commerce Hub
 
 ## Overview
 
-Creator Studio Lite is a comprehensive social media management platform built with Expo React Native. It enables creators to manage their presence across Instagram, TikTok, YouTube, LinkedIn, and Pinterest with AI-powered content generation, analytics dashboards, and team collaboration. The project aims to be a production-ready mobile application for multi-platform content creation and publishing, offering a streamlined workflow for content creators. Key capabilities include:
+This is a comprehensive Print-on-Demand (POD) generator and e-commerce management platform built with Expo React Native. It serves as a complete POD hub with AI-powered content generation, product mockup creation, and multi-platform marketplace integrations. The platform functions as a Listener (monitoring orders/inventory), Manager (handling listings/fulfillment), and Prediction Engine (analytics/forecasting). Key capabilities include:
 
--   **Content Studio**: Create, edit, and manage content with AI assistance.
--   **Multi-Platform Publishing**: Publish to 5+ social platforms simultaneously.
--   **Analytics Dashboard**: Real-time metrics for engagement and growth.
--   **Team Collaboration**: Role-based permissions with workspace management.
--   **Smart Scheduling**: Schedule posts with optimal timing recommendations.
--   **Media Library**: Asset management with favorites and tagging.
--   **Merch Studio (PoDGen)**: AI-powered product mockup generator for Print-on-Demand merchandise visualization.
--   **AI Content Generator**: Advanced content generation with various content types, tones, and target audiences.
--   **Prompt Studio**: Create, manage, and execute reusable prompt templates with variable support.
--   **Agent Orchestrator**: Multi-agent management system with workflow creation and task execution.
+### Core POD Features
+-   **Merch Studio (PoDGen)**: AI-powered product mockup generator using Google Gemini for Print-on-Demand merchandise visualization.
+-   **AI Content Generator**: Real AI integration (OpenAI/Gemini) with 8 content types, 6 tones, 6 target audiences.
+-   **Product Design Tools**: Create and manage product designs for POD fulfillment.
+
+### Marketplace Integrations (7 Platforms)
+-   **Printify**: Full API integration for POD product creation, publishing, and order management.
+-   **Shopify**: Complete product/order sync with fulfillment support.
+-   **Amazon**: SP-API integration for order retrieval and marketplace participation.
+-   **Amazon KDP**: Support for Kindle Direct Publishing products.
+-   **Etsy**: Full listing management with receipt/order handling.
+-   **TikTok Shop**: Product and order management with fulfillment API.
+-   **WooCommerce**: REST API integration for self-hosted stores.
+
+### Platform Capabilities
+-   **Order Listener**: Real-time order monitoring with webhook support, polling, and event handlers.
+-   **Inventory Manager**: Stock tracking, reorder alerts, reservation system, and multi-marketplace sync.
+-   **Prediction Engine**: Sales forecasting, trend analysis, inventory forecasts, and seasonality patterns.
+-   **Unified Analytics**: Cross-platform revenue, orders, and product performance metrics.
 
 ## User Preferences
 
@@ -33,6 +42,12 @@ The project employs a feature-first domain module structure, emphasizing clear s
 ```
 ├── server/             # Express backend for Replit Auth
 ├── features/           # Feature-first domain modules (e.g., auth, content, analytics, merch, ai-generator, prompts, agents)
+│   ├── marketplaces/   # Unified marketplace integration layer
+│   │   ├── services/   # Platform-specific services (Printify, Shopify, Etsy, WooCommerce, Amazon, TikTok Shop)
+│   │   └── types/      # Shared marketplace types (products, orders, analytics)
+│   ├── orders/         # Order Listener service with real-time monitoring
+│   ├── inventory/      # Inventory Manager with alerts and reservations
+│   └── predictions/    # Prediction Engine for forecasting
 ├── core/               # Core infrastructure (errors, result, validation, featureFlags, cache, edgeCases)
 ├── __tests__/          # Test utilities and smoke test suites
 ├── context/            # React contexts (Auth, Team)
@@ -78,6 +93,27 @@ The project employs a feature-first domain module structure, emphasizing clear s
 -   **Prompt Studio**: Template management with variable support, 6 categories, and LLM settings configuration.
 -   **Agent Orchestrator**: Multi-agent creation with 6 capabilities and workflow creation with agent chaining.
 
+### Marketplace Integration Architecture
+
+-   **BaseMarketplaceService**: Abstract base class defining standard interface for all marketplace integrations.
+-   **Unified Marketplace Service**: Aggregates all marketplace services for cross-platform operations.
+-   **Credential Storage**: Secure API key/OAuth token storage using expo-secure-store.
+-   **Supported Operations**: Products CRUD, Orders retrieval, Analytics aggregation, Inventory sync.
+
+### Order & Inventory Systems
+
+-   **Order Listener**: Polling-based order monitoring (60s intervals) with webhook event processing.
+-   **Order Events**: Created, updated, fulfilled, shipped, delivered, cancelled, refunded.
+-   **Inventory Manager**: Stock levels, reservations, reorder points, and automated alerts.
+-   **Alert Types**: Low stock, out of stock, overstock, reorder needed.
+
+### Prediction Engine
+
+-   **Sales Predictions**: Product-level forecasts with confidence scores and impact factors.
+-   **Trend Analysis**: Rising/stable/declining trend detection with percentage changes.
+-   **Inventory Forecasts**: Days until stockout, reorder suggestions, urgency levels.
+-   **Seasonality Patterns**: Weekly, monthly, and yearly multipliers for accurate predictions.
+
 ## External Dependencies
 
 -   **Replit Auth**: For user authentication via `@replit/repl-auth`.
@@ -85,5 +121,5 @@ The project employs a feature-first domain module structure, emphasizing clear s
 -   **Expo React Native**: Core framework for mobile application development.
 -   **React Navigation**: For managing application navigation.
 -   **@react-native-community/netinfo**: For network status detection in offline mode.
--   **expo-secure-store**: For secure authentication storage.
+-   **expo-secure-store**: For secure authentication storage and API credential management.
 -   **express-session**: For session management in the Express backend.
