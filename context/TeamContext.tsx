@@ -92,9 +92,9 @@ export function TeamProvider({ children }: TeamProviderProps) {
     setIsLoading(true);
     setError(null);
 
+    let timeoutId: NodeJS.Timeout | undefined;
     try {
       // Add timeout to prevent infinite loading
-      let timeoutId: NodeJS.Timeout;
       const timeoutPromise = new Promise<never>((_, reject) => {
         timeoutId = setTimeout(
           () => reject(new Error("Team initialization timeout")),
@@ -108,7 +108,7 @@ export function TeamProvider({ children }: TeamProviderProps) {
       ]);
 
       // Clear timeout on success
-      clearTimeout(timeoutId!);
+      if (timeoutId) clearTimeout(timeoutId);
 
       if (requestId !== loadRequestRef.current || !isMountedRef.current) return;
 
@@ -143,6 +143,8 @@ export function TeamProvider({ children }: TeamProviderProps) {
         await teamService.updateMemberActivity(activeWorkspace.id, user.id);
       }
     } catch (err) {
+      // Clear timeout on error
+      if (timeoutId) clearTimeout(timeoutId);
       if (requestId !== loadRequestRef.current || !isMountedRef.current) return;
       console.error("Error loading team data:", err);
       setError("Failed to load team data");

@@ -16,9 +16,9 @@ export function useAuth() {
 
   const loadUser = useCallback(async () => {
     dispatch({ type: "SET_LOADING", payload: true });
+    let timeoutId: NodeJS.Timeout | undefined;
     try {
       // Add timeout to prevent infinite loading
-      let timeoutId: NodeJS.Timeout;
       const timeoutPromise = new Promise<never>((_, reject) => {
         timeoutId = setTimeout(
           () => reject(new Error("Auth initialization timeout")),
@@ -32,7 +32,7 @@ export function useAuth() {
       ]);
 
       // Clear timeout on success
-      clearTimeout(timeoutId!);
+      if (timeoutId) clearTimeout(timeoutId);
 
       if (isOk(result)) {
         dispatch({ type: "SET_USER", payload: result.data });
@@ -41,6 +41,8 @@ export function useAuth() {
         dispatch({ type: "SET_USER", payload: null });
       }
     } catch (error) {
+      // Clear timeout on error
+      if (timeoutId) clearTimeout(timeoutId);
       logError(error, { context: "useAuth.loadUser" });
       dispatch({ type: "SET_USER", payload: null });
     }
