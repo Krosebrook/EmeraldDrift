@@ -33,7 +33,8 @@ The project employs a feature-first domain module structure, emphasizing clear s
 ```
 ├── server/             # Express backend for Replit Auth
 ├── features/           # Feature-first domain modules (e.g., auth, content, analytics, merch, ai-generator, prompts, agents)
-├── core/               # Core infrastructure (errors, result, validation)
+├── core/               # Core infrastructure (errors, result, validation, featureFlags, cache, edgeCases)
+├── __tests__/          # Test utilities and smoke test suites
 ├── context/            # React contexts (Auth, Team)
 ├── hooks/              # React hooks (e.g., useTheme, useResponsive, useAuth)
 ├── services/           # External integrations (AI, notifications, userStats)
@@ -50,6 +51,9 @@ The project employs a feature-first domain module structure, emphasizing clear s
 -   **Result Type**: Explicit error handling.
 -   **Race Prevention**: Request token pattern for async operations.
 -   **Ref Intervals**: Stable autosave without interval resets.
+-   **Feature Flags**: Runtime configuration for AI provider switching (simulated/OpenAI/Gemini).
+-   **Smart Caching**: Hybrid cache with background refresh, 5-minute TTL, LRU eviction.
+-   **Graceful Degradation**: Service failure tracking with exponential backoff retry.
 
 ### UI/UX Decisions
 
@@ -60,10 +64,13 @@ The project employs a feature-first domain module structure, emphasizing clear s
 ### Technical Implementations
 
 -   **Error Handling**: Implemented with `Result` type for async operations and `FeatureErrorBoundary` for isolated error handling.
--   **Validation**: Comprehensive content validation system with field-level errors and real-time feedback.
+-   **Validation**: Comprehensive content and input validation with 20+ validators, sanitization utilities, and field-level errors.
 -   **Type-Safe Navigation**: Defined `ParamList` types for secure navigation.
 -   **Offline Mode**: Includes network status detection, offline storage, sync queue manager, and conflict resolution, with an auto-sync mechanism.
 -   **PWA Configuration**: Supports PWA with web manifest, mobile-first meta tags, and standalone display mode.
+-   **Edge Case Handling**: Debounce, throttle, memoize, retry with exponential backoff, safe JSON parsing, deep merge utilities.
+-   **Lazy Loading**: Suspense-based component loading for AI features with preloading capabilities.
+-   **Test Infrastructure**: Custom smoke test runner, test helpers, comprehensive assertion utilities.
 
 ### Feature Specifications
 
