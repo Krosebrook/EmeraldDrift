@@ -8,7 +8,7 @@ import { Colors } from "@/constants/theme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { logError } from "@/core/errors";
 
-type FeatureName = "content" | "analytics" | "platforms" | "offline" | "merch" | "team" | "general";
+type FeatureName = "content" | "analytics" | "platforms" | "offline" | "merch" | "team" | "general" | "ai-generator" | "prompts" | "agents";
 
 interface FeatureErrorBoundaryProps {
   children: ReactNode;
@@ -58,6 +58,21 @@ const featureConfig: Record<FeatureName, { icon: keyof typeof Feather.glyphMap; 
     icon: "alert-circle",
     title: "Something went wrong",
     defaultMessage: "An unexpected error occurred. Please try again.",
+  },
+  "ai-generator": {
+    icon: "cpu",
+    title: "AI Generator Error",
+    defaultMessage: "Unable to generate content. Please try again.",
+  },
+  prompts: {
+    icon: "terminal",
+    title: "Prompt Studio Error",
+    defaultMessage: "Unable to load prompts. Please try again.",
+  },
+  agents: {
+    icon: "activity",
+    title: "Agent Orchestrator Error",
+    defaultMessage: "Unable to load agents. Please try again.",
   },
 };
 
