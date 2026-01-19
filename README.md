@@ -5,9 +5,9 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)](https://www.typescriptlang.org)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> A production-ready mobile application for multi-platform content creation and social media management.
+> A production-ready mobile application for multi-platform content creation, social media management, and e-commerce integration.
 
-EmeraldDrift is a comprehensive social media management platform that empowers creators to manage their presence across Instagram, TikTok, YouTube, LinkedIn, and Pinterest. Built with Expo React Native, it features AI-powered content generation, real-time analytics, team collaboration, and smart scheduling capabilities.
+EmeraldDrift is a comprehensive creator platform that empowers content creators and online entrepreneurs to manage their presence across Instagram, TikTok, YouTube, LinkedIn, and Pinterest, while also selling products across 7+ e-commerce marketplaces. Built with Expo React Native, it features AI-powered content generation, merchandise design studio, print-on-demand integration, real-time analytics, team collaboration, and agent orchestration capabilities.
 
 ![Creator Studio Dashboard](docs/assets/dashboard-preview.png)
 
@@ -47,6 +47,64 @@ EmeraldDrift is a comprehensive social media management platform that empowers c
 - Search and filter capabilities
 - Cloud storage with CDN delivery
 - Duplicate detection
+
+### 🛍️ Marketplace Integrations
+- **7 E-Commerce Platforms**: Shopify, Etsy, Amazon (KDP + Products), TikTok Shop, Printify, WooCommerce
+- Unified product catalog management across all platforms
+- Real-time order tracking and fulfillment
+- Inventory sync and stock management
+- Aggregated analytics (revenue, orders, AOV)
+- Webhook support for instant updates
+- Multi-marketplace dashboard
+
+### 👕 Merch Studio
+- **18+ Product Types**: T-shirts, hoodies, mugs, tote bags, caps, phone cases, posters, canvas prints, notebooks, pillows, blankets, and more
+- AI-powered mockup generation with Google Gemini
+- **8 Style Presets**: Studio, Lifestyle, Editorial, Minimal, Dramatic, Vibrant, Vintage, Professional
+- Text overlay controls with customizable fonts/colors/positioning
+- Batch variation generation for A/B testing
+- Smart caching for faster generation
+- Usage metrics and cost tracking
+
+### 🎨 Design Studio
+- **8 Platform Templates**: Amazon KDP, Etsy, TikTok Shop, Instagram, Pinterest, Gumroad, Printify, Shopify
+- 27+ pre-built design templates
+- AI image generation for designs
+- Platform-specific dimension management
+- Design status tracking (draft → generating → ready → published)
+- Multi-format export (PNG, JPEG, PDF)
+- Direct platform publishing
+
+### 🤖 Agent Orchestration
+- Create and manage autonomous AI agents
+- **8 Agent Capabilities**: Text generation, code generation, data analysis, web search, image generation, summarization, translation, content moderation
+- Workflow orchestration with conditional logic
+- Chain multiple agents for complex tasks
+- Performance tracking (execution time, token usage)
+- Task execution history
+
+### 🧠 AI Content Generation
+- **8 Content Types**: Marketing copy, technical docs, social media posts, blog articles, email campaigns, press releases, video scripts, ad copy
+- **6 Tone Presets**: Professional, casual, enthusiastic, informative, persuasive, friendly
+- **6 Target Audiences**: General, B2B, B2C, Technical, Creative, Enterprise
+- Customizable word counts (250-2000 words)
+- Platform-specific optimization
+- Keyword integration
+
+### 📝 Prompt Management
+- Template-based prompt system
+- Variable substitution with type validation
+- LLM-specific settings (temperature, max tokens, top-p)
+- Prompt categorization and versioning
+- Execution result tracking
+- Reusable prompt library
+
+### 📴 Offline Support
+- Full offline mode with automatic sync
+- Conflict resolution strategies
+- Operation queuing and retry logic
+- Network status monitoring
+- Background sync when online
 
 ## 🚀 Quick Start
 
@@ -110,6 +168,13 @@ npm run dev
 - [**Android Configuration**](docs/ANDROID_CONFIGURATION.md) - Native Android setup and configuration
 - [**Release Checklist**](docs/RELEASE_CHECKLIST.md) - Pre-release verification and quality assurance
 
+### Feature Guides
+- [**Marketplace Integration Guide**](docs/MARKETPLACE_GUIDE.md) - Setup and manage 7+ e-commerce platforms
+- [**Merch Studio Guide**](docs/MERCH_GUIDE.md) - AI mockup generation and product design
+- [**Design Studio Guide**](docs/DESIGN_GUIDE.md) - Platform-specific design creation
+- [**Agent Orchestration Guide**](docs/AGENTS_GUIDE.md) - Create and chain AI agents
+- [**AI Content Generation Guide**](docs/AI_CONTENT_GUIDE.md) - Advanced content generation features
+
 ### Additional Resources
 - [Design Guidelines](design_guidelines.md) - UI/UX specifications and design system
 - [Privacy Policy](docs/PRIVACY_POLICY.md) - Data handling and privacy practices
@@ -124,16 +189,25 @@ EmeraldDrift/
 │   ├── shared/         # Shared types, repository factory, Result pattern
 │   ├── auth/           # Authentication and session management
 │   ├── content/        # Content CRUD, publish, schedule operations
-│   ├── platforms/      # Platform connections management
+│   ├── platforms/      # Social media platform connections
 │   ├── analytics/      # Analytics snapshots and metrics
-│   └── team/           # Team collaboration and roles
+│   ├── team/           # Team collaboration and roles
+│   ├── marketplaces/   # E-commerce integrations (7 platforms)
+│   ├── merch/          # Merchandise design and mockup generation
+│   ├── designs/        # Multi-platform design studio
+│   ├── agents/         # AI agent orchestration system
+│   ├── ai-generator/   # Advanced AI content generation
+│   ├── prompts/        # Prompt template management
+│   ├── offline/        # Offline sync and conflict resolution
+│   ├── orders/         # Order management across marketplaces
+│   └── inventory/      # Inventory sync and management
 ├── core/               # Core infrastructure (errors, result, validation)
 ├── context/            # React contexts (Auth, Team)
 ├── hooks/              # React hooks (useTheme, useResponsive, useAuth)
 ├── services/           # External integrations (AI, notifications)
 ├── navigation/         # Navigation configuration
 ├── components/         # Reusable UI components
-├── screens/            # Screen components
+├── screens/            # Screen components (32 screens)
 ├── constants/          # Design system (colors, spacing, typography)
 ├── assets/             # Images, fonts, and media files
 ├── docs/               # Documentation files
@@ -155,6 +229,8 @@ EmeraldDrift/
 | HTTP Client | Fetch API with Result pattern |
 | Notifications | Expo Notifications |
 | Media | Expo Image Picker & Image |
+| AI Services | Google Gemini (merch mockups) |
+| E-Commerce | Shopify, Etsy, Amazon, Printify, WooCommerce, TikTok Shop |
 
 ## 🔧 Available Scripts
 
@@ -263,8 +339,21 @@ Create a `.env.local` file in the root directory:
 EXPO_PUBLIC_API_URL=https://api.example.com
 EXPO_PUBLIC_API_KEY=your_api_key_here
 
-# OpenAI (for AI content generation)
+# AI Services
 EXPO_PUBLIC_OPENAI_API_KEY=sk-...
+EXPO_PUBLIC_GOOGLE_GEMINI_API_KEY=your_gemini_key_here
+
+# E-Commerce Marketplace API Keys
+EXPO_PUBLIC_SHOPIFY_API_KEY=your_shopify_key
+EXPO_PUBLIC_SHOPIFY_ADMIN_ACCESS_TOKEN=your_shopify_token
+EXPO_PUBLIC_ETSY_API_KEY=your_etsy_key
+EXPO_PUBLIC_AMAZON_ACCESS_KEY_ID=your_amazon_key
+EXPO_PUBLIC_AMAZON_SECRET_ACCESS_KEY=your_amazon_secret
+EXPO_PUBLIC_PRINTIFY_API_TOKEN=your_printify_token
+EXPO_PUBLIC_WOOCOMMERCE_CONSUMER_KEY=your_woo_key
+EXPO_PUBLIC_WOOCOMMERCE_CONSUMER_SECRET=your_woo_secret
+EXPO_PUBLIC_TIKTOK_SHOP_APP_KEY=your_tiktok_shop_key
+EXPO_PUBLIC_TIKTOK_SHOP_APP_SECRET=your_tiktok_shop_secret
 
 # Analytics
 EXPO_PUBLIC_ANALYTICS_ID=your_analytics_id
@@ -272,9 +361,14 @@ EXPO_PUBLIC_ANALYTICS_ID=your_analytics_id
 # Feature Flags
 EXPO_PUBLIC_ENABLE_AI_FEATURES=true
 EXPO_PUBLIC_ENABLE_TEAM_FEATURES=true
+EXPO_PUBLIC_ENABLE_MARKETPLACE_FEATURES=true
+EXPO_PUBLIC_ENABLE_MERCH_STUDIO=true
+EXPO_PUBLIC_ENABLE_AGENT_ORCHESTRATION=true
 ```
 
 ⚠️ **Never commit `.env.local` or files containing secrets to version control.**
+
+See [Marketplace Integration Guide](docs/MARKETPLACE_GUIDE.md) for detailed setup instructions for each platform.
 
 ## 🤝 Contributing
 
