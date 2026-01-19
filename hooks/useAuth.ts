@@ -18,17 +18,21 @@ export function useAuth() {
     dispatch({ type: "SET_LOADING", payload: true });
     try {
       // Add timeout to prevent infinite loading
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(
+      let timeoutId: NodeJS.Timeout;
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(
           () => reject(new Error("Auth initialization timeout")),
           10000,
-        ),
-      );
+        );
+      });
 
       const result = await Promise.race([
         authService.initialize(),
         timeoutPromise,
       ]);
+
+      // Clear timeout on success
+      clearTimeout(timeoutId!);
 
       if (isOk(result)) {
         dispatch({ type: "SET_USER", payload: result.data });
