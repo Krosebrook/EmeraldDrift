@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, createContext, useContext } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  createContext,
+  useContext,
+} from "react";
 import { ActivityIndicator, View, StyleSheet } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
@@ -57,7 +63,9 @@ export default function RootNavigator() {
       if (isAuthenticated && user) {
         try {
           await userStatsService.initializeUser(user.id);
-          const onboardingState = await userStatsService.getOnboardingState(user.id);
+          const onboardingState = await userStatsService.getOnboardingState(
+            user.id,
+          );
           const completed = onboardingState?.completed ?? false;
           setNeedsOnboarding(!completed);
         } catch (error) {
@@ -93,7 +101,12 @@ export default function RootNavigator() {
 
   if (isLoading || !isInitialized) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: theme.backgroundRoot }]}>
+      <View
+        style={[
+          styles.loadingContainer,
+          { backgroundColor: theme.backgroundRoot },
+        ]}
+      >
         <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
@@ -104,7 +117,10 @@ export default function RootNavigator() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {isAuthenticated ? (
           needsOnboarding ? (
-            <Stack.Screen name="Onboarding" component={OnboardingScreenWrapper} />
+            <Stack.Screen
+              name="Onboarding"
+              component={OnboardingScreenWrapper}
+            />
           ) : (
             <Stack.Screen name="Main" component={MainTabNavigator} />
           )

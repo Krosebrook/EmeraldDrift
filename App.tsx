@@ -28,7 +28,7 @@ export default function App() {
     async function prepare() {
       try {
         // Give contexts time to initialize
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       } catch (e) {
         console.warn("Error during app preparation:", e);
       } finally {

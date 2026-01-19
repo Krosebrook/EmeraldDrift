@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  ReactNode,
+} from "react";
 import { useAuthContext } from "./AuthContext";
 import {
   teamService,
@@ -23,8 +31,13 @@ interface TeamContextType {
   isLoading: boolean;
   error: string | null;
   switchWorkspace: (workspaceId: string) => Promise<void>;
-  createWorkspace: (name: string, description?: string) => Promise<Workspace | null>;
-  updateWorkspace: (updates: Partial<Omit<Workspace, "id" | "createdAt" | "ownerId">>) => Promise<boolean>;
+  createWorkspace: (
+    name: string,
+    description?: string,
+  ) => Promise<Workspace | null>;
+  updateWorkspace: (
+    updates: Partial<Omit<Workspace, "id" | "createdAt" | "ownerId">>,
+  ) => Promise<boolean>;
   deleteWorkspace: () => Promise<boolean>;
   inviteMember: (email: string, role: TeamRole) => Promise<InviteResult>;
   updateMemberRole: (memberId: string, newRole: TeamRole) => Promise<boolean>;
@@ -43,10 +56,14 @@ interface TeamProviderProps {
 export function TeamProvider({ children }: TeamProviderProps) {
   const { user, isAuthenticated } = useAuthContext();
 
-  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
+  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(
+    null,
+  );
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [members, setMembers] = useState<TeamMember[]>([]);
-  const [pendingInvitations, setPendingInvitations] = useState<TeamInvitation[]>([]);
+  const [pendingInvitations, setPendingInvitations] = useState<
+    TeamInvitation[]
+  >([]);
   const [userRole, setUserRole] = useState<TeamRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -77,25 +94,30 @@ export function TeamProvider({ children }: TeamProviderProps) {
 
     try {
       // Add timeout to prevent infinite loading
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Team initialization timeout")), 10000)
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error("Team initialization timeout")),
+          10000,
+        ),
       );
 
       const workspace = await Promise.race([
         teamService.initializeDefaultWorkspace(user.id, user.name, user.email),
-        timeoutPromise
-      ]) as any;
+        timeoutPromise,
+      ]);
 
       if (requestId !== loadRequestRef.current || !isMountedRef.current) return;
 
       const userWorkspaces = await teamService.getUserWorkspaces(user.id);
-      
+
       if (requestId !== loadRequestRef.current || !isMountedRef.current) return;
       setWorkspaces(userWorkspaces);
 
       const currentId = await teamService.getCurrentWorkspaceId();
       const activeWorkspace =
-        userWorkspaces.find((w) => w.id === currentId) || userWorkspaces[0] || workspace;
+        userWorkspaces.find((w) => w.id === currentId) ||
+        userWorkspaces[0] ||
+        workspace;
 
       if (requestId !== loadRequestRef.current || !isMountedRef.current) return;
       setCurrentWorkspace(activeWorkspace);
@@ -107,8 +129,9 @@ export function TeamProvider({ children }: TeamProviderProps) {
           teamService.getPendingInvitations(activeWorkspace.id),
         ]);
 
-        if (requestId !== loadRequestRef.current || !isMountedRef.current) return;
-        
+        if (requestId !== loadRequestRef.current || !isMountedRef.current)
+          return;
+
         setMembers(workspaceMembers);
         setUserRole(role);
         setPendingInvitations(invitations);
@@ -145,7 +168,7 @@ export function TeamProvider({ children }: TeamProviderProps) {
       const requestId = ++loadRequestRef.current;
 
       await teamService.setCurrentWorkspace(workspaceId);
-      
+
       if (requestId !== loadRequestRef.current || !isMountedRef.current) return;
       setCurrentWorkspace(workspace);
 
@@ -156,14 +179,14 @@ export function TeamProvider({ children }: TeamProviderProps) {
       ]);
 
       if (requestId !== loadRequestRef.current || !isMountedRef.current) return;
-      
+
       setMembers(workspaceMembers);
       setUserRole(role);
       setPendingInvitations(invitations);
 
       await teamService.updateMemberActivity(workspaceId, user.id);
     },
-    [user, workspaces]
+    [user, workspaces],
   );
 
   const createWorkspace = useCallback(
@@ -176,13 +199,15 @@ export function TeamProvider({ children }: TeamProviderProps) {
           user.id,
           user.name,
           user.email,
-          description
+          description,
         );
 
         setWorkspaces((prev) => [...prev, workspace]);
         setCurrentWorkspace(workspace);
 
-        const workspaceMembers = await teamService.getWorkspaceMembers(workspace.id);
+        const workspaceMembers = await teamService.getWorkspaceMembers(
+          workspace.id,
+        );
         setMembers(workspaceMembers);
         setUserRole("owner");
         setPendingInvitations([]);
@@ -193,26 +218,29 @@ export function TeamProvider({ children }: TeamProviderProps) {
         return null;
       }
     },
-    [user]
+    [user],
   );
 
   const updateWorkspace = useCallback(
     async (
-      updates: Partial<Omit<Workspace, "id" | "createdAt" | "ownerId">>
+      updates: Partial<Omit<Workspace, "id" | "createdAt" | "ownerId">>,
     ): Promise<boolean> => {
       if (!currentWorkspace) return false;
 
-      const updated = await teamService.updateWorkspace(currentWorkspace.id, updates);
+      const updated = await teamService.updateWorkspace(
+        currentWorkspace.id,
+        updates,
+      );
       if (updated) {
         setCurrentWorkspace(updated);
         setWorkspaces((prev) =>
-          prev.map((w) => (w.id === updated.id ? updated : w))
+          prev.map((w) => (w.id === updated.id ? updated : w)),
         );
         return true;
       }
       return false;
     },
-    [currentWorkspace]
+    [currentWorkspace],
   );
 
   const deleteWorkspace = useCallback(async (): Promise<boolean> => {
@@ -236,7 +264,7 @@ export function TeamProvider({ children }: TeamProviderProps) {
           currentWorkspace.id,
           email,
           role,
-          user.id
+          user.id,
         );
         if (result.invitation) {
           setPendingInvitations((prev) => [...prev, result.invitation!]);
@@ -248,7 +276,7 @@ export function TeamProvider({ children }: TeamProviderProps) {
         return { success: false, error: "unknown" };
       }
     },
-    [currentWorkspace, user]
+    [currentWorkspace, user],
   );
 
   const updateMemberRole = useCallback(
@@ -258,41 +286,46 @@ export function TeamProvider({ children }: TeamProviderProps) {
       const updated = await teamService.updateMemberRole(
         currentWorkspace.id,
         memberId,
-        newRole
+        newRole,
       );
       if (updated) {
         setMembers((prev) =>
-          prev.map((m) => (m.id === memberId ? updated : m))
+          prev.map((m) => (m.id === memberId ? updated : m)),
         );
         return true;
       }
       return false;
     },
-    [currentWorkspace]
+    [currentWorkspace],
   );
 
   const removeMember = useCallback(
     async (memberId: string): Promise<boolean> => {
       if (!currentWorkspace) return false;
 
-      const success = await teamService.removeMember(currentWorkspace.id, memberId);
+      const success = await teamService.removeMember(
+        currentWorkspace.id,
+        memberId,
+      );
       if (success) {
         setMembers((prev) => prev.filter((m) => m.id !== memberId));
       }
       return success;
     },
-    [currentWorkspace]
+    [currentWorkspace],
   );
 
   const cancelInvitation = useCallback(
     async (invitationId: string): Promise<boolean> => {
       const success = await teamService.cancelInvitation(invitationId);
       if (success) {
-        setPendingInvitations((prev) => prev.filter((i) => i.id !== invitationId));
+        setPendingInvitations((prev) =>
+          prev.filter((i) => i.id !== invitationId),
+        );
       }
       return success;
     },
-    []
+    [],
   );
 
   const hasPermission = useCallback(
@@ -300,7 +333,7 @@ export function TeamProvider({ children }: TeamProviderProps) {
       if (!userRole) return false;
       return teamService.hasPermission(userRole, permission);
     },
-    [userRole]
+    [userRole],
   );
 
   const value: TeamContextType = {
