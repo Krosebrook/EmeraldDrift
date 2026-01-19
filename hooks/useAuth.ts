@@ -16,8 +16,24 @@ export function useAuth() {
 
   const loadUser = useCallback(async () => {
     dispatch({ type: "SET_LOADING", payload: true });
+    let timeoutId: NodeJS.Timeout | undefined;
     try {
-      const result = await authService.initialize();
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(
+          () => reject(new Error("Auth initialization timeout")),
+          10000,
+        );
+      });
+
+      const result = await Promise.race([
+        authService.initialize(),
+        timeoutPromise,
+      ]);
+
+      // Clear timeout on success
+      if (timeoutId) clearTimeout(timeoutId);
+
       if (isOk(result)) {
         dispatch({ type: "SET_USER", payload: result.data });
       } else {
@@ -25,6 +41,8 @@ export function useAuth() {
         dispatch({ type: "SET_USER", payload: null });
       }
     } catch (error) {
+      // Clear timeout on error
+      if (timeoutId) clearTimeout(timeoutId);
       logError(error, { context: "useAuth.loadUser" });
       dispatch({ type: "SET_USER", payload: null });
     }
@@ -34,41 +52,47 @@ export function useAuth() {
     loadUser();
   }, [loadUser]);
 
-  const signIn = useCallback(async (email: string, password: string): Promise<boolean> => {
-    dispatch({ type: "SET_LOADING", payload: true });
-    try {
-      const result = await authService.login(email, password);
-      if (isOk(result)) {
-        dispatch({ type: "SET_USER", payload: result.data });
-        return true;
-      } else {
-        dispatch({ type: "SET_ERROR", payload: result.error });
+  const signIn = useCallback(
+    async (email: string, password: string): Promise<boolean> => {
+      dispatch({ type: "SET_LOADING", payload: true });
+      try {
+        const result = await authService.login(email, password);
+        if (isOk(result)) {
+          dispatch({ type: "SET_USER", payload: result.data });
+          return true;
+        } else {
+          dispatch({ type: "SET_ERROR", payload: result.error });
+          return false;
+        }
+      } catch (error) {
+        logError(error, { context: "useAuth.signIn" });
+        dispatch({ type: "SET_LOADING", payload: false });
         return false;
       }
-    } catch (error) {
-      logError(error, { context: "useAuth.signIn" });
-      dispatch({ type: "SET_LOADING", payload: false });
-      return false;
-    }
-  }, []);
+    },
+    [],
+  );
 
-  const signUp = useCallback(async (email: string, password: string, name: string): Promise<boolean> => {
-    dispatch({ type: "SET_LOADING", payload: true });
-    try {
-      const result = await authService.signup(email, password, name);
-      if (isOk(result)) {
-        dispatch({ type: "SET_USER", payload: result.data });
-        return true;
-      } else {
-        dispatch({ type: "SET_ERROR", payload: result.error });
+  const signUp = useCallback(
+    async (email: string, password: string, name: string): Promise<boolean> => {
+      dispatch({ type: "SET_LOADING", payload: true });
+      try {
+        const result = await authService.signup(email, password, name);
+        if (isOk(result)) {
+          dispatch({ type: "SET_USER", payload: result.data });
+          return true;
+        } else {
+          dispatch({ type: "SET_ERROR", payload: result.error });
+          return false;
+        }
+      } catch (error) {
+        logError(error, { context: "useAuth.signUp" });
+        dispatch({ type: "SET_LOADING", payload: false });
         return false;
       }
-    } catch (error) {
-      logError(error, { context: "useAuth.signUp" });
-      dispatch({ type: "SET_LOADING", payload: false });
-      return false;
-    }
-  }, []);
+    },
+    [],
+  );
 
   const signOut = useCallback(async (): Promise<void> => {
     try {
@@ -97,21 +121,24 @@ export function useAuth() {
     }
   }, []);
 
-  const updateProfile = useCallback(async (updates: Partial<User>): Promise<boolean> => {
-    try {
-      const result = await authService.updateProfile(updates);
-      if (isOk(result)) {
-        dispatch({ type: "SET_USER", payload: result.data });
-        return true;
-      } else {
-        dispatch({ type: "SET_ERROR", payload: result.error });
+  const updateProfile = useCallback(
+    async (updates: Partial<User>): Promise<boolean> => {
+      try {
+        const result = await authService.updateProfile(updates);
+        if (isOk(result)) {
+          dispatch({ type: "SET_USER", payload: result.data });
+          return true;
+        } else {
+          dispatch({ type: "SET_ERROR", payload: result.error });
+          return false;
+        }
+      } catch (error) {
+        logError(error, { context: "useAuth.updateProfile" });
         return false;
       }
-    } catch (error) {
-      logError(error, { context: "useAuth.updateProfile" });
-      return false;
-    }
-  }, []);
+    },
+    [],
+  );
 
   return {
     user: state.user,
