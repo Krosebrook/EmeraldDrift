@@ -64,3 +64,46 @@ export type {
   ConflictResolution,
   SyncResult,
 } from "./offline";
+
+export { aiGeneratorRepository, aiGeneratorService, CONTENT_TYPES, TONES, AUDIENCES, WORD_COUNTS } from "./ai-generator";
+export type {
+  AIGeneratorRepository,
+  AIGeneratorService,
+  ContentType,
+  ContentTone,
+  TargetAudience,
+  ContentTypeConfig,
+  GenerationRequest,
+  GeneratedContent,
+  GenerationHistory,
+  AIGeneratorState,
+} from "./ai-generator";
+
+export { promptRepository, promptService, PROMPT_CATEGORIES, VARIABLE_TYPES, DEFAULT_LLM_SETTINGS } from "./prompts";
+export type {
+  PromptRepository,
+  PromptService,
+  CreatePromptInput,
+  PromptTemplate,
+  PromptVariable,
+  PromptCategory,
+  VariableType,
+  PromptExecutionResult,
+  LLMSettings,
+} from "./prompts";
+
+export { agentRepository, agentService, AGENT_CAPABILITIES, DEFAULT_AGENT_CONFIG } from "./agents";
+export type {
+  AgentRepository,
+  AgentService,
+  CreateAgentInput,
+  CreateWorkflowInput,
+  Agent,
+  AgentTask,
+  AgentWorkflow,
+  AgentConfig,
+  AgentStatus,
+  AgentCapability,
+  WorkflowConnection,
+  AgentOrchestrationResult,
+} from "./agents";
