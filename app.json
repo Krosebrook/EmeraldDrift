@@ -51,7 +51,8 @@
       "display": "standalone",
       "orientation": "portrait",
       "startUrl": "/",
-      "bundler": "metro"
+      "bundler": "metro",
+      "preferRelatedApplications": false
     },
     "plugins": [
       [
