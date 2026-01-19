@@ -10,6 +10,9 @@ import DesignListScreen from "@/screens/DesignListScreen";
 import DesignDetailScreen from "@/screens/DesignDetailScreen";
 import PublishDesignScreen from "@/screens/PublishDesignScreen";
 import PlatformSettingsScreen from "@/screens/PlatformSettingsScreen";
+import AIGeneratorScreen from "@/screens/AIGeneratorScreen";
+import PromptStudioScreen from "@/screens/PromptStudioScreen";
+import AgentOrchestratorScreen from "@/screens/AgentOrchestratorScreen";
 import { useTheme } from "@/hooks/useTheme";
 import { getCommonScreenOptions } from "@/navigation/screenOptions";
 import type { DesignPlatform } from "@/features";
@@ -29,6 +32,9 @@ export type StudioStackParamList = {
   DesignDetail: { designId: string };
   PublishDesign: { designId: string };
   PlatformSettings: { platform: DesignPlatform };
+  AIGenerator: undefined;
+  PromptStudio: undefined;
+  AgentOrchestrator: undefined;
 };
 
 const Stack = createNativeStackNavigator<StudioStackParamList>();
@@ -84,6 +90,21 @@ export default function StudioStackNavigator() {
         name="PlatformSettings"
         component={PlatformSettingsScreen}
         options={{ headerTitle: "Platform Settings" }}
+      />
+      <Stack.Screen
+        name="AIGenerator"
+        component={AIGeneratorScreen}
+        options={{ headerTitle: "AI Content Generator" }}
+      />
+      <Stack.Screen
+        name="PromptStudio"
+        component={PromptStudioScreen}
+        options={{ headerTitle: "Prompt Studio" }}
+      />
+      <Stack.Screen
+        name="AgentOrchestrator"
+        component={AgentOrchestratorScreen}
+        options={{ headerTitle: "Agent Orchestrator" }}
       />
     </Stack.Navigator>
   );

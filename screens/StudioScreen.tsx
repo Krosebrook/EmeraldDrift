@@ -405,6 +405,58 @@ export default function StudioScreen({ navigation }: StudioScreenProps) {
 
       <Spacer height={Spacing.lg} />
 
+      <ThemedText type="subhead" secondary style={{ marginBottom: Spacing.sm }}>
+        Advanced AI Tools
+      </ThemedText>
+
+      <Pressable
+        onPress={() => navigation.navigate("AIGenerator")}
+        style={({ pressed }) => [
+          styles.aiButton,
+          { backgroundColor: "#6366F1", opacity: pressed ? 0.9 : 1 },
+        ]}
+      >
+        <Feather name="zap" size={18} color="#FFFFFF" />
+        <ThemedText style={{ color: "#FFFFFF", marginLeft: 8, fontWeight: "600" }}>
+          AI Content Generator
+        </ThemedText>
+        <Feather name="chevron-right" size={18} color="#FFFFFF" style={{ marginLeft: "auto" }} />
+      </Pressable>
+
+      <Spacer height={Spacing.base} />
+
+      <Pressable
+        onPress={() => navigation.navigate("PromptStudio")}
+        style={({ pressed }) => [
+          styles.aiButton,
+          { backgroundColor: "#8B5CF6", opacity: pressed ? 0.9 : 1 },
+        ]}
+      >
+        <Feather name="edit-3" size={18} color="#FFFFFF" />
+        <ThemedText style={{ color: "#FFFFFF", marginLeft: 8, fontWeight: "600" }}>
+          Prompt Studio
+        </ThemedText>
+        <Feather name="chevron-right" size={18} color="#FFFFFF" style={{ marginLeft: "auto" }} />
+      </Pressable>
+
+      <Spacer height={Spacing.base} />
+
+      <Pressable
+        onPress={() => navigation.navigate("AgentOrchestrator")}
+        style={({ pressed }) => [
+          styles.aiButton,
+          { backgroundColor: "#7C3AED", opacity: pressed ? 0.9 : 1 },
+        ]}
+      >
+        <Feather name="cpu" size={18} color="#FFFFFF" />
+        <ThemedText style={{ color: "#FFFFFF", marginLeft: 8, fontWeight: "600" }}>
+          Agent Orchestrator
+        </ThemedText>
+        <Feather name="chevron-right" size={18} color="#FFFFFF" style={{ marginLeft: "auto" }} />
+      </Pressable>
+
+      <Spacer height={Spacing.lg} />
+
       <View style={styles.mediaSection}>
         {mediaUri ? (
           <View style={[styles.mediaPreview, { backgroundColor: theme.backgroundSecondary }]}>
