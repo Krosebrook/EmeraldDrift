@@ -1,5 +1,14 @@
 import { ok, err, type AsyncResult } from "@/core/result";
 import { AppError, logError } from "@/core/errors";
+import { 
+  required, 
+  minLength, 
+  maxLength, 
+  range, 
+  validate,
+  sanitizeString,
+  clamp 
+} from "@/core/inputValidation";
 import { aiGeneratorRepository } from "./repository";
 import type { 
   GenerationRequest, 
@@ -65,16 +74,42 @@ Please format the content professionally and make it ready for immediate use.`;
 
   async generate(request: GenerationRequest): AsyncResult<GeneratedContent, AppError> {
     try {
-      if (!request.topic.trim()) {
-        return err(AppError.validation("Topic is required"));
+      const topic = sanitizeString(request.topic);
+      
+      const topicValidation = validate(topic, [
+        required("Topic"),
+        minLength(3, "Topic"),
+        maxLength(500, "Topic"),
+      ]);
+      
+      if (!topicValidation.valid) {
+        return err(AppError.validation(topicValidation.errors.join("; ")));
       }
+      
+      const wordCountValidation = validate(request.wordCount, [
+        range(50, 5000, "Word count"),
+      ]);
+      
+      if (!wordCountValidation.valid) {
+        return err(AppError.validation(wordCountValidation.errors.join("; ")));
+      }
+      
+      const sanitizedRequest: GenerationRequest = {
+        ...request,
+        topic,
+        wordCount: clamp(request.wordCount, 50, 5000),
+        keywords: request.keywords ? sanitizeString(request.keywords) : undefined,
+        additionalInstructions: request.additionalInstructions 
+          ? sanitizeString(request.additionalInstructions) 
+          : undefined,
+      };
 
-      const prompt = this.buildPrompt(request);
-      const generatedText = await simulateAIGeneration(prompt, request);
+      const prompt = this.buildPrompt(sanitizedRequest);
+      const generatedText = await simulateAIGeneration(prompt, sanitizedRequest);
       
       const content: GeneratedContent = {
         id: generateId(),
-        request,
+        request: sanitizedRequest,
         content: generatedText,
         wordCount: countWords(generatedText),
         generatedAt: new Date().toISOString(),
