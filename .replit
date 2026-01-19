@@ -74,9 +74,10 @@ ensurePreviewReachable = "/status"
 stack = "EXPO"
 
 [deployment]
-deploymentTarget = "static"
+deploymentTarget = "cloudrun"
 publicDir = "static-build"
 build = ["node", "scripts/build.js"]
+run = ["sh", "-c", "npm run start"]
 
 # Expo manifest headers
 [[deployment.responseHeaders]]
