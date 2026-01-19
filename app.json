@@ -41,7 +41,17 @@
     },
     "web": {
       "output": "single",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "name": "Creator Studio",
+      "shortName": "Creator",
+      "description": "Multi-platform content creation and social media management",
+      "lang": "en",
+      "themeColor": "#8B5CF6",
+      "backgroundColor": "#171717",
+      "display": "standalone",
+      "orientation": "portrait",
+      "startUrl": "/",
+      "bundler": "metro"
     },
     "plugins": [
       [
