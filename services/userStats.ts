@@ -96,11 +96,13 @@ export const userStatsService = {
   async initializeUser(userId: string): Promise<void> {
     const existingStats = await this.getStats(userId);
     if (!existingStats) {
-      await this.saveStats(userId, getDefaultStats());
-      await this.saveActivities(userId, []);
-      await this.savePlatformStats(userId, []);
-      await this.saveOnboardingState(userId, getDefaultOnboarding());
-      await this.saveTutorialState(userId, getDefaultTutorial());
+      await Promise.all([
+        this.saveStats(userId, getDefaultStats()),
+        this.saveActivities(userId, []),
+        this.savePlatformStats(userId, []),
+        this.saveOnboardingState(userId, getDefaultOnboarding()),
+        this.saveTutorialState(userId, getDefaultTutorial()),
+      ]);
     }
   },
 
