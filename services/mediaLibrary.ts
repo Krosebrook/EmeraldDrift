@@ -46,7 +46,12 @@ const extractFileName = (uri: string): string => {
 
 const getMediaType = (uri: string): "image" | "video" => {
   const lowerUri = uri.toLowerCase();
-  if (lowerUri.includes(".mp4") || lowerUri.includes(".mov") || lowerUri.includes(".avi") || lowerUri.includes(".webm")) {
+  if (
+    lowerUri.includes(".mp4") ||
+    lowerUri.includes(".mov") ||
+    lowerUri.includes(".avi") ||
+    lowerUri.includes(".webm")
+  ) {
     return "video";
   }
   return "image";
@@ -85,10 +90,10 @@ export const mediaLibraryService = {
       height?: number;
       duration?: number;
       fileSize?: number;
-    }
+    },
   ): Promise<MediaAsset> {
     const library = await this.getLibrary();
-    
+
     let fileSize = options?.fileSize || 0;
     if (!fileSize && uri.startsWith("file://")) {
       try {
@@ -130,53 +135,56 @@ export const mediaLibraryService = {
       height?: number;
       duration?: number;
       fileSize?: number;
-    }>
+    }>,
   ): Promise<MediaAsset[]> {
     const library = await this.getLibrary();
-    const newAssets: MediaAsset[] = [];
-
-    for (const item of items) {
-      let fileSize = item.fileSize || 0;
-      if (!fileSize && item.uri.startsWith("file://")) {
-        try {
-          const info = await FileSystem.getInfoAsync(item.uri);
-          if (info.exists && "size" in info) {
-            fileSize = info.size || 0;
+    const newAssets = await Promise.all(
+      items.map(async (item) => {
+        let fileSize = item.fileSize || 0;
+        if (!fileSize && item.uri.startsWith("file://")) {
+          try {
+            const info = await FileSystem.getInfoAsync(item.uri);
+            if (info.exists && "size" in info) {
+              fileSize = info.size || 0;
+            }
+          } catch {
+            fileSize = 0;
           }
-        } catch {
-          fileSize = 0;
         }
-      }
 
-      const asset: MediaAsset = {
-        id: generateId(),
-        uri: item.uri,
-        type: getMediaType(item.uri),
-        fileName: extractFileName(item.uri),
-        fileSize,
-        width: item.width,
-        height: item.height,
-        duration: item.duration,
-        category: [],
-        tags: [],
-        isFavorite: false,
-        usedIn: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+        const asset: MediaAsset = {
+          id: generateId(),
+          uri: item.uri,
+          type: getMediaType(item.uri),
+          fileName: extractFileName(item.uri),
+          fileSize,
+          width: item.width,
+          height: item.height,
+          duration: item.duration,
+          category: [],
+          tags: [],
+          isFavorite: false,
+          usedIn: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
 
-      newAssets.push(asset);
-    }
+        return asset;
+      }),
+    );
 
     library.assets = [...newAssets, ...library.assets];
     await this.saveLibrary(library);
     return newAssets;
   },
 
-  async updateAsset(id: string, updates: Partial<MediaAsset>): Promise<MediaAsset | null> {
+  async updateAsset(
+    id: string,
+    updates: Partial<MediaAsset>,
+  ): Promise<MediaAsset | null> {
     const library = await this.getLibrary();
     const index = library.assets.findIndex((a) => a.id === id);
-    
+
     if (index === -1) return null;
 
     library.assets[index] = {
@@ -193,7 +201,7 @@ export const mediaLibraryService = {
     const library = await this.getLibrary();
     const initialLength = library.assets.length;
     library.assets = library.assets.filter((a) => a.id !== id);
-    
+
     if (library.assets.length < initialLength) {
       await this.saveLibrary(library);
       return true;
@@ -204,7 +212,7 @@ export const mediaLibraryService = {
   async toggleFavorite(id: string): Promise<MediaAsset | null> {
     const library = await this.getLibrary();
     const asset = library.assets.find((a) => a.id === id);
-    
+
     if (!asset) return null;
 
     asset.isFavorite = !asset.isFavorite;
@@ -233,7 +241,7 @@ export const mediaLibraryService = {
   async markAsUsed(assetId: string, contentId: string): Promise<void> {
     const library = await this.getLibrary();
     const asset = library.assets.find((a) => a.id === assetId);
-    
+
     if (asset && !asset.usedIn.includes(contentId)) {
       asset.usedIn.push(contentId);
       asset.updatedAt = new Date().toISOString();
@@ -244,7 +252,7 @@ export const mediaLibraryService = {
   async removeUsage(assetId: string, contentId: string): Promise<void> {
     const library = await this.getLibrary();
     const asset = library.assets.find((a) => a.id === assetId);
-    
+
     if (asset) {
       asset.usedIn = asset.usedIn.filter((id) => id !== contentId);
       asset.updatedAt = new Date().toISOString();
@@ -258,7 +266,7 @@ export const mediaLibraryService = {
       category?: MediaCategory | string;
       search?: string;
       type?: "image" | "video";
-    }
+    },
   ): MediaAsset[] {
     let filtered = [...assets];
 
@@ -270,7 +278,9 @@ export const mediaLibraryService = {
       } else if (options.category === "favorites") {
         filtered = filtered.filter((a) => a.isFavorite);
       } else {
-        filtered = filtered.filter((a) => a.category.includes(options.category as string));
+        filtered = filtered.filter((a) =>
+          a.category.includes(options.category as string),
+        );
       }
     }
 
@@ -284,7 +294,7 @@ export const mediaLibraryService = {
         (a) =>
           a.fileName.toLowerCase().includes(searchLower) ||
           a.tags.some((t) => t.toLowerCase().includes(searchLower)) ||
-          a.category.some((c) => c.toLowerCase().includes(searchLower))
+          a.category.some((c) => c.toLowerCase().includes(searchLower)),
       );
     }
 
@@ -292,7 +302,7 @@ export const mediaLibraryService = {
   },
 
   formatFileSize,
-  
+
   async getStats(): Promise<{
     totalAssets: number;
     totalImages: number;
@@ -302,8 +312,11 @@ export const mediaLibraryService = {
     formattedSize: string;
   }> {
     const library = await this.getLibrary();
-    const totalSize = library.assets.reduce((acc, a) => acc + (a.fileSize || 0), 0);
-    
+    const totalSize = library.assets.reduce(
+      (acc, a) => acc + (a.fileSize || 0),
+      0,
+    );
+
     return {
       totalAssets: library.assets.length,
       totalImages: library.assets.filter((a) => a.type === "image").length,
