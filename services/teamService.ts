@@ -112,22 +112,32 @@ const defaultTeamData: TeamData = {
   invitations: [],
 };
 
+let cachedTeamData: TeamData | null = null;
+
 function generateId(): string {
   return `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
 
 export const teamService = {
   async getTeamData(): Promise<TeamData> {
+    if (cachedTeamData) {
+      return cachedTeamData;
+    }
+
     try {
       const data = await AsyncStorage.getItem(TEAM_STORAGE_KEY);
-      return data ? JSON.parse(data) : defaultTeamData;
+      // We clone defaultTeamData to avoid mutation of the constant
+      cachedTeamData = data ? JSON.parse(data) : JSON.parse(JSON.stringify(defaultTeamData));
+      return cachedTeamData!;
     } catch (error) {
       console.error("Error loading team data:", error);
-      return defaultTeamData;
+      // Return a fresh copy on error to avoid shared state issues if not caching
+      return JSON.parse(JSON.stringify(defaultTeamData));
     }
   },
 
   async saveTeamData(data: TeamData): Promise<void> {
+    cachedTeamData = data;
     await AsyncStorage.setItem(TEAM_STORAGE_KEY, JSON.stringify(data));
   },
 
