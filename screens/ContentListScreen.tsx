@@ -1,5 +1,12 @@
 import React, { useState, useCallback } from "react";
-import { StyleSheet, View, Pressable, RefreshControl, Alert, Platform } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Pressable,
+  RefreshControl,
+  Alert,
+  Platform,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useFocusEffect } from "@react-navigation/native";
@@ -13,6 +20,7 @@ import { isOk } from "@/core/result";
 import type { ContentItem, ContentStatus } from "@/features/shared/types";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import type { DashboardStackParamList } from "@/navigation/DashboardStackNavigator";
+import { AppTheme } from "@/types";
 
 type ContentListScreenProps = {
   navigation: NativeStackNavigationProp<DashboardStackParamList, "ContentList">;
@@ -20,7 +28,30 @@ type ContentListScreenProps = {
 
 type FilterType = "all" | "draft" | "scheduled" | "published";
 
-export default function ContentListScreen({ navigation }: ContentListScreenProps) {
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+};
+
+const getStatusColor = (
+  status: ContentItem["status"],
+  theme: AppTheme,
+): string => {
+  switch (status) {
+    case "published":
+      return theme.success;
+    case "scheduled":
+      return theme.warning;
+    case "failed":
+      return theme.error;
+    default:
+      return theme.textSecondary;
+  }
+};
+
+export default function ContentListScreen({
+  navigation,
+}: ContentListScreenProps) {
   const { theme } = useTheme();
   const [content, setContent] = useState<ContentItem[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -36,7 +67,7 @@ export default function ContentListScreen({ navigation }: ContentListScreenProps
   useFocusEffect(
     useCallback(() => {
       loadContent();
-    }, [loadContent])
+    }, [loadContent]),
   );
 
   const onRefresh = useCallback(async () => {
@@ -45,131 +76,152 @@ export default function ContentListScreen({ navigation }: ContentListScreenProps
     setRefreshing(false);
   }, [loadContent]);
 
-  const handleDelete = (item: ContentItem) => {
-    Alert.alert(
-      "Delete Content",
-      "Are you sure you want to delete this content?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            await contentService.delete(item.id);
-            await loadContent();
-            if (Platform.OS !== "web") {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            }
+  const handleDelete = useCallback(
+    (item: ContentItem) => {
+      Alert.alert(
+        "Delete Content",
+        "Are you sure you want to delete this content?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: async () => {
+              await contentService.delete(item.id);
+              await loadContent();
+              if (Platform.OS !== "web") {
+                Haptics.notificationAsync(
+                  Haptics.NotificationFeedbackType.Success,
+                );
+              }
+            },
           },
-        },
-      ]
-    );
-  };
+        ],
+      );
+    },
+    [loadContent],
+  );
 
   const filteredContent = content.filter((item) => {
     if (filter === "all") return true;
     return item.status === filter;
   });
 
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  };
-
-  const getStatusColor = (status: ContentItem["status"]): string => {
-    switch (status) {
-      case "published": return theme.success;
-      case "scheduled": return theme.warning;
-      case "failed": return theme.error;
-      default: return theme.textSecondary;
-    }
-  };
-
-  const renderItem = ({ item }: { item: ContentItem }) => (
-    <Pressable
-      onPress={() => navigation.navigate("ContentDetail", { id: item.id })}
-      onLongPress={() => handleDelete(item)}
-      style={({ pressed }) => [
-        styles.contentCard,
-        { backgroundColor: theme.cardBackground, opacity: pressed ? 0.9 : 1 },
-      ]}
-    >
-      <View style={[styles.thumbnail, { backgroundColor: theme.backgroundSecondary }]}>
-        {item.mediaUri ? (
-          <Feather name="image" size={24} color={theme.textSecondary} />
-        ) : (
-          <Feather name="file-text" size={24} color={theme.textSecondary} />
-        )}
-      </View>
-      <View style={styles.contentInfo}>
-        <ThemedText numberOfLines={1} style={styles.contentTitle}>
-          {item.title || "Untitled"}
-        </ThemedText>
-        <ThemedText type="caption" secondary numberOfLines={1}>
-          {item.caption || "No caption"}
-        </ThemedText>
-        <View style={styles.contentMeta}>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + "20" }]}>
-            <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
-            <ThemedText
-              type="caption"
-              style={{ color: getStatusColor(item.status), textTransform: "capitalize" }}
+  const renderItem = useCallback(
+    ({ item }: { item: ContentItem }) => (
+      <Pressable
+        onPress={() => navigation.navigate("ContentDetail", { id: item.id })}
+        onLongPress={() => handleDelete(item)}
+        style={({ pressed }) => [
+          styles.contentCard,
+          { backgroundColor: theme.cardBackground, opacity: pressed ? 0.9 : 1 },
+        ]}
+      >
+        <View
+          style={[
+            styles.thumbnail,
+            { backgroundColor: theme.backgroundSecondary },
+          ]}
+        >
+          {item.mediaUri ? (
+            <Feather name="image" size={24} color={theme.textSecondary} />
+          ) : (
+            <Feather name="file-text" size={24} color={theme.textSecondary} />
+          )}
+        </View>
+        <View style={styles.contentInfo}>
+          <ThemedText numberOfLines={1} style={styles.contentTitle}>
+            {item.title || "Untitled"}
+          </ThemedText>
+          <ThemedText type="caption" secondary numberOfLines={1}>
+            {item.caption || "No caption"}
+          </ThemedText>
+          <View style={styles.contentMeta}>
+            <View
+              style={[
+                styles.statusBadge,
+                { backgroundColor: getStatusColor(item.status, theme) + "20" },
+              ]}
             >
-              {item.status}
+              <View
+                style={[
+                  styles.statusDot,
+                  { backgroundColor: getStatusColor(item.status, theme) },
+                ]}
+              />
+              <ThemedText
+                type="caption"
+                style={{
+                  color: getStatusColor(item.status, theme),
+                  textTransform: "capitalize",
+                }}
+              >
+                {item.status}
+              </ThemedText>
+            </View>
+            <ThemedText type="caption" secondary>
+              {formatDate(item.createdAt)}
             </ThemedText>
           </View>
-          <ThemedText type="caption" secondary>
-            {formatDate(item.createdAt)}
-          </ThemedText>
         </View>
-      </View>
-      <Feather name="chevron-right" size={20} color={theme.textSecondary} />
-    </Pressable>
+        <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+      </Pressable>
+    ),
+    [navigation, handleDelete, theme],
   );
 
   const ListHeader = () => (
     <View style={styles.header}>
       <View style={styles.filterContainer}>
-        {(["all", "draft", "scheduled", "published"] as FilterType[]).map((type) => (
-          <Pressable
-            key={type}
-            onPress={() => {
-              setFilter(type);
-              if (Platform.OS !== "web") {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              }
-            }}
-            style={({ pressed }) => [
-              styles.filterButton,
-              {
-                backgroundColor: filter === type ? theme.primary : theme.cardBackground,
-                opacity: pressed ? 0.9 : 1,
-              },
-            ]}
-          >
-            <ThemedText
-              type="caption"
-              style={{
-                color: filter === type ? "#FFFFFF" : theme.text,
-                fontWeight: "600",
-                textTransform: "capitalize",
+        {(["all", "draft", "scheduled", "published"] as FilterType[]).map(
+          (type) => (
+            <Pressable
+              key={type}
+              onPress={() => {
+                setFilter(type);
+                if (Platform.OS !== "web") {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
               }}
+              style={({ pressed }) => [
+                styles.filterButton,
+                {
+                  backgroundColor:
+                    filter === type ? theme.primary : theme.cardBackground,
+                  opacity: pressed ? 0.9 : 1,
+                },
+              ]}
             >
-              {type}
-            </ThemedText>
-          </Pressable>
-        ))}
+              <ThemedText
+                type="caption"
+                style={{
+                  color: filter === type ? "#FFFFFF" : theme.text,
+                  fontWeight: "600",
+                  textTransform: "capitalize",
+                }}
+              >
+                {type}
+              </ThemedText>
+            </Pressable>
+          ),
+        )}
       </View>
     </View>
   );
 
   const ListEmpty = () => (
-    <View style={[styles.emptyState, { backgroundColor: theme.cardBackground }]}>
+    <View
+      style={[styles.emptyState, { backgroundColor: theme.cardBackground }]}
+    >
       <Feather name="inbox" size={48} color={theme.textSecondary} />
       <ThemedText style={{ marginTop: Spacing.md, textAlign: "center" }}>
         {filter === "all" ? "No content yet" : `No ${filter} content`}
       </ThemedText>
-      <ThemedText type="caption" secondary style={{ textAlign: "center", marginTop: Spacing.xs }}>
+      <ThemedText
+        type="caption"
+        secondary
+        style={{ textAlign: "center", marginTop: Spacing.xs }}
+      >
         {filter === "all"
           ? "Create your first post in the Studio"
           : `You don't have any ${filter} content`}
@@ -186,7 +238,11 @@ export default function ContentListScreen({ navigation }: ContentListScreenProps
       ListEmptyComponent={ListEmpty}
       ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={theme.primary}
+        />
       }
     />
   );
