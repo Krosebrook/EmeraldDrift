@@ -14,6 +14,7 @@ Common issues and solutions for EmeraldDrift development and deployment.
 5. [Platform-Specific Issues](#platform-specific-issues)
 6. [Performance Issues](#performance-issues)
 7. [Data & Storage](#data--storage)
+8. [Git & Version Control](#git--version-control)
 
 ---
 
@@ -684,6 +685,286 @@ useEffect(() => {
    - Periodic background sync
    - Real-time sync with WebSockets
    - Conflict detection
+
+---
+
+## Git & Version Control
+
+### Can't push: unpulled changes must be merged first
+
+**Symptoms**: 
+- Warning: "pulling will start a merge with conflicts"
+- Error: "Can't push: unpulled changes must be merged first"
+- Branch status shows "5 down 36 up" (commits behind/ahead of remote)
+
+This occurs when:
+1. You have local commits that aren't on the remote
+2. Remote has commits you haven't pulled
+3. Git requires merging before you can push
+
+**Solutions**:
+
+#### Option 1: Merge Remote Changes (Recommended)
+
+```bash
+# 1. Fetch latest changes from remote
+git fetch origin
+
+# 2. Check what commits are different
+git log HEAD..origin/main --oneline  # See remote commits
+git log origin/main..HEAD --oneline  # See your local commits
+
+# 3. Pull and merge remote changes
+git pull origin main
+
+# 4. If conflicts occur, Git will pause and show conflicted files
+# Files with conflicts will be marked like:
+# <<<<<<< HEAD (your changes)
+# your code
+# =======
+# remote code
+# >>>>>>> origin/main (remote changes)
+
+# 5. Resolve conflicts by editing each file
+# Choose which changes to keep or combine both
+
+# 6. After resolving conflicts, stage the resolved files
+git add .
+
+# 7. Complete the merge
+git commit -m "Merge remote changes"
+
+# 8. Push your merged changes
+git push origin main
+```
+
+#### Option 2: Rebase (Creates Linear History)
+
+```bash
+# 1. Fetch latest changes
+git fetch origin
+
+# 2. Rebase your commits on top of remote
+git rebase origin/main
+
+# 3. If conflicts occur, resolve them
+# Edit conflicted files
+
+# 4. After resolving, continue rebase
+git add .
+git rebase --continue
+
+# 5. Repeat steps 3-4 until rebase completes
+
+# 6. Push changes (may require force push)
+git push origin main --force-with-lease
+```
+
+⚠️ **Note**: Only use `--force-with-lease` if you're sure no one else has pushed to the branch since you last pulled.
+
+#### Option 3: Stash Changes Temporarily
+
+If you want to pull first, then apply your changes:
+
+```bash
+# 1. Save your local changes temporarily
+git stash save "Work in progress"
+
+# 2. Pull remote changes
+git pull origin main
+
+# 3. Apply your stashed changes
+git stash pop
+
+# 4. Resolve any conflicts that arise
+git add .
+git commit -m "Resolve conflicts after stash pop"
+
+# 5. Push
+git push origin main
+```
+
+### Resolving Merge Conflicts
+
+**Symptoms**: 
+- Git shows "CONFLICT (content): Merge conflict in [filename]"
+- Files contain conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`)
+- Cannot commit until conflicts are resolved
+
+**Step-by-Step Resolution**:
+
+1. **Identify conflicted files**:
+   ```bash
+   git status
+   # Look for "both modified:" files
+   ```
+
+2. **Open each conflicted file** and look for conflict markers:
+   ```
+   <<<<<<< HEAD
+   // Your local changes
+   const API_URL = "http://localhost:3000";
+   =======
+   // Remote changes
+   const API_URL = "https://api.production.com";
+   >>>>>>> origin/main
+   ```
+
+3. **Decide how to resolve**:
+   - **Keep yours**: Delete remote code and markers
+   - **Keep theirs**: Delete your code and markers
+   - **Keep both**: Combine both changes and remove markers
+   - **Manual edit**: Write new code that combines both
+
+4. **Clean example resolution**:
+   ```typescript
+   // Before (with conflict):
+   <<<<<<< HEAD
+   const API_URL = "http://localhost:3000";
+   =======
+   const API_URL = "https://api.production.com";
+   >>>>>>> origin/main
+
+   // After (resolved):
+   const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+   ```
+
+5. **Mark as resolved**:
+   ```bash
+   git add [resolved-file]
+   ```
+
+6. **Complete the merge**:
+   ```bash
+   # After resolving all conflicts
+   git commit -m "Resolve merge conflicts"
+   git push origin main
+   ```
+
+### Common Merge Conflict Scenarios
+
+#### Package.json conflicts
+
+**Symptom**: Conflict in `package.json` or `package-lock.json`
+
+**Solution**:
+```bash
+# 1. Choose one version of package.json
+# Usually keep both dependencies merged manually
+
+# 2. Delete package-lock.json
+rm package-lock.json
+
+# 3. Regenerate lock file
+npm install
+
+# 4. Commit resolved files
+git add package.json package-lock.json
+git commit -m "Resolve package.json conflicts"
+```
+
+#### Import/export conflicts
+
+**Symptom**: Conflict in `index.ts` export files
+
+**Solution**:
+```typescript
+// Merge both export lists, remove duplicates
+export { ComponentA } from "./ComponentA";
+export { ComponentB } from "./ComponentB";
+export { ComponentC } from "./ComponentC"; // From remote
+```
+
+#### TypeScript type conflicts
+
+**Symptom**: Conflicting type definitions
+
+**Solution**:
+```typescript
+// Combine type definitions or use union types
+export interface User {
+  id: string;
+  name: string;
+  email: string;        // Your addition
+  role: UserRole;       // Remote addition
+}
+```
+
+### Preventing Conflicts
+
+**Best Practices**:
+
+1. **Pull frequently**:
+   ```bash
+   # Start each work session by pulling
+   git pull origin main
+   ```
+
+2. **Commit small, focused changes**:
+   ```bash
+   # Commit logical units of work
+   git add [specific-files]
+   git commit -m "feat: add specific feature"
+   ```
+
+3. **Communicate with team**:
+   - Coordinate on shared files
+   - Use feature branches for major changes
+   - Review pull requests promptly
+
+4. **Use feature branches**:
+   ```bash
+   # Create branch for your work
+   git checkout -b feature/my-feature
+   
+   # Work and commit
+   git add .
+   git commit -m "feat: implement feature"
+   
+   # Update your branch with latest main
+   git checkout main
+   git pull origin main
+   git checkout feature/my-feature
+   git merge main
+   
+   # Push feature branch
+   git push origin feature/my-feature
+   ```
+
+### Undoing a Merge
+
+**If merge went wrong**:
+
+```bash
+# Before committing the merge
+git merge --abort
+
+# After committing the merge
+git reset --hard HEAD~1  # Removes last commit
+# ⚠️ WARNING: This deletes uncommitted work
+
+# Safer option: Create new commit that undoes changes
+git revert -m 1 HEAD
+```
+
+### Checking Remote Status
+
+**Check if you're behind/ahead of remote**:
+
+```bash
+# Fetch without merging
+git fetch origin
+
+# Compare your branch to remote
+git status
+
+# See detailed comparison
+git log --oneline --graph --all --decorate
+
+# Count commits behind/ahead
+git rev-list --left-right --count origin/main...HEAD
+# Output: "5  36" means 5 behind, 36 ahead
+```
 
 ---
 
