@@ -20,7 +20,7 @@ import { isOk } from "@/core/result";
 import type { ContentItem } from "@/features/shared/types";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import type { DashboardStackParamList } from "@/navigation/DashboardStackNavigator";
-import type { AppTheme } from "@/types";
+import { AppTheme } from "@/types";
 
 type ContentListScreenProps = {
   navigation: NativeStackNavigationProp<DashboardStackParamList, "ContentList">;
