@@ -55,27 +55,27 @@ export const notificationService = {
     }
 
     if (Platform.OS === "android") {
-      await Notifications.setNotificationChannelAsync("default", {
-        name: "Default",
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: "#8B5CF6",
-      });
-
-      await Notifications.setNotificationChannelAsync("publishing", {
-        name: "Publishing Updates",
-        description: "Notifications about your content publishing status",
-        importance: Notifications.AndroidImportance.HIGH,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: "#8B5CF6",
-      });
-
-      await Notifications.setNotificationChannelAsync("reminders", {
-        name: "Scheduled Reminders",
-        description: "Reminders for scheduled content",
-        importance: Notifications.AndroidImportance.DEFAULT,
-        lightColor: "#8B5CF6",
-      });
+      await Promise.all([
+        Notifications.setNotificationChannelAsync("default", {
+          name: "Default",
+          importance: Notifications.AndroidImportance.MAX,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: "#8B5CF6",
+        }),
+        Notifications.setNotificationChannelAsync("publishing", {
+          name: "Publishing Updates",
+          description: "Notifications about your content publishing status",
+          importance: Notifications.AndroidImportance.HIGH,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: "#8B5CF6",
+        }),
+        Notifications.setNotificationChannelAsync("reminders", {
+          name: "Scheduled Reminders",
+          description: "Reminders for scheduled content",
+          importance: Notifications.AndroidImportance.DEFAULT,
+          lightColor: "#8B5CF6",
+        }),
+      ]);
     }
 
     return true;
