@@ -711,8 +711,8 @@ This occurs when:
 git fetch origin
 
 # 2. Check what commits are different
-git log HEAD..origin/main --oneline  # See remote commits
-git log origin/main..HEAD --oneline  # See your local commits
+git log origin/main..HEAD --oneline  # Your local commits not on remote
+git log HEAD..origin/main --oneline  # Remote commits you don't have
 
 # 3. Pull and merge remote changes
 git pull origin main
@@ -849,10 +849,11 @@ git push origin main
 
 **Solution**:
 ```bash
-# 1. Choose one version of package.json
-# Usually keep both dependencies merged manually
+# 1. Resolve package.json conflicts manually
+# Carefully merge dependencies from both versions
 
-# 2. Delete package-lock.json
+# 2. Only if necessary, regenerate lock file
+# (Try to resolve lock file conflicts first if possible)
 rm package-lock.json
 
 # 3. Regenerate lock file
@@ -862,6 +863,8 @@ npm install
 git add package.json package-lock.json
 git commit -m "Resolve package.json conflicts"
 ```
+
+**Note**: Avoid deleting `package-lock.json` unless absolutely necessary, as it ensures consistent dependency versions.
 
 #### Import/export conflicts
 

@@ -293,8 +293,8 @@ git status
 git fetch origin
 
 # 2. See what's different
+git log --oneline origin/main..HEAD  # Your local commits not on remote
 git log --oneline HEAD..origin/main  # Remote commits you don't have
-git log --oneline origin/main..HEAD  # Your commits not on remote
 
 # 3. Pull and merge remote changes
 git pull origin main
@@ -361,7 +361,7 @@ git push origin main
 ```bash
 # If package.json has conflicts:
 # 1. Manually merge dependencies in package.json
-# 2. Delete package-lock.json
+# 2. Only if necessary, regenerate lock file (try resolving lock file conflicts first)
 rm package-lock.json
 
 # 3. Regenerate lock file
@@ -371,6 +371,8 @@ npm install
 git add package.json package-lock.json
 git commit -m "Merge package.json and regenerate lock file"
 ```
+
+**Note**: Avoid deleting `package-lock.json` unless absolutely necessary, as it ensures consistent dependency versions.
 
 #### 2. Same File, Different Lines
 
