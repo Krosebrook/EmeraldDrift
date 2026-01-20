@@ -21,6 +21,8 @@ const DEFAULT_SETTINGS: NotificationSettings = {
   teamActivity: true,
 };
 
+let settingsCache: NotificationSettings | null = null;
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -42,7 +44,8 @@ export const notificationService = {
       return false;
     }
 
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    const { status: existingStatus } =
+      await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
     if (existingStatus !== "granted") {
@@ -90,14 +93,21 @@ export const notificationService = {
   },
 
   async getSettings(): Promise<NotificationSettings> {
+    if (settingsCache) {
+      return settingsCache;
+    }
+
     try {
       const stored = await AsyncStorage.getItem(NOTIFICATION_SETTINGS_KEY);
       if (stored) {
-        return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
+        const parsed = { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
+        settingsCache = parsed;
+        return parsed;
       }
     } catch {
       console.log("Error loading notification settings");
     }
+    settingsCache = DEFAULT_SETTINGS;
     return DEFAULT_SETTINGS;
   },
 
@@ -105,7 +115,11 @@ export const notificationService = {
     try {
       const current = await this.getSettings();
       const updated = { ...current, ...settings };
-      await AsyncStorage.setItem(NOTIFICATION_SETTINGS_KEY, JSON.stringify(updated));
+      settingsCache = updated;
+      await AsyncStorage.setItem(
+        NOTIFICATION_SETTINGS_KEY,
+        JSON.stringify(updated),
+      );
     } catch {
       console.log("Error saving notification settings");
     }
@@ -127,7 +141,11 @@ export const notificationService = {
     });
   },
 
-  async notifyPublishFailure(title: string, platform: string, error?: string): Promise<void> {
+  async notifyPublishFailure(
+    title: string,
+    platform: string,
+    error?: string,
+  ): Promise<void> {
     const settings = await this.getSettings();
     if (!settings.publishFailure) return;
 
@@ -143,12 +161,16 @@ export const notificationService = {
     });
   },
 
-  async scheduleReminder(contentId: string, title: string, scheduledTime: Date): Promise<string | null> {
+  async scheduleReminder(
+    contentId: string,
+    title: string,
+    scheduledTime: Date,
+  ): Promise<string | null> {
     const settings = await this.getSettings();
     if (!settings.scheduledReminders) return null;
 
     const reminderTime = new Date(scheduledTime.getTime() - 30 * 60 * 1000);
-    
+
     if (reminderTime <= new Date()) {
       return null;
     }
@@ -224,13 +246,13 @@ export const notificationService = {
   },
 
   addNotificationListener(
-    callback: (notification: Notifications.Notification) => void
+    callback: (notification: Notifications.Notification) => void,
   ): Notifications.EventSubscription {
     return Notifications.addNotificationReceivedListener(callback);
   },
 
   addResponseListener(
-    callback: (response: Notifications.NotificationResponse) => void
+    callback: (response: Notifications.NotificationResponse) => void,
   ): Notifications.EventSubscription {
     return Notifications.addNotificationResponseReceivedListener(callback);
   },
