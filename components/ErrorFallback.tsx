@@ -63,7 +63,8 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
         </ThemedText>
 
         <ThemedText type="body" style={styles.message}>
-          Something unexpected happened. Tap below to restart the app and get back to creating.
+          Something unexpected happened. Tap below to restart the app and get
+          back to creating.
         </ThemedText>
 
         <Pressable

@@ -29,7 +29,12 @@ export function EmptyState({
 
   return (
     <View style={[styles.container, style]}>
-      <View style={[styles.iconContainer, { backgroundColor: theme.backgroundSecondary }]}>
+      <View
+        style={[
+          styles.iconContainer,
+          { backgroundColor: theme.backgroundSecondary },
+        ]}
+      >
         <Feather name={icon} size={48} color={theme.textSecondary} />
       </View>
 

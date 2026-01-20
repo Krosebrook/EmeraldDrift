@@ -27,11 +27,7 @@ export function Skeleton({
   const animation = useSharedValue(0);
 
   useEffect(() => {
-    animation.value = withRepeat(
-      withTiming(1, { duration: 1000 }),
-      -1,
-      true
-    );
+    animation.value = withRepeat(withTiming(1, { duration: 1000 }), -1, true);
   }, [animation]);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -70,11 +66,7 @@ export function SkeletonCard({
 
   return (
     <View
-      style={[
-        styles.card,
-        { backgroundColor: theme.cardBackground },
-        style,
-      ]}
+      style={[styles.card, { backgroundColor: theme.cardBackground }, style]}
     >
       {showAvatar ? (
         <View style={styles.cardHeader}>
@@ -89,11 +81,11 @@ export function SkeletonCard({
 
       <View style={styles.cardContent}>
         {Array.from({ length: lines }).map((_, i) => (
-          <View key={i} style={{ marginBottom: i < lines - 1 ? Spacing.sm : 0 }}>
-            <Skeleton
-              width={i === lines - 1 ? "60%" : "100%"}
-              height={14}
-            />
+          <View
+            key={i}
+            style={{ marginBottom: i < lines - 1 ? Spacing.sm : 0 }}
+          >
+            <Skeleton width={i === lines - 1 ? "60%" : "100%"} height={14} />
           </View>
         ))}
       </View>

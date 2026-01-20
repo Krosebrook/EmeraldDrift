@@ -1,5 +1,11 @@
 import React from "react";
-import { View, StyleSheet, Image, ActivityIndicator, Pressable } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Image,
+  ActivityIndicator,
+  Pressable,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Animated, {
   useAnimatedStyle,
@@ -34,7 +40,7 @@ function LoadingOverlay() {
     rotation.value = withRepeat(
       withTiming(360, { duration: 2000, easing: Easing.linear }),
       -1,
-      false
+      false,
     );
   }, []);
 
@@ -69,9 +75,19 @@ export function MerchPreview({
 
   if (!product) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.backgroundSecondary }]}>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: theme.backgroundSecondary },
+        ]}
+      >
         <View style={styles.emptyState}>
-          <View style={[styles.emptyIcon, { backgroundColor: theme.backgroundTertiary }]}>
+          <View
+            style={[
+              styles.emptyIcon,
+              { backgroundColor: theme.backgroundTertiary },
+            ]}
+          >
             <Feather name="package" size={40} color={theme.textSecondary} />
           </View>
           <ThemedText type="title3" style={styles.emptyTitle}>
@@ -88,7 +104,9 @@ export function MerchPreview({
   const displayImage = mockupImage || product.placeholderImage;
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.backgroundSecondary }]}>
+    <View
+      style={[styles.container, { backgroundColor: theme.backgroundSecondary }]}
+    >
       <View style={styles.imageContainer}>
         <Image
           source={{ uri: displayImage }}
@@ -99,7 +117,9 @@ export function MerchPreview({
         {isGenerating && <LoadingOverlay />}
 
         {error && (
-          <View style={[styles.overlay, { backgroundColor: "rgba(239,68,68,0.9)" }]}>
+          <View
+            style={[styles.overlay, { backgroundColor: "rgba(239,68,68,0.9)" }]}
+          >
             <Feather name="alert-circle" size={32} color="#FFFFFF" />
             <ThemedText style={styles.errorText}>Generation Failed</ThemedText>
             <ThemedText type="caption" style={styles.errorDescription}>
@@ -121,7 +141,12 @@ export function MerchPreview({
 
         {!mockupImage && !isGenerating && !error && (
           <View style={styles.placeholderOverlay}>
-            <View style={[styles.placeholderBadge, { backgroundColor: theme.backgroundTertiary }]}>
+            <View
+              style={[
+                styles.placeholderBadge,
+                { backgroundColor: theme.backgroundTertiary },
+              ]}
+            >
               <Feather name="image" size={16} color={theme.textSecondary} />
               <ThemedText type="caption" secondary style={{ marginLeft: 6 }}>
                 Preview

@@ -40,7 +40,9 @@ export function UploadArea({
 
     if (!result.canceled && result.assets[0]) {
       const asset = result.assets[0];
-      const base64 = asset.base64 ? `data:image/jpeg;base64,${asset.base64}` : "";
+      const base64 = asset.base64
+        ? `data:image/jpeg;base64,${asset.base64}`
+        : "";
       onImageSelected(asset.uri, base64);
     }
   };
@@ -71,7 +73,10 @@ export function UploadArea({
           <View style={styles.previewActions}>
             <Pressable
               onPress={pickImage}
-              style={[styles.previewAction, { backgroundColor: theme.backgroundSecondary }]}
+              style={[
+                styles.previewAction,
+                { backgroundColor: theme.backgroundSecondary },
+              ]}
             >
               <Feather name="edit-2" size={16} color={theme.text} />
             </Pressable>
@@ -96,7 +101,12 @@ export function UploadArea({
             },
           ]}
         >
-          <View style={[styles.uploadIcon, { backgroundColor: theme.backgroundTertiary }]}>
+          <View
+            style={[
+              styles.uploadIcon,
+              { backgroundColor: theme.backgroundTertiary },
+            ]}
+          >
             <Feather name="upload" size={24} color={theme.textSecondary} />
           </View>
           <ThemedText type="body" style={styles.uploadText}>

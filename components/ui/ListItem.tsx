@@ -1,5 +1,11 @@
 import React, { ReactNode } from "react";
-import { View, Pressable, StyleSheet, ViewStyle, StyleProp } from "react-native";
+import {
+  View,
+  Pressable,
+  StyleSheet,
+  ViewStyle,
+  StyleProp,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
@@ -44,7 +50,11 @@ export function ListItem({
         <View
           style={[
             styles.iconContainer,
-            { backgroundColor: destructive ? `${theme.error}15` : theme.backgroundSecondary },
+            {
+              backgroundColor: destructive
+                ? `${theme.error}15`
+                : theme.backgroundSecondary,
+            },
           ]}
         >
           <Feather
@@ -89,9 +99,7 @@ export function ListItem({
     return (
       <Pressable
         onPress={onPress}
-        style={({ pressed }) => [
-          { opacity: pressed ? 0.7 : 1 },
-        ]}
+        style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
       >
         {content}
       </Pressable>

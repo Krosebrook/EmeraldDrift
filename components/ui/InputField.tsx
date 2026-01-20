@@ -40,7 +40,7 @@ export const InputField = forwardRef<TextInput, InputFieldProps>(
       style,
       ...props
     },
-    ref
+    ref,
   ) => {
     const { theme } = useTheme();
     const [isFocused, setIsFocused] = useState(false);
@@ -116,17 +116,24 @@ export const InputField = forwardRef<TextInput, InputFieldProps>(
         </View>
 
         {error ? (
-          <ThemedText type="caption" style={{ color: theme.error, marginTop: Spacing.xs }}>
+          <ThemedText
+            type="caption"
+            style={{ color: theme.error, marginTop: Spacing.xs }}
+          >
             {error}
           </ThemedText>
         ) : hint ? (
-          <ThemedText type="caption" secondary style={{ marginTop: Spacing.xs }}>
+          <ThemedText
+            type="caption"
+            secondary
+            style={{ marginTop: Spacing.xs }}
+          >
             {hint}
           </ThemedText>
         ) : null}
       </View>
     );
-  }
+  },
 );
 
 InputField.displayName = "InputField";

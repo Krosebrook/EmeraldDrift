@@ -6,7 +6,21 @@ import { Typography } from "@/constants/theme";
 export type ThemedTextProps = TextProps & {
   lightColor?: string;
   darkColor?: string;
-  type?: "display" | "title1" | "title2" | "title3" | "body" | "callout" | "subhead" | "caption" | "h1" | "h2" | "h3" | "h4" | "small" | "link";
+  type?:
+    | "display"
+    | "title1"
+    | "title2"
+    | "title3"
+    | "body"
+    | "callout"
+    | "subhead"
+    | "caption"
+    | "h1"
+    | "h2"
+    | "h3"
+    | "h4"
+    | "small"
+    | "link";
   secondary?: boolean;
 };
 

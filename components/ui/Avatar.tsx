@@ -1,5 +1,11 @@
 import React from "react";
-import { View, StyleSheet, ViewStyle, StyleProp, ImageStyle } from "react-native";
+import {
+  View,
+  StyleSheet,
+  ViewStyle,
+  StyleProp,
+  ImageStyle,
+} from "react-native";
 import { Image } from "expo-image";
 import { Feather } from "@expo/vector-icons";
 import { ThemedText } from "@/components/ThemedText";
@@ -46,18 +52,16 @@ export function Avatar({ source, name, size = "md", style }: AvatarProps) {
 
   if (source) {
     return (
-      <Image
-        source={{ uri: source }}
-        style={imageStyle}
-        contentFit="cover"
-      />
+      <Image source={{ uri: source }} style={imageStyle} contentFit="cover" />
     );
   }
 
   if (name) {
     return (
       <View style={[styles.container, containerStyle, style]}>
-        <ThemedText style={{ color: theme.primary, fontSize, fontWeight: "600" }}>
+        <ThemedText
+          style={{ color: theme.primary, fontSize, fontWeight: "600" }}
+        >
           {getInitials(name)}
         </ThemedText>
       </View>

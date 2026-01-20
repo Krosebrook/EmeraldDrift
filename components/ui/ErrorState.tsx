@@ -25,7 +25,9 @@ export function ErrorState({
 
   return (
     <View style={[styles.container, style]}>
-      <View style={[styles.iconContainer, { backgroundColor: `${theme.error}15` }]}>
+      <View
+        style={[styles.iconContainer, { backgroundColor: `${theme.error}15` }]}
+      >
         <Feather name="alert-circle" size={48} color={theme.error} />
       </View>
 

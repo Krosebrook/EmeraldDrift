@@ -4,11 +4,20 @@ import { Feather } from "@expo/vector-icons";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { Colors } from "@/constants/theme";
-import { Spacing, BorderRadius } from "@/constants/theme";
+import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { logError } from "@/core/errors";
 
-type FeatureName = "content" | "analytics" | "platforms" | "offline" | "merch" | "team" | "general" | "ai-generator" | "prompts" | "agents";
+type FeatureName =
+  | "content"
+  | "analytics"
+  | "platforms"
+  | "offline"
+  | "merch"
+  | "team"
+  | "general"
+  | "ai-generator"
+  | "prompts"
+  | "agents";
 
 interface FeatureErrorBoundaryProps {
   children: ReactNode;
@@ -23,7 +32,10 @@ interface FeatureErrorBoundaryState {
   error: Error | null;
 }
 
-const featureConfig: Record<FeatureName, { icon: keyof typeof Feather.glyphMap; title: string; defaultMessage: string }> = {
+const featureConfig: Record<
+  FeatureName,
+  { icon: keyof typeof Feather.glyphMap; title: string; defaultMessage: string }
+> = {
   content: {
     icon: "file-text",
     title: "Content Error",
@@ -76,7 +88,10 @@ const featureConfig: Record<FeatureName, { icon: keyof typeof Feather.glyphMap; 
   },
 };
 
-export class FeatureErrorBoundary extends Component<FeatureErrorBoundaryProps, FeatureErrorBoundaryState> {
+export class FeatureErrorBoundary extends Component<
+  FeatureErrorBoundaryProps,
+  FeatureErrorBoundaryState
+> {
   state: FeatureErrorBoundaryState = {
     hasError: false,
     error: null,
@@ -112,11 +127,11 @@ export class FeatureErrorBoundary extends Component<FeatureErrorBoundaryProps, F
           <View style={styles.iconContainer}>
             <Feather name={config.icon} size={32} color={Colors.light.error} />
           </View>
-          
+
           <ThemedText type="title3" style={styles.title}>
             {config.title}
           </ThemedText>
-          
+
           <ThemedText type="body" secondary style={styles.message}>
             {message}
           </ThemedText>

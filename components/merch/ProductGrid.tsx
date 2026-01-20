@@ -7,7 +7,11 @@ import { ProductCard } from "./ProductCard";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { MERCH_PRODUCTS } from "@/features/merch/data/products";
-import { CATEGORY_INFO, type MerchProduct, type MerchProductType } from "@/features/merch/types";
+import {
+  CATEGORY_INFO,
+  type MerchProduct,
+  type MerchProductType,
+} from "@/features/merch/types";
 
 interface ProductGridProps {
   selectedProductId: MerchProductType | null;
@@ -46,13 +50,17 @@ function CategoryFilter({
             style={[
               styles.categoryChip,
               {
-                backgroundColor: selected ? theme.primary : theme.backgroundSecondary,
+                backgroundColor: selected
+                  ? theme.primary
+                  : theme.backgroundSecondary,
                 borderColor: selected ? theme.primary : theme.border,
               },
             ]}
           >
             <Feather
-              name={category.icon as React.ComponentProps<typeof Feather>["name"]}
+              name={
+                category.icon as React.ComponentProps<typeof Feather>["name"]
+              }
               size={14}
               color={selected ? "#FFFFFF" : theme.textSecondary}
             />
@@ -88,10 +96,18 @@ export function ProductGrid({
     return MERCH_PRODUCTS.filter((p) => p.category === selectedCategory);
   }, [selectedCategory]);
 
-  const renderItem = ({ item, index }: { item: MerchProduct; index: number }) => {
+  const renderItem = ({
+    item,
+    index,
+  }: {
+    item: MerchProduct;
+    index: number;
+  }) => {
     const isLastInRow = (index + 1) % columns === 0;
     return (
-      <View style={[styles.gridItem, { marginRight: isLastInRow ? 0 : Spacing.sm }]}>
+      <View
+        style={[styles.gridItem, { marginRight: isLastInRow ? 0 : Spacing.sm }]}
+      >
         <ProductCard
           product={item}
           selected={selectedProductId === item.id}
@@ -135,7 +151,7 @@ export function ProductGridCompact({
   const { theme } = useTheme();
   const popularProducts = useMemo(
     () => MERCH_PRODUCTS.filter((p) => p.popular),
-    []
+    [],
   );
 
   return (
