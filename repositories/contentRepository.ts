@@ -2,7 +2,17 @@ import { persistence } from "../core/persistence";
 import { STORAGE_KEYS } from "../core/constants";
 import type { ContentItem, ContentStatus, PlatformType } from "../types";
 
-const repository = persistence.createRepository<ContentItem>(STORAGE_KEYS.CONTENT);
+// Key definitions
+const ALL_IDS_KEY = STORAGE_KEYS.CONTENT;
+const ITEM_PREFIX = `${STORAGE_KEYS.CONTENT}_item_`;
+const INDEX_STATUS_PREFIX = `${STORAGE_KEYS.CONTENT}_idx_status_`;
+const INDEX_PLATFORM_PREFIX = `${STORAGE_KEYS.CONTENT}_idx_platform_`;
+
+const getItemKey = (id: string) => `${ITEM_PREFIX}${id}`;
+const getStatusIndexKey = (status: ContentStatus) =>
+  `${INDEX_STATUS_PREFIX}${status}`;
+const getPlatformIndexKey = (platform: PlatformType) =>
+  `${INDEX_PLATFORM_PREFIX}${platform}`;
 
 export interface ContentFilters {
   status?: ContentStatus;
@@ -19,7 +29,8 @@ export interface ContentSortOptions {
 
 function matchesFilters(item: ContentItem, filters: ContentFilters): boolean {
   if (filters.status && item.status !== filters.status) return false;
-  if (filters.platform && !item.platforms.includes(filters.platform)) return false;
+  if (filters.platform && !item.platforms.includes(filters.platform))
+    return false;
   if (filters.searchQuery) {
     const query = filters.searchQuery.toLowerCase();
     const matchesTitle = item.title.toLowerCase().includes(query);
@@ -33,7 +44,7 @@ function matchesFilters(item: ContentItem, filters: ContentFilters): boolean {
 
 function sortContent(
   items: ContentItem[],
-  options: ContentSortOptions
+  options: ContentSortOptions,
 ): ContentItem[] {
   return [...items].sort((a, b) => {
     const aValue = a[options.field] || "";
@@ -43,21 +54,132 @@ function sortContent(
   });
 }
 
+// Internal Helpers
+async function migrateLegacyData(items: ContentItem[]) {
+  // 1. Build Indexes in Memory
+  const statusMap = new Map<string, string[]>();
+  const platformMap = new Map<string, string[]>();
+  const allIds: string[] = [];
+
+  const itemPairs: [string, ContentItem][] = [];
+
+  for (const item of items) {
+    allIds.push(item.id);
+    itemPairs.push([getItemKey(item.id), item]);
+
+    // Status
+    const sKey = getStatusIndexKey(item.status);
+    if (!statusMap.has(sKey)) statusMap.set(sKey, []);
+    statusMap.get(sKey)!.push(item.id);
+
+    // Platforms
+    for (const p of item.platforms) {
+      const pKey = getPlatformIndexKey(p);
+      if (!platformMap.has(pKey)) platformMap.set(pKey, []);
+      platformMap.get(pKey)!.push(item.id);
+    }
+  }
+
+  // 2. Prepare MultiSet pairs
+  const pairs: [string, any][] = [...itemPairs, [ALL_IDS_KEY, allIds]];
+
+  statusMap.forEach((ids, key) => pairs.push([key, ids]));
+  platformMap.forEach((ids, key) => pairs.push([key, ids]));
+
+  // 3. Save Everything
+  await persistence.multiSet(pairs);
+}
+
+async function getIds(key: string): Promise<string[]> {
+  // We use `any` here because we might get legacy ContentItem[]
+  const data = await persistence.get<any>(key);
+
+  if (!data) return [];
+
+  // Migration Check: If we read ALL_IDS_KEY and got an array of Objects (legacy format)
+  // We check if the first item is an object (not string) to detect legacy format.
+  if (
+    key === ALL_IDS_KEY &&
+    Array.isArray(data) &&
+    data.length > 0 &&
+    typeof data[0] !== "string"
+  ) {
+    console.log("Migrating content repository to new format...");
+    await migrateLegacyData(data);
+    // After migration, return IDs
+    return data.map((i: any) => i.id);
+  }
+
+  return data;
+}
+
+async function addToIndex(key: string, id: string) {
+  const ids = await getIds(key);
+  if (!ids.includes(id)) {
+    await persistence.set(key, [id, ...ids]); // Prepend for LIFO-ish
+  }
+}
+
+async function removeFromIndex(key: string, id: string) {
+  const ids = await getIds(key);
+  const newIds = ids.filter((i) => i !== id);
+  if (newIds.length !== ids.length) {
+    await persistence.set(key, newIds);
+  }
+}
+
 export const contentRepository = {
   async getById(id: string): Promise<ContentItem | null> {
-    return repository.getById(id);
+    return persistence.get<ContentItem>(getItemKey(id));
   },
 
   async getAll(): Promise<ContentItem[]> {
-    return repository.getAll();
+    const ids = await getIds(ALL_IDS_KEY);
+    const items = await persistence.multiGet<ContentItem>(ids.map(getItemKey));
+    return items.filter((i): i is ContentItem => i !== null);
   },
 
   async getFiltered(
     filters: ContentFilters,
-    sort?: ContentSortOptions
+    sort?: ContentSortOptions,
   ): Promise<ContentItem[]> {
-    let items = await repository.getAll();
+    let candidateIds: string[] | null = null;
+
+    // 1. Filter by Status (Index)
+    if (filters.status) {
+      candidateIds = await getIds(getStatusIndexKey(filters.status));
+    }
+
+    // 2. Filter by Platform (Index)
+    if (filters.platform) {
+      const platformIds = await getIds(getPlatformIndexKey(filters.platform));
+      if (candidateIds === null) {
+        candidateIds = platformIds;
+      } else {
+        // Intersect
+        const platformSet = new Set(platformIds);
+        candidateIds = candidateIds.filter((id) => platformSet.has(id));
+      }
+    }
+
+    // 3. If no indexed filters used, we must fetch all IDs
+    if (candidateIds === null) {
+      candidateIds = await getIds(ALL_IDS_KEY);
+    }
+
+    // If candidateIds is empty, return early
+    if (candidateIds.length === 0) {
+      return [];
+    }
+
+    // 4. Fetch Items
+    const keys = candidateIds.map(getItemKey);
+    const itemsNullable = await persistence.multiGet<ContentItem>(keys);
+    let items = itemsNullable.filter((i): i is ContentItem => i !== null);
+
+    // 5. Apply remaining filters in memory
     items = items.filter((item) => matchesFilters(item, filters));
+
     if (sort) {
       items = sortContent(items, sort);
     }
@@ -74,8 +196,8 @@ export const contentRepository = {
 
   async getScheduled(): Promise<ContentItem[]> {
     const items = await this.getByStatus("scheduled");
-    return items.sort((a, b) => 
-      (a.scheduledAt || "").localeCompare(b.scheduledAt || "")
+    return items.sort((a, b) =>
+      (a.scheduledAt || "").localeCompare(b.scheduledAt || ""),
     );
   },
 
@@ -89,7 +211,7 @@ export const contentRepository = {
   },
 
   async create(
-    data: Omit<ContentItem, "id" | "createdAt" | "updatedAt">
+    data: Omit<ContentItem, "id" | "createdAt" | "updatedAt">,
   ): Promise<ContentItem> {
     const now = new Date().toISOString();
     const item: ContentItem = {
@@ -98,14 +220,17 @@ export const contentRepository = {
       createdAt: now,
       updatedAt: now,
     };
-    await repository.save(item);
+    await this.save(item);
     return item;
   },
 
-  async update(id: string, updates: Partial<ContentItem>): Promise<ContentItem | null> {
-    const existing = await repository.getById(id);
+  async update(
+    id: string,
+    updates: Partial<ContentItem>,
+  ): Promise<ContentItem | null> {
+    const existing = await this.getById(id);
     if (!existing) return null;
-    
+
     const updated: ContentItem = {
       ...existing,
       ...updates,
@@ -113,22 +238,115 @@ export const contentRepository = {
       createdAt: existing.createdAt,
       updatedAt: new Date().toISOString(),
     };
-    await repository.save(updated);
+    await this.save(updated);
     return updated;
   },
 
   async save(item: ContentItem): Promise<void> {
-    await repository.save(item);
+    // 1. Get old item to check for index changes
+    const oldItem = await this.getById(item.id);
+
+    // 2. Save Item
+    await persistence.set(getItemKey(item.id), item);
+
+    // 3. Update Global ID List
+    await addToIndex(ALL_IDS_KEY, item.id);
+
+    // 4. Update Indexes
+    // Status
+    if (oldItem && oldItem.status !== item.status) {
+      await removeFromIndex(getStatusIndexKey(oldItem.status), item.id);
+    }
+    await addToIndex(getStatusIndexKey(item.status), item.id);
+
+    // Platforms
+    const newPlatforms = new Set(item.platforms);
+    const oldPlatforms = oldItem
+      ? new Set(oldItem.platforms)
+      : new Set<PlatformType>();
+
+    // Add to new
+    for (const p of item.platforms) {
+      if (!oldPlatforms.has(p)) {
+        await addToIndex(getPlatformIndexKey(p), item.id);
+      }
+    }
+    // Remove from old
+    if (oldItem) {
+      for (const p of oldItem.platforms) {
+        if (!newPlatforms.has(p)) {
+          await removeFromIndex(getPlatformIndexKey(p), item.id);
+        }
+      }
+    }
   },
 
   async delete(id: string): Promise<void> {
-    await repository.delete(id);
+    const item = await this.getById(id);
+    if (!item) return;
+
+    // 1. Remove Item
+    await persistence.remove(getItemKey(id));
+
+    // 2. Remove from Global ID List
+    await removeFromIndex(ALL_IDS_KEY, id);
+
+    // 3. Remove from Indexes
+    await removeFromIndex(getStatusIndexKey(item.status), id);
+    for (const p of item.platforms) {
+      await removeFromIndex(getPlatformIndexKey(p), id);
+    }
   },
 
   async deleteMany(ids: string[]): Promise<void> {
-    const items = await repository.getAll();
-    const filtered = items.filter((item) => !ids.includes(item.id));
-    await repository.saveAll(filtered);
+    if (ids.length === 0) return;
+
+    const idSet = new Set(ids);
+
+    // 1. Load All Indexes to update
+    const statuses: ContentStatus[] = [
+      "draft",
+      "scheduled",
+      "published",
+      "failed",
+    ];
+    const platforms: PlatformType[] = [
+      "instagram",
+      "tiktok",
+      "youtube",
+      "linkedin",
+      "pinterest",
+    ];
+
+    const statusKeys = statuses.map(getStatusIndexKey);
+    const platformKeys = platforms.map(getPlatformIndexKey);
+    const indexKeys = [ALL_IDS_KEY, ...statusKeys, ...platformKeys];
+
+    // Fetch all index contents
+    const indexValues = await persistence.multiGet<string[]>(indexKeys);
+
+    // 2. Update Indexes in Memory
+    const updates: [string, string[]][] = [];
+
+    // indexValues matches indexKeys order
+    for (let i = 0; i < indexKeys.length; i++) {
+      const key = indexKeys[i];
+      const currentIds = indexValues[i] || [];
+      // Filter out deleted IDs
+      const newIds = currentIds.filter((id) => !idSet.has(id));
+
+      if (newIds.length !== currentIds.length) {
+        updates.push([key, newIds]);
+      }
+    }
+
+    // 3. Save Updated Indexes
+    if (updates.length > 0) {
+      await persistence.multiSet(updates);
+    }
+
+    // 4. Remove Items
+    await persistence.multiRemove(ids.map(getItemKey));
   },
 
   async publish(id: string): Promise<ContentItem | null> {
@@ -159,18 +377,53 @@ export const contentRepository = {
     published: number;
     failed: number;
   }> {
-    const items = await repository.getAll();
+    const [totalIds, draftsIds, scheduledIds, publishedIds, failedIds] =
+      await Promise.all([
+        getIds(ALL_IDS_KEY),
+        getIds(getStatusIndexKey("draft")),
+        getIds(getStatusIndexKey("scheduled")),
+        getIds(getStatusIndexKey("published")),
+        getIds(getStatusIndexKey("failed")),
+      ]);
+
     return {
-      total: items.length,
-      drafts: items.filter((i) => i.status === "draft").length,
-      scheduled: items.filter((i) => i.status === "scheduled").length,
-      published: items.filter((i) => i.status === "published").length,
-      failed: items.filter((i) => i.status === "failed").length,
+      total: totalIds.length,
+      drafts: draftsIds.length,
+      scheduled: scheduledIds.length,
+      published: publishedIds.length,
+      failed: failedIds.length,
     };
   },
 
   async clear(): Promise<void> {
-    await repository.clear();
+    const ids = await getIds(ALL_IDS_KEY);
+
+    // Remove all items
+    await persistence.multiRemove(ids.map(getItemKey));
+
+    // Remove Global List
+    await persistence.remove(ALL_IDS_KEY);
+
+    // Remove All Indexes
+    const statuses: ContentStatus[] = [
+      "draft",
+      "scheduled",
+      "published",
+      "failed",
+    ];
+    const platforms: PlatformType[] = [
+      "instagram",
+      "tiktok",
+      "youtube",
+      "linkedin",
+      "pinterest",
+    ];
+
+    const indexKeys = [
+      ...statuses.map(getStatusIndexKey),
+      ...platforms.map(getPlatformIndexKey),
+    ];
+    await persistence.multiRemove(indexKeys);
   },
 };
 

@@ -11,7 +11,7 @@ export class PersistenceError extends Error {
     message: string,
     public readonly operation: "read" | "write" | "delete",
     public readonly key: string,
-    public readonly cause?: Error
+    public readonly cause?: Error,
   ) {
     super(message);
     this.name = "PersistenceError";
@@ -27,7 +27,7 @@ async function safeGet<T>(key: string): Promise<T | null> {
       `Failed to read data for key: ${key}`,
       "read",
       key,
-      error instanceof Error ? error : undefined
+      error instanceof Error ? error : undefined,
     );
   }
 }
@@ -40,7 +40,23 @@ async function safeSet<T>(key: string, value: T): Promise<void> {
       `Failed to write data for key: ${key}`,
       "write",
       key,
-      error instanceof Error ? error : undefined
+      error instanceof Error ? error : undefined,
+    );
+  }
+}
+
+async function safeMultiSet(pairs: [string, any][]): Promise<void> {
+  try {
+    const stringPairs = pairs.map(
+      ([key, value]) => [key, JSON.stringify(value)] as [string, string],
+    );
+    await AsyncStorage.multiSet(stringPairs);
+  } catch (error) {
+    throw new PersistenceError(
+      `Failed to write multiple keys`,
+      "write",
+      pairs.map((p) => p[0]).join(", "),
+      error instanceof Error ? error : undefined,
     );
   }
 }
@@ -53,7 +69,7 @@ async function safeRemove(key: string): Promise<void> {
       `Failed to delete data for key: ${key}`,
       "delete",
       key,
-      error instanceof Error ? error : undefined
+      error instanceof Error ? error : undefined,
     );
   }
 }
@@ -66,7 +82,29 @@ async function safeMultiRemove(keys: string[]): Promise<void> {
       `Failed to delete multiple keys`,
       "delete",
       keys.join(", "),
-      error instanceof Error ? error : undefined
+      error instanceof Error ? error : undefined,
+    );
+  }
+}
+
+async function safeMultiGet<T>(keys: string[]): Promise<(T | null)[]> {
+  try {
+    const pairs = await AsyncStorage.multiGet(keys);
+    const map = new Map(pairs);
+    return keys.map((key) => {
+      const val = map.get(key);
+      try {
+        return val ? JSON.parse(val) : null;
+      } catch {
+        return null;
+      }
+    });
+  } catch (error) {
+    throw new PersistenceError(
+      `Failed to read multiple keys`,
+      "read",
+      keys.join(", "),
+      error instanceof Error ? error : undefined,
     );
   }
 }
@@ -81,7 +119,7 @@ export interface Repository<T, ID = string> {
 }
 
 export function createRepository<T extends { id: string }>(
-  storageKey: string
+  storageKey: string,
 ): Repository<T> {
   return {
     async getById(id: string): Promise<T | null> {
@@ -145,7 +183,9 @@ export function createUserScopedStorage(userId: string) {
 export const persistence = {
   get: safeGet,
   set: safeSet,
+  multiSet: safeMultiSet,
   remove: safeRemove,
+  multiGet: safeMultiGet,
   multiRemove: safeMultiRemove,
   createRepository,
   createUserScopedStorage,
