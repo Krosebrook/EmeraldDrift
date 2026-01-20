@@ -2,7 +2,9 @@ import { persistence } from "../core/persistence";
 import { STORAGE_KEYS } from "../core/constants";
 import type { MediaAsset, MediaAssetType } from "../types";
 
-const repository = persistence.createRepository<MediaAsset>(STORAGE_KEYS.MEDIA_LIBRARY);
+const repository = persistence.createRepository<MediaAsset>(
+  STORAGE_KEYS.MEDIA_LIBRARY,
+);
 
 export interface MediaFilters {
   type?: MediaAssetType;
@@ -15,13 +17,18 @@ export interface MediaFilters {
 
 function matchesFilters(asset: MediaAsset, filters: MediaFilters): boolean {
   if (filters.type && asset.type !== filters.type) return false;
-  if (filters.isFavorite !== undefined && asset.isFavorite !== filters.isFavorite) return false;
+  if (
+    filters.isFavorite !== undefined &&
+    asset.isFavorite !== filters.isFavorite
+  )
+    return false;
   if (filters.searchQuery) {
     const query = filters.searchQuery.toLowerCase();
     if (!asset.name.toLowerCase().includes(query)) return false;
   }
   if (filters.tags && filters.tags.length > 0) {
-    if (!asset.tags || !filters.tags.some((tag) => asset.tags?.includes(tag))) return false;
+    if (!asset.tags || !filters.tags.some((tag) => asset.tags?.includes(tag)))
+      return false;
   }
   if (filters.startDate && asset.createdAt < filters.startDate) return false;
   if (filters.endDate && asset.createdAt > filters.endDate) return false;
@@ -60,24 +67,29 @@ export const mediaRepository = {
     return asset;
   },
 
-  async addBatch(assets: Omit<MediaAsset, "id" | "createdAt">[]): Promise<MediaAsset[]> {
+  async addBatch(
+    assets: Omit<MediaAsset, "id" | "createdAt">[],
+  ): Promise<MediaAsset[]> {
     const existingAssets = await repository.getAll();
     const now = new Date().toISOString();
-    
+
     const newAssets: MediaAsset[] = assets.map((data, index) => ({
       ...data,
       id: `media_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 9)}`,
       createdAt: now,
     }));
-    
+
     await repository.saveAll([...newAssets, ...existingAssets]);
     return newAssets;
   },
 
-  async update(id: string, updates: Partial<MediaAsset>): Promise<MediaAsset | null> {
+  async update(
+    id: string,
+    updates: Partial<MediaAsset>,
+  ): Promise<MediaAsset | null> {
     const existing = await repository.getById(id);
     if (!existing) return null;
-    
+
     const updated: MediaAsset = { ...existing, ...updates, id: existing.id };
     await repository.save(updated);
     return updated;
@@ -89,14 +101,17 @@ export const mediaRepository = {
     return this.update(id, { isFavorite: !asset.isFavorite });
   },
 
-  async setFavorite(id: string, isFavorite: boolean): Promise<MediaAsset | null> {
+  async setFavorite(
+    id: string,
+    isFavorite: boolean,
+  ): Promise<MediaAsset | null> {
     return this.update(id, { isFavorite });
   },
 
   async addTags(id: string, tags: string[]): Promise<MediaAsset | null> {
     const asset = await repository.getById(id);
     if (!asset) return null;
-    
+
     const existingTags = asset.tags ?? [];
     const uniqueTags = [...new Set([...existingTags, ...tags])];
     return this.update(id, { tags: uniqueTags });
@@ -105,7 +120,7 @@ export const mediaRepository = {
   async removeTags(id: string, tags: string[]): Promise<MediaAsset | null> {
     const asset = await repository.getById(id);
     if (!asset) return null;
-    
+
     const filteredTags = (asset.tags ?? []).filter((t) => !tags.includes(t));
     return this.update(id, { tags: filteredTags });
   },
@@ -116,7 +131,8 @@ export const mediaRepository = {
 
   async deleteMany(ids: string[]): Promise<void> {
     const assets = await repository.getAll();
-    const filtered = assets.filter((asset) => !ids.includes(asset.id));
+    const idsSet = new Set(ids);
+    const filtered = assets.filter((asset) => !idsSet.has(asset.id));
     await repository.saveAll(filtered);
   },
 
