@@ -24,6 +24,71 @@ This is a comprehensive Print-on-Demand (POD) generator and e-commerce managemen
 -   **Prediction Engine**: Sales forecasting, trend analysis, inventory forecasts, and seasonality patterns.
 -   **Unified Analytics**: Cross-platform revenue, orders, and product performance metrics.
 
+## B2B SaaS Target User Segments
+
+### Primary Personas
+
+#### 1. Independent POD Sellers (Solo Entrepreneurs)
+-   **Profile**: Individual creators running POD businesses on 1-3 platforms
+-   **Pain Points**: Manual order tracking, inconsistent product listings across platforms, no sales forecasting
+-   **Value Proposition**: Unified dashboard to manage all marketplaces, AI-generated content saves hours per week
+-   **Monthly Revenue**: $1K-$10K
+-   **Technical Comfort**: Low to moderate
+-   **Key Features Used**: AI Content Generator, Order Listener, Basic Analytics
+
+#### 2. Growing E-commerce Brands (Small Teams)
+-   **Profile**: 2-5 person teams scaling from hobbyist to professional POD operations
+-   **Pain Points**: Inventory sync issues, missed reorder points, no demand forecasting
+-   **Value Proposition**: Prediction Engine prevents stockouts, automated alerts reduce manual monitoring
+-   **Monthly Revenue**: $10K-$50K
+-   **Technical Comfort**: Moderate
+-   **Key Features Used**: Inventory Manager, Prediction Engine, Multi-marketplace sync, Merch Studio
+
+#### 3. Established POD Agencies (Professional Operations)
+-   **Profile**: Agencies managing POD fulfillment for multiple clients or brands
+-   **Pain Points**: Cross-platform reporting, client-specific analytics, bulk product management
+-   **Value Proposition**: Unified analytics across all 7 platforms, white-label potential, team collaboration
+-   **Monthly Revenue**: $50K-$500K+
+-   **Technical Comfort**: High
+-   **Key Features Used**: Full platform capabilities, API integrations, Advanced Analytics, Agent Orchestrator
+
+#### 4. Content Creators Monetizing Merchandise
+-   **Profile**: YouTubers, influencers, artists selling branded merchandise
+-   **Pain Points**: Design-to-product workflow friction, no time for marketplace management
+-   **Value Proposition**: AI mockup generation from designs, hands-off order fulfillment via Printify
+-   **Monthly Revenue**: Variable ($500-$25K)
+-   **Technical Comfort**: Low
+-   **Key Features Used**: Merch Studio, Printify integration, AI Content Generator
+
+### Secondary Personas
+
+#### 5. Amazon KDP Authors
+-   **Profile**: Self-published authors expanding into low-content books and merchandise
+-   **Pain Points**: Separate tools for KDP vs other POD, no unified book/merch analytics
+-   **Value Proposition**: Single platform for KDP + POD merchandise management
+-   **Key Features Used**: Amazon KDP integration, Content Generator, Sales Predictions
+
+#### 6. Dropshipping Entrepreneurs
+-   **Profile**: E-commerce operators using POD as part of broader dropshipping model
+-   **Pain Points**: Supplier coordination, inventory visibility, order routing
+-   **Value Proposition**: Centralized order management with real-time inventory across suppliers
+-   **Key Features Used**: Order Listener, Inventory Manager, WooCommerce/Shopify sync
+
+### User Journey Stages
+
+1.  **Discovery**: Landing page with clear value proposition for each persona
+2.  **Onboarding**: Guided marketplace connection flow, first AI-generated content
+3.  **Activation**: First order synced, first product created via Merch Studio
+4.  **Retention**: Daily dashboard usage, prediction-based reorder alerts
+5.  **Expansion**: Adding additional marketplaces, team member invites
+6.  **Advocacy**: Referrals, case study participation
+
+### Pricing Tier Alignment
+
+-   **Free/Starter**: Solo sellers, 1-2 marketplace connections, basic analytics
+-   **Growth**: Small teams, all 7 marketplaces, Prediction Engine, team seats
+-   **Enterprise**: Agencies, API access, white-label, priority support
+
 ## User Preferences
 
 -   Clean code architecture at maximum depth
