@@ -130,15 +130,28 @@ export const mediaRepository = {
     totalSize: number;
   }> {
     const assets = await repository.getAll();
-    return {
-      total: assets.length,
-      images: assets.filter((a) => a.type === "image").length,
-      videos: assets.filter((a) => a.type === "video").length,
-      audio: assets.filter((a) => a.type === "audio").length,
-      documents: assets.filter((a) => a.type === "document").length,
-      favorites: assets.filter((a) => a.isFavorite).length,
-      totalSize: assets.reduce((sum, a) => sum + a.size, 0),
-    };
+    return assets.reduce(
+      (stats, asset) => {
+        stats.total++;
+        if (asset.type === "image") stats.images++;
+        else if (asset.type === "video") stats.videos++;
+        else if (asset.type === "audio") stats.audio++;
+        else if (asset.type === "document") stats.documents++;
+
+        if (asset.isFavorite) stats.favorites++;
+        stats.totalSize += asset.size;
+        return stats;
+      },
+      {
+        total: 0,
+        images: 0,
+        videos: 0,
+        audio: 0,
+        documents: 0,
+        favorites: 0,
+        totalSize: 0,
+      }
+    );
   },
 
   async clear(): Promise<void> {
