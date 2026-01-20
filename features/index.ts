@@ -124,8 +124,8 @@ export type {
   MarketplaceProduct,
   MarketplaceOrder,
   MarketplaceAnalytics,
-  SyncResult 
-} from "./marketplaces/service";
+  SyncResult as MarketplaceSyncResult 
+} from "./marketplaces";
 
 export { orderListenerService } from "./orders";
 export type {
