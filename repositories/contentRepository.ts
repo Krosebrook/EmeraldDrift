@@ -2,7 +2,9 @@ import { persistence } from "../core/persistence";
 import { STORAGE_KEYS } from "../core/constants";
 import type { ContentItem, ContentStatus, PlatformType } from "../types";
 
-const repository = persistence.createRepository<ContentItem>(STORAGE_KEYS.CONTENT);
+const repository = persistence.createRepository<ContentItem>(
+  STORAGE_KEYS.CONTENT,
+);
 
 export interface ContentFilters {
   status?: ContentStatus;
@@ -19,7 +21,8 @@ export interface ContentSortOptions {
 
 function matchesFilters(item: ContentItem, filters: ContentFilters): boolean {
   if (filters.status && item.status !== filters.status) return false;
-  if (filters.platform && !item.platforms.includes(filters.platform)) return false;
+  if (filters.platform && !item.platforms.includes(filters.platform))
+    return false;
   if (filters.searchQuery) {
     const query = filters.searchQuery.toLowerCase();
     const matchesTitle = item.title.toLowerCase().includes(query);
@@ -33,7 +36,7 @@ function matchesFilters(item: ContentItem, filters: ContentFilters): boolean {
 
 function sortContent(
   items: ContentItem[],
-  options: ContentSortOptions
+  options: ContentSortOptions,
 ): ContentItem[] {
   return [...items].sort((a, b) => {
     const aValue = a[options.field] || "";
@@ -54,7 +57,7 @@ export const contentRepository = {
 
   async getFiltered(
     filters: ContentFilters,
-    sort?: ContentSortOptions
+    sort?: ContentSortOptions,
   ): Promise<ContentItem[]> {
     let items = await repository.getAll();
     items = items.filter((item) => matchesFilters(item, filters));
@@ -74,8 +77,8 @@ export const contentRepository = {
 
   async getScheduled(): Promise<ContentItem[]> {
     const items = await this.getByStatus("scheduled");
-    return items.sort((a, b) => 
-      (a.scheduledAt || "").localeCompare(b.scheduledAt || "")
+    return items.sort((a, b) =>
+      (a.scheduledAt || "").localeCompare(b.scheduledAt || ""),
     );
   },
 
@@ -89,7 +92,7 @@ export const contentRepository = {
   },
 
   async create(
-    data: Omit<ContentItem, "id" | "createdAt" | "updatedAt">
+    data: Omit<ContentItem, "id" | "createdAt" | "updatedAt">,
   ): Promise<ContentItem> {
     const now = new Date().toISOString();
     const item: ContentItem = {
@@ -102,10 +105,13 @@ export const contentRepository = {
     return item;
   },
 
-  async update(id: string, updates: Partial<ContentItem>): Promise<ContentItem | null> {
+  async update(
+    id: string,
+    updates: Partial<ContentItem>,
+  ): Promise<ContentItem | null> {
     const existing = await repository.getById(id);
     if (!existing) return null;
-    
+
     const updated: ContentItem = {
       ...existing,
       ...updates,
@@ -160,13 +166,32 @@ export const contentRepository = {
     failed: number;
   }> {
     const items = await repository.getAll();
-    return {
+    const stats = {
       total: items.length,
-      drafts: items.filter((i) => i.status === "draft").length,
-      scheduled: items.filter((i) => i.status === "scheduled").length,
-      published: items.filter((i) => i.status === "published").length,
-      failed: items.filter((i) => i.status === "failed").length,
+      drafts: 0,
+      scheduled: 0,
+      published: 0,
+      failed: 0,
     };
+
+    for (const item of items) {
+      switch (item.status) {
+        case "draft":
+          stats.drafts++;
+          break;
+        case "scheduled":
+          stats.scheduled++;
+          break;
+        case "published":
+          stats.published++;
+          break;
+        case "failed":
+          stats.failed++;
+          break;
+      }
+    }
+
+    return stats;
   },
 
   async clear(): Promise<void> {
