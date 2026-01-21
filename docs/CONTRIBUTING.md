@@ -8,9 +8,10 @@
 1. [Getting Started](#getting-started)
 2. [Development Environment](#development-environment)
 3. [Code Style Guide](#code-style-guide)
-4. [Development Workflow](#development-workflow)
-5. [Testing Guidelines](#testing-guidelines)
-6. [Pull Request Process](#pull-request-process)
+4. [Git Workflow](#git-workflow)
+5. [Development Workflow](#development-workflow)
+6. [Testing Guidelines](#testing-guidelines)
+7. [Pull Request Process](#pull-request-process)
 
 ---
 
@@ -215,6 +216,283 @@ try {
 // DON'T: Silently swallow errors
 // DON'T: Use console.log for error logging in production
 ```
+
+---
+
+## Git Workflow
+
+### Standard Development Flow
+
+Follow this workflow for contributing to EmeraldDrift:
+
+```bash
+# 1. Start by ensuring you're on main and up to date
+git checkout main
+git pull origin main
+
+# 2. Create a feature branch
+git checkout -b feature/your-feature-name
+# or
+git checkout -b fix/bug-description
+
+# 3. Make your changes and commit frequently
+git add [files]
+git commit -m "feat: add new feature"
+
+# 4. Before pushing, sync with latest main
+git fetch origin
+git merge origin/main
+# or use rebase for linear history
+git rebase origin/main
+
+# 5. Push your branch
+git push origin feature/your-feature-name
+
+# 6. Create Pull Request on GitHub
+```
+
+### Branch Naming Conventions
+
+| Type | Format | Example |
+|------|--------|---------|
+| Feature | `feature/description` | `feature/add-analytics-dashboard` |
+| Bug Fix | `fix/description` | `fix/navigation-crash` |
+| Documentation | `docs/description` | `docs/update-contributing` |
+| Refactor | `refactor/description` | `refactor/simplify-auth` |
+| Performance | `perf/description` | `perf/optimize-image-loading` |
+
+### Keeping Your Branch Updated
+
+**Regularly sync with main** to avoid large conflicts later:
+
+```bash
+# Option 1: Merge (preserves all history)
+git checkout feature/your-feature
+git fetch origin
+git merge origin/main
+
+# Option 2: Rebase (creates linear history)
+git checkout feature/your-feature
+git fetch origin
+git rebase origin/main
+```
+
+### Handling Remote Updates
+
+#### Scenario: Can't Push Due to Unpulled Changes
+
+**Symptoms**:
+- Error: "Can't push: unpulled changes must be merged first"
+- Status shows "5 down 36 up" (5 commits to pull, 36 to push)
+
+**Solution**:
+
+```bash
+# 1. Check current status
+git status
+git fetch origin
+
+# 2. See what's different
+git log --oneline origin/main..HEAD  # Your local commits not on remote
+git log --oneline HEAD..origin/main  # Remote commits you don't have
+
+# 3. Pull and merge remote changes
+git pull origin main
+# This will attempt to merge automatically
+
+# 4. If conflicts occur, see "Resolving Conflicts" below
+
+# 5. After resolving, push
+git push origin main
+```
+
+### Resolving Merge Conflicts
+
+When Git can't automatically merge changes:
+
+**Step 1: Identify Conflicts**
+```bash
+git status
+# Look for "both modified:" files
+```
+
+**Step 2: Open Conflicted Files**
+
+Conflicts are marked with:
+```
+<<<<<<< HEAD
+your changes
+=======
+remote changes
+>>>>>>> origin/main
+```
+
+**Step 3: Resolve the Conflict**
+
+Edit the file to keep the correct code:
+
+```typescript
+// Before (with conflict):
+<<<<<<< HEAD
+const API_URL = "http://localhost:3000";
+=======
+const API_URL = "https://api.production.com";
+>>>>>>> origin/main
+
+// After (resolved - keep both with environment variable):
+const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+```
+
+**Step 4: Mark as Resolved**
+```bash
+git add [resolved-file]
+```
+
+**Step 5: Complete the Merge**
+```bash
+git commit -m "Merge remote changes and resolve conflicts"
+git push origin main
+```
+
+### Common Conflict Scenarios
+
+#### 1. Package.json Conflicts
+
+```bash
+# If package.json has conflicts:
+# 1. Manually merge dependencies in package.json
+# 2. Only if necessary, regenerate lock file (try resolving lock file conflicts first)
+rm package-lock.json
+
+# 3. Regenerate lock file
+npm install
+
+# 4. Commit
+git add package.json package-lock.json
+git commit -m "Merge package.json and regenerate lock file"
+```
+
+**Note**: Avoid deleting `package-lock.json` unless absolutely necessary, as it ensures consistent dependency versions.
+
+#### 2. Same File, Different Lines
+
+**Resolution**: Usually auto-merged by Git. If not, keep both changes if they don't conflict logically.
+
+#### 3. Same File, Same Lines
+
+**Resolution**: Choose the correct version or combine both changes manually.
+
+### Undoing Mistakes
+
+#### Undo Uncommitted Changes
+
+```bash
+# Discard changes in a specific file
+git checkout -- [file]
+
+# Discard all changes
+git reset --hard HEAD
+```
+
+#### Undo Last Commit (Not Pushed)
+
+```bash
+# Keep changes, undo commit
+git reset --soft HEAD~1
+
+# Discard changes and commit
+git reset --hard HEAD~1
+```
+
+#### Abort a Merge
+
+```bash
+# If merge is going wrong
+git merge --abort
+```
+
+#### Abort a Rebase
+
+```bash
+# If rebase is going wrong
+git rebase --abort
+```
+
+### Using Stash for Quick Context Switching
+
+```bash
+# Save work in progress temporarily
+git stash save "WIP: working on feature"
+
+# Switch branches or pull updates
+git checkout main
+git pull origin main
+
+# Return to your branch
+git checkout feature/your-feature
+
+# Restore your work
+git stash pop
+
+# List all stashes
+git stash list
+
+# Apply specific stash without removing it
+git stash apply stash@{0}
+
+# Clear all stashes
+git stash clear
+```
+
+### Pre-Push Checklist
+
+Before pushing your changes:
+
+- [ ] **Fetch latest**: `git fetch origin`
+- [ ] **Sync with main**: `git merge origin/main` or `git rebase origin/main`
+- [ ] **Run linter**: `npm run lint`
+- [ ] **Check types**: `npm run check:format`
+- [ ] **Test locally**: `npm run dev` and verify functionality
+- [ ] **Review changes**: `git diff origin/main`
+- [ ] **Commit messages follow convention**: `type(scope): description`
+
+### Checking Branch Status
+
+```bash
+# See commits ahead/behind remote
+git status
+
+# Detailed branch comparison
+git log --oneline --graph --all
+
+# Count commits ahead/behind
+git rev-list --left-right --count origin/main...HEAD
+# Output: "5  36" means 5 behind, 36 ahead
+
+# See what files changed
+git diff --name-status origin/main
+```
+
+### Best Practices
+
+1. **Commit Often**: Make small, logical commits
+2. **Pull Frequently**: Start each session with `git pull`
+3. **Write Clear Messages**: Use conventional commit format
+4. **Test Before Pushing**: Ensure code works
+5. **Review Your Changes**: Use `git diff` before committing
+6. **Keep Branches Short-Lived**: Merge/delete after PR is accepted
+7. **Use Feature Branches**: Never commit directly to main
+8. **Communicate**: Coordinate on shared files with team
+
+### Getting Help with Git
+
+If you're stuck:
+
+1. **Check status**: `git status` shows current state
+2. **View history**: `git log --oneline` shows recent commits
+3. **Abort operation**: `git merge --abort` or `git rebase --abort`
+4. **Seek help**: Ask in PR comments or team chat
+5. **Refer to docs**: See [TROUBLESHOOTING.md](TROUBLESHOOTING.md#git--version-control)
 
 ---
 

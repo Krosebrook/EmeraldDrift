@@ -382,6 +382,12 @@ We welcome contributions! Please follow these steps:
 6. **Push to your fork**: `git push origin feature/amazing-feature`
 7. **Open a Pull Request**
 
+**Need help with Git?** See the [Git Workflow section](docs/CONTRIBUTING.md#git-workflow) in our Contributing Guide for detailed instructions on:
+- Handling merge conflicts
+- Syncing with remote changes  
+- Resolving "unpulled changes" errors
+- Branch management best practices
+
 ### Commit Message Convention
 
 We follow [Conventional Commits](https://www.conventionalcommits.org/):
@@ -412,6 +418,17 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 ## 🐛 Troubleshooting
 
 ### Common Issues
+
+#### Git: Can't Push Due to Remote Updates
+```bash
+# Error: "Can't push: unpulled changes must be merged first"
+git fetch origin
+git pull origin main
+# Resolve any conflicts, then:
+git push origin main
+```
+
+See [Git & Version Control Troubleshooting](docs/TROUBLESHOOTING.md#git--version-control) for detailed conflict resolution.
 
 #### Expo Go App Not Connecting
 ```bash
