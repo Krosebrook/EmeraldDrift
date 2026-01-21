@@ -29,14 +29,18 @@ export function OfflineIndicator({
 }: OfflineIndicatorProps) {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
-  const { isOffline, isSyncing, pendingCount, triggerSync, isOnline } = useOfflineContext();
+  const { isOffline, isSyncing, pendingCount, triggerSync, isOnline } =
+    useOfflineContext();
   const translateY = useSharedValue(position === "top" ? -100 : 100);
   const pulseOpacity = useSharedValue(1);
   const wasOfflineRef = useRef(false);
 
   useEffect(() => {
     if (isOffline || pendingCount > 0) {
-      translateY.value = withTiming(0, { duration: 300, easing: Easing.out(Easing.cubic) });
+      translateY.value = withTiming(0, {
+        duration: 300,
+        easing: Easing.out(Easing.cubic),
+      });
     } else {
       translateY.value = withTiming(position === "top" ? -100 : 100, {
         duration: 300,
@@ -50,9 +54,9 @@ export function OfflineIndicator({
       pulseOpacity.value = withRepeat(
         withSequence(
           withTiming(0.5, { duration: 1000 }),
-          withTiming(1, { duration: 1000 })
+          withTiming(1, { duration: 1000 }),
         ),
-        -1
+        -1,
       );
       wasOfflineRef.current = true;
     } else {
@@ -145,7 +149,11 @@ export function OfflineIndicator({
         )}
 
         {isSyncing && (
-          <ActivityIndicator size="small" color="#FFFFFF" style={styles.spinner} />
+          <ActivityIndicator
+            size="small"
+            color="#FFFFFF"
+            style={styles.spinner}
+          />
         )}
       </Animated.View>
     </Animated.View>

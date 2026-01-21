@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { View, StyleSheet, TextInput, Pressable, ScrollView } from "react-native";
+import {
+  View,
+  StyleSheet,
+  TextInput,
+  Pressable,
+  ScrollView,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -51,7 +57,12 @@ function TextOverlayItem({
   const availableColors = getColors(theme);
 
   return (
-    <View style={[styles.overlayItem, { backgroundColor: theme.backgroundSecondary }]}>
+    <View
+      style={[
+        styles.overlayItem,
+        { backgroundColor: theme.backgroundSecondary },
+      ]}
+    >
       <View style={styles.overlayHeader}>
         <ThemedText type="subhead" style={{ fontWeight: "600" }}>
           Text Layer
@@ -101,7 +112,10 @@ function TextOverlayItem({
                 <ThemedText
                   type="caption"
                   style={{
-                    color: overlay.fontFamily === font.family ? "#FFFFFF" : theme.text,
+                    color:
+                      overlay.fontFamily === font.family
+                        ? "#FFFFFF"
+                        : theme.text,
                     fontFamily: font.family,
                   }}
                 >
@@ -119,17 +133,32 @@ function TextOverlayItem({
         </ThemedText>
         <View style={styles.sizeControls}>
           <Pressable
-            onPress={() => onUpdate({ fontSize: Math.max(12, overlay.fontSize - 2) })}
-            style={[styles.sizeButton, { backgroundColor: theme.backgroundTertiary }]}
+            onPress={() =>
+              onUpdate({ fontSize: Math.max(12, overlay.fontSize - 2) })
+            }
+            style={[
+              styles.sizeButton,
+              { backgroundColor: theme.backgroundTertiary },
+            ]}
           >
             <Feather name="minus" size={16} color={theme.text} />
           </Pressable>
-          <View style={[styles.sizeDisplay, { backgroundColor: theme.backgroundDefault }]}>
+          <View
+            style={[
+              styles.sizeDisplay,
+              { backgroundColor: theme.backgroundDefault },
+            ]}
+          >
             <ThemedText type="body">{overlay.fontSize}px</ThemedText>
           </View>
           <Pressable
-            onPress={() => onUpdate({ fontSize: Math.min(72, overlay.fontSize + 2) })}
-            style={[styles.sizeButton, { backgroundColor: theme.backgroundTertiary }]}
+            onPress={() =>
+              onUpdate({ fontSize: Math.min(72, overlay.fontSize + 2) })
+            }
+            style={[
+              styles.sizeButton,
+              { backgroundColor: theme.backgroundTertiary },
+            ]}
           >
             <Feather name="plus" size={16} color={theme.text} />
           </Pressable>
@@ -213,8 +242,8 @@ function TextOverlayItem({
                   alignment === "left"
                     ? "align-left"
                     : alignment === "center"
-                    ? "align-center"
-                    : "align-right"
+                      ? "align-center"
+                      : "align-right"
                 }
                 size={16}
                 color={overlay.alignment === alignment ? "#FFFFFF" : theme.text}

@@ -31,7 +31,7 @@ export function Skeleton({
     shimmerValue.value = withRepeat(
       withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
       -1,
-      true
+      true,
     );
   }, []);
 
@@ -94,7 +94,10 @@ export function SkeletonCard({
     <View
       style={[
         styles.card,
-        { backgroundColor: theme.backgroundSecondary, borderColor: theme.border },
+        {
+          backgroundColor: theme.backgroundSecondary,
+          borderColor: theme.border,
+        },
       ]}
     >
       <Skeleton
@@ -107,7 +110,11 @@ export function SkeletonCard({
         <View style={styles.cardContent}>
           <Skeleton width="70%" height={18} />
           {showDescription && (
-            <Skeleton width="90%" height={12} style={{ marginTop: Spacing.xs }} />
+            <Skeleton
+              width="90%"
+              height={12}
+              style={{ marginTop: Spacing.xs }}
+            />
           )}
         </View>
       )}

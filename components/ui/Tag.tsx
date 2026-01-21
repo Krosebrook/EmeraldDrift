@@ -1,5 +1,11 @@
 import React from "react";
-import { View, Pressable, StyleSheet, ViewStyle, StyleProp } from "react-native";
+import {
+  View,
+  Pressable,
+  StyleSheet,
+  ViewStyle,
+  StyleProp,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
@@ -52,7 +58,10 @@ export function Tag({
 
   if (onPress && !disabled) {
     return (
-      <Pressable onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+      >
         {content}
       </Pressable>
     );

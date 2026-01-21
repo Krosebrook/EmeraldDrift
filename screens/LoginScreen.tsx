@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { StyleSheet, View, TextInput, Pressable, Alert, Platform, ActivityIndicator, Image } from "react-native";
+import {
+  StyleSheet,
+  View,
+  TextInput,
+  Pressable,
+  Alert,
+  Platform,
+  ActivityIndicator,
+  Image,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -23,7 +32,9 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
+    {},
+  );
 
   const validate = (): boolean => {
     const newErrors: { email?: string; password?: string } = {};
@@ -59,7 +70,10 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
     } else {
-      Alert.alert("Login Failed", "Please check your credentials and try again.");
+      Alert.alert(
+        "Login Failed",
+        "Please check your credentials and try again.",
+      );
     }
   };
 
@@ -80,7 +94,9 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           style={styles.logo}
           resizeMode="contain"
         />
-        <ThemedText type="display" style={styles.title}>Welcome Back</ThemedText>
+        <ThemedText type="display" style={styles.title}>
+          Welcome Back
+        </ThemedText>
         <ThemedText secondary style={styles.subtitle}>
           Sign in to continue to Creator Studio
         </ThemedText>
@@ -90,13 +106,16 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
       <View style={styles.form}>
         <View style={styles.fieldContainer}>
-          <ThemedText type="subhead" style={styles.label}>Email</ThemedText>
+          <ThemedText type="subhead" style={styles.label}>
+            Email
+          </ThemedText>
           <TextInput
             style={inputStyle(errors.email)}
             value={email}
             onChangeText={(text) => {
               setEmail(text);
-              if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+              if (errors.email)
+                setErrors((prev) => ({ ...prev, email: undefined }));
             }}
             placeholder="your@email.com"
             placeholderTextColor={theme.placeholder}
@@ -107,7 +126,10 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             editable={!isLoading}
           />
           {errors.email ? (
-            <ThemedText type="caption" style={{ color: theme.error, marginTop: 4 }}>
+            <ThemedText
+              type="caption"
+              style={{ color: theme.error, marginTop: 4 }}
+            >
               {errors.email}
             </ThemedText>
           ) : null}
@@ -116,14 +138,17 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         <Spacer height={Spacing.base} />
 
         <View style={styles.fieldContainer}>
-          <ThemedText type="subhead" style={styles.label}>Password</ThemedText>
+          <ThemedText type="subhead" style={styles.label}>
+            Password
+          </ThemedText>
           <View style={styles.passwordContainer}>
             <TextInput
               style={[inputStyle(errors.password), styles.passwordInput]}
               value={password}
               onChangeText={(text) => {
                 setPassword(text);
-                if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
+                if (errors.password)
+                  setErrors((prev) => ({ ...prev, password: undefined }));
               }}
               placeholder="Enter your password"
               placeholderTextColor={theme.placeholder}
@@ -134,8 +159,18 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               editable={!isLoading}
             />
             <Pressable
-              onPress={() => setShowPassword(!showPassword)}
+              onPress={() => {
+                setShowPassword(!showPassword);
+                if (Platform.OS !== "web") {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+              }}
               style={styles.eyeButton}
+              accessibilityRole="button"
+              accessibilityLabel={
+                showPassword ? "Hide password" : "Show password"
+              }
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <Feather
                 name={showPassword ? "eye-off" : "eye"}
@@ -145,7 +180,10 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             </Pressable>
           </View>
           {errors.password ? (
-            <ThemedText type="caption" style={{ color: theme.error, marginTop: 4 }}>
+            <ThemedText
+              type="caption"
+              style={{ color: theme.error, marginTop: 4 }}
+            >
               {errors.password}
             </ThemedText>
           ) : null}
@@ -155,7 +193,9 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
         <Pressable
           onPress={() => navigation.navigate("ForgotPassword")}
-          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1, alignSelf: "flex-end" }]}
+          style={({ pressed }) => [
+            { opacity: pressed ? 0.7 : 1, alignSelf: "flex-end" },
+          ]}
         >
           <ThemedText type="link">Forgot Password?</ThemedText>
         </Pressable>
@@ -173,9 +213,15 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         <Spacer height={Spacing.lg} />
 
         <View style={styles.divider}>
-          <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
-          <ThemedText type="caption" secondary style={styles.dividerText}>or continue with</ThemedText>
-          <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
+          <View
+            style={[styles.dividerLine, { backgroundColor: theme.border }]}
+          />
+          <ThemedText type="caption" secondary style={styles.dividerText}>
+            or continue with
+          </ThemedText>
+          <View
+            style={[styles.dividerLine, { backgroundColor: theme.border }]}
+          />
         </View>
 
         <Spacer height={Spacing.lg} />
@@ -188,7 +234,9 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           onPress={() => navigation.navigate("ReplitAuth")}
         >
           <Feather name="code" size={20} color="#FFFFFF" />
-          <ThemedText style={styles.replitButtonText}>Sign in with Replit</ThemedText>
+          <ThemedText style={styles.replitButtonText}>
+            Sign in with Replit
+          </ThemedText>
         </Pressable>
       </View>
 
@@ -200,7 +248,9 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           onPress={() => navigation.navigate("SignUp")}
           style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
         >
-          <ThemedText type="link" style={{ fontWeight: "600" }}>Sign Up</ThemedText>
+          <ThemedText type="link" style={{ fontWeight: "600" }}>
+            Sign Up
+          </ThemedText>
         </Pressable>
       </View>
     </ScreenKeyboardAwareScrollView>

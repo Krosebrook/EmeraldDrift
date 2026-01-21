@@ -1,5 +1,11 @@
 import React, { ReactNode } from "react";
-import { StyleSheet, Pressable, View, ViewStyle, StyleProp } from "react-native";
+import {
+  StyleSheet,
+  Pressable,
+  View,
+  ViewStyle,
+  StyleProp,
+} from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -84,7 +90,9 @@ export function Card({ children, elevation = 0, onPress, style }: CardProps) {
   }
 
   return (
-    <View style={[styles.card, { backgroundColor: cardBackgroundColor }, style]}>
+    <View
+      style={[styles.card, { backgroundColor: cardBackgroundColor }, style]}
+    >
       {children}
     </View>
   );

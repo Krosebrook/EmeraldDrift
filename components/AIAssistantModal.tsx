@@ -15,7 +15,12 @@ import * as Haptics from "expo-haptics";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { aiContentService, ContentIdea, CaptionSuggestion, HashtagSuggestion } from "@/services/aiContent";
+import {
+  aiContentService,
+  ContentIdea,
+  CaptionSuggestion,
+  HashtagSuggestion,
+} from "@/services/aiContent";
 
 type AIMode = "ideas" | "captions" | "hashtags" | "improve" | "setup";
 
@@ -91,7 +96,10 @@ export function AIAssistantModal({
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    const result = await aiContentService.generateContentIdeas(topic || undefined, 5);
+    const result = await aiContentService.generateContentIdeas(
+      topic || undefined,
+      5,
+    );
     setIdeas(result.ideas);
     setUsingTemplates(!result.usedAI);
     setIsLoading(false);
@@ -108,7 +116,7 @@ export function AIAssistantModal({
       currentTitle,
       currentCaption,
       selectedPlatforms.length > 0 ? selectedPlatforms : ["instagram"],
-      3
+      3,
     );
     setCaptions(result.captions);
     setUsingTemplates(!result.usedAI);
@@ -126,7 +134,7 @@ export function AIAssistantModal({
     const result = await aiContentService.generateHashtags(
       content,
       selectedPlatforms.length > 0 ? selectedPlatforms : ["instagram"],
-      20
+      20,
     );
     setHashtags(result.result);
     setUsingTemplates(!result.usedAI);
@@ -182,9 +190,17 @@ export function AIAssistantModal({
     <View style={styles.modeContainer}>
       {[
         { id: "ideas" as AIMode, label: "Ideas", icon: "zap" as const },
-        { id: "captions" as AIMode, label: "Captions", icon: "edit-3" as const },
+        {
+          id: "captions" as AIMode,
+          label: "Captions",
+          icon: "edit-3" as const,
+        },
         { id: "hashtags" as AIMode, label: "Hashtags", icon: "hash" as const },
-        { id: "improve" as AIMode, label: "Improve", icon: "trending-up" as const },
+        {
+          id: "improve" as AIMode,
+          label: "Improve",
+          icon: "trending-up" as const,
+        },
       ].map((item) => (
         <Pressable
           key={item.id}
@@ -196,20 +212,21 @@ export function AIAssistantModal({
           }}
           style={[
             styles.modeButton,
-            { 
-              backgroundColor: mode === item.id ? theme.primary : theme.backgroundDefault,
+            {
+              backgroundColor:
+                mode === item.id ? theme.primary : theme.backgroundDefault,
               borderColor: mode === item.id ? theme.primary : theme.border,
             },
           ]}
         >
-          <Feather 
-            name={item.icon} 
-            size={16} 
-            color={mode === item.id ? "#FFFFFF" : theme.text} 
+          <Feather
+            name={item.icon}
+            size={16}
+            color={mode === item.id ? "#FFFFFF" : theme.text}
           />
           <ThemedText
             type="caption"
-            style={{ 
+            style={{
               color: mode === item.id ? "#FFFFFF" : theme.text,
               marginLeft: 4,
               fontWeight: "600",
@@ -226,11 +243,14 @@ export function AIAssistantModal({
     <View style={styles.contentSection}>
       <View style={styles.inputRow}>
         <TextInput
-          style={[styles.topicInput, { 
-            backgroundColor: theme.backgroundDefault,
-            borderColor: theme.border,
-            color: theme.text,
-          }]}
+          style={[
+            styles.topicInput,
+            {
+              backgroundColor: theme.backgroundDefault,
+              borderColor: theme.border,
+              color: theme.text,
+            },
+          ]}
           value={topic}
           onChangeText={setTopic}
           placeholder="Topic (optional)..."
@@ -250,14 +270,20 @@ export function AIAssistantModal({
       </View>
 
       {ideas.length > 0 ? (
-        <ScrollView style={styles.resultsList} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.resultsList}
+          showsVerticalScrollIndicator={false}
+        >
           {ideas.map((idea, index) => (
             <Pressable
               key={index}
               onPress={() => handleSelectIdea(idea)}
               style={({ pressed }) => [
                 styles.ideaCard,
-                { backgroundColor: theme.cardBackground, opacity: pressed ? 0.9 : 1 },
+                {
+                  backgroundColor: theme.cardBackground,
+                  opacity: pressed ? 0.9 : 1,
+                },
               ]}
             >
               <ThemedText style={styles.ideaTitle}>{idea.title}</ThemedText>
@@ -266,7 +292,10 @@ export function AIAssistantModal({
               </ThemedText>
               <View style={styles.ideaAngle}>
                 <Feather name="compass" size={12} color={theme.primary} />
-                <ThemedText type="caption" style={{ marginLeft: 4, color: theme.primary }}>
+                <ThemedText
+                  type="caption"
+                  style={{ marginLeft: 4, color: theme.primary }}
+                >
                   {idea.angle}
                 </ThemedText>
               </View>
@@ -274,9 +303,17 @@ export function AIAssistantModal({
           ))}
         </ScrollView>
       ) : (
-        <View style={[styles.emptyState, { backgroundColor: theme.backgroundDefault }]}>
+        <View
+          style={[
+            styles.emptyState,
+            { backgroundColor: theme.backgroundDefault },
+          ]}
+        >
           <Feather name="zap" size={32} color={theme.textSecondary} />
-          <ThemedText secondary style={{ marginTop: Spacing.sm, textAlign: "center" }}>
+          <ThemedText
+            secondary
+            style={{ marginTop: Spacing.sm, textAlign: "center" }}
+          >
             Enter a topic and tap generate{"\n"}for content ideas
           </ThemedText>
         </View>
@@ -287,9 +324,17 @@ export function AIAssistantModal({
   const renderCaptionsContent = () => (
     <View style={styles.contentSection}>
       {!currentTitle.trim() ? (
-        <View style={[styles.emptyState, { backgroundColor: theme.backgroundDefault }]}>
+        <View
+          style={[
+            styles.emptyState,
+            { backgroundColor: theme.backgroundDefault },
+          ]}
+        >
           <Feather name="edit-3" size={32} color={theme.textSecondary} />
-          <ThemedText secondary style={{ marginTop: Spacing.sm, textAlign: "center" }}>
+          <ThemedText
+            secondary
+            style={{ marginTop: Spacing.sm, textAlign: "center" }}
+          >
             Add a title first to generate{"\n"}caption suggestions
           </ThemedText>
         </View>
@@ -305,7 +350,9 @@ export function AIAssistantModal({
             ) : (
               <>
                 <Feather name="edit-3" size={18} color="#FFFFFF" />
-                <ThemedText style={{ color: "#FFFFFF", marginLeft: 8, fontWeight: "600" }}>
+                <ThemedText
+                  style={{ color: "#FFFFFF", marginLeft: 8, fontWeight: "600" }}
+                >
                   Generate Captions for "{currentTitle.slice(0, 20)}..."
                 </ThemedText>
               </>
@@ -313,32 +360,56 @@ export function AIAssistantModal({
           </Pressable>
 
           {captions.length > 0 ? (
-            <ScrollView style={styles.resultsList} showsVerticalScrollIndicator={false}>
+            <ScrollView
+              style={styles.resultsList}
+              showsVerticalScrollIndicator={false}
+            >
               {captions.map((cap, index) => (
                 <Pressable
                   key={index}
                   onPress={() => handleSelectCaption(cap)}
                   style={({ pressed }) => [
                     styles.captionCard,
-                    { backgroundColor: theme.cardBackground, opacity: pressed ? 0.9 : 1 },
+                    {
+                      backgroundColor: theme.cardBackground,
+                      opacity: pressed ? 0.9 : 1,
+                    },
                   ]}
                 >
                   <ThemedText numberOfLines={3}>{cap.caption}</ThemedText>
                   <View style={styles.hashtagPreview}>
                     {cap.hashtags.slice(0, 5).map((tag, i) => (
-                      <View key={i} style={[styles.hashtagChip, { backgroundColor: theme.primary + "20" }]}>
-                        <ThemedText type="caption" style={{ color: theme.primary }}>
+                      <View
+                        key={i}
+                        style={[
+                          styles.hashtagChip,
+                          { backgroundColor: theme.primary + "20" },
+                        ]}
+                      >
+                        <ThemedText
+                          type="caption"
+                          style={{ color: theme.primary }}
+                        >
                           {tag}
                         </ThemedText>
                       </View>
                     ))}
                     {cap.hashtags.length > 5 ? (
-                      <ThemedText type="caption" secondary>+{cap.hashtags.length - 5}</ThemedText>
+                      <ThemedText type="caption" secondary>
+                        +{cap.hashtags.length - 5}
+                      </ThemedText>
                     ) : null}
                   </View>
                   <View style={styles.ctaPreview}>
-                    <Feather name="message-circle" size={12} color={theme.success} />
-                    <ThemedText type="caption" style={{ marginLeft: 4, color: theme.success }}>
+                    <Feather
+                      name="message-circle"
+                      size={12}
+                      color={theme.success}
+                    />
+                    <ThemedText
+                      type="caption"
+                      style={{ marginLeft: 4, color: theme.success }}
+                    >
                       {cap.callToAction}
                     </ThemedText>
                   </View>
@@ -354,9 +425,17 @@ export function AIAssistantModal({
   const renderHashtagsContent = () => (
     <View style={styles.contentSection}>
       {!currentTitle.trim() && !currentCaption.trim() ? (
-        <View style={[styles.emptyState, { backgroundColor: theme.backgroundDefault }]}>
+        <View
+          style={[
+            styles.emptyState,
+            { backgroundColor: theme.backgroundDefault },
+          ]}
+        >
           <Feather name="hash" size={32} color={theme.textSecondary} />
-          <ThemedText secondary style={{ marginTop: Spacing.sm, textAlign: "center" }}>
+          <ThemedText
+            secondary
+            style={{ marginTop: Spacing.sm, textAlign: "center" }}
+          >
             Add a title or caption first{"\n"}to generate hashtags
           </ThemedText>
         </View>
@@ -372,7 +451,9 @@ export function AIAssistantModal({
             ) : (
               <>
                 <Feather name="hash" size={18} color="#FFFFFF" />
-                <ThemedText style={{ color: "#FFFFFF", marginLeft: 8, fontWeight: "600" }}>
+                <ThemedText
+                  style={{ color: "#FFFFFF", marginLeft: 8, fontWeight: "600" }}
+                >
                   Generate Hashtags
                 </ThemedText>
               </>
@@ -380,9 +461,20 @@ export function AIAssistantModal({
           </Pressable>
 
           {hashtags ? (
-            <ScrollView style={styles.resultsList} showsVerticalScrollIndicator={false}>
-              <View style={[styles.hashtagSection, { backgroundColor: theme.cardBackground }]}>
-                <ThemedText type="subhead" style={{ fontWeight: "600", marginBottom: Spacing.sm }}>
+            <ScrollView
+              style={styles.resultsList}
+              showsVerticalScrollIndicator={false}
+            >
+              <View
+                style={[
+                  styles.hashtagSection,
+                  { backgroundColor: theme.cardBackground },
+                ]}
+              >
+                <ThemedText
+                  type="subhead"
+                  style={{ fontWeight: "600", marginBottom: Spacing.sm }}
+                >
                   All Hashtags ({hashtags.hashtags.length})
                 </ThemedText>
                 <View style={styles.hashtagGrid}>
@@ -390,9 +482,15 @@ export function AIAssistantModal({
                     <Pressable
                       key={index}
                       onPress={() => handleSelectHashtags([tag])}
-                      style={[styles.selectableHashtag, { backgroundColor: theme.primary + "20" }]}
+                      style={[
+                        styles.selectableHashtag,
+                        { backgroundColor: theme.primary + "20" },
+                      ]}
                     >
-                      <ThemedText type="caption" style={{ color: theme.primary }}>
+                      <ThemedText
+                        type="caption"
+                        style={{ color: theme.primary }}
+                      >
                         {tag}
                       </ThemedText>
                     </Pressable>
@@ -402,7 +500,9 @@ export function AIAssistantModal({
                   onPress={() => handleSelectHashtags(hashtags.hashtags)}
                   style={[styles.useAllButton, { borderColor: theme.primary }]}
                 >
-                  <ThemedText style={{ color: theme.primary, fontWeight: "600" }}>
+                  <ThemedText
+                    style={{ color: theme.primary, fontWeight: "600" }}
+                  >
                     Use All Hashtags
                   </ThemedText>
                 </Pressable>
@@ -417,9 +517,17 @@ export function AIAssistantModal({
   const renderImproveContent = () => (
     <View style={styles.contentSection}>
       {!currentCaption.trim() ? (
-        <View style={[styles.emptyState, { backgroundColor: theme.backgroundDefault }]}>
+        <View
+          style={[
+            styles.emptyState,
+            { backgroundColor: theme.backgroundDefault },
+          ]}
+        >
           <Feather name="trending-up" size={32} color={theme.textSecondary} />
-          <ThemedText secondary style={{ marginTop: Spacing.sm, textAlign: "center" }}>
+          <ThemedText
+            secondary
+            style={{ marginTop: Spacing.sm, textAlign: "center" }}
+          >
             Write a caption first to{"\n"}get improvement suggestions
           </ThemedText>
         </View>
@@ -435,7 +543,9 @@ export function AIAssistantModal({
             ) : (
               <>
                 <Feather name="trending-up" size={18} color="#FFFFFF" />
-                <ThemedText style={{ color: "#FFFFFF", marginLeft: 8, fontWeight: "600" }}>
+                <ThemedText
+                  style={{ color: "#FFFFFF", marginLeft: 8, fontWeight: "600" }}
+                >
                   Improve My Caption
                 </ThemedText>
               </>
@@ -443,20 +553,35 @@ export function AIAssistantModal({
           </Pressable>
 
           {improvedCaption ? (
-            <View style={[styles.improvedCard, { backgroundColor: theme.cardBackground }]}>
+            <View
+              style={[
+                styles.improvedCard,
+                { backgroundColor: theme.cardBackground },
+              ]}
+            >
               <View style={styles.comparisonHeader}>
                 <Feather name="arrow-down" size={16} color={theme.success} />
-                <ThemedText style={{ marginLeft: 8, fontWeight: "600", color: theme.success }}>
+                <ThemedText
+                  style={{
+                    marginLeft: 8,
+                    fontWeight: "600",
+                    color: theme.success,
+                  }}
+                >
                   Improved Version
                 </ThemedText>
               </View>
-              <ThemedText style={{ marginTop: Spacing.sm }}>{improvedCaption}</ThemedText>
+              <ThemedText style={{ marginTop: Spacing.sm }}>
+                {improvedCaption}
+              </ThemedText>
               <Pressable
                 onPress={handleApplyImproved}
                 style={[styles.applyButton, { backgroundColor: theme.success }]}
               >
                 <Feather name="check" size={18} color="#FFFFFF" />
-                <ThemedText style={{ color: "#FFFFFF", marginLeft: 8, fontWeight: "600" }}>
+                <ThemedText
+                  style={{ color: "#FFFFFF", marginLeft: 8, fontWeight: "600" }}
+                >
                   Apply This Caption
                 </ThemedText>
               </Pressable>
@@ -469,15 +594,19 @@ export function AIAssistantModal({
 
   const renderSetupContent = () => (
     <View style={styles.contentSection}>
-      <View style={[styles.setupCard, { backgroundColor: theme.cardBackground }]}>
+      <View
+        style={[styles.setupCard, { backgroundColor: theme.cardBackground }]}
+      >
         <View style={styles.setupHeader}>
           <Feather name="key" size={24} color={theme.primary} />
-          <ThemedText style={{ marginLeft: Spacing.sm, fontWeight: "600", fontSize: 18 }}>
+          <ThemedText
+            style={{ marginLeft: Spacing.sm, fontWeight: "600", fontSize: 18 }}
+          >
             OpenAI API Key
           </ThemedText>
         </View>
         <ThemedText type="caption" secondary style={{ marginTop: Spacing.sm }}>
-          {hasApiKey 
+          {hasApiKey
             ? "Your API key is configured. AI features will use OpenAI for enhanced results."
             : "Add your OpenAI API key for enhanced AI-powered suggestions. Without it, basic templates will be used."}
         </ThemedText>
@@ -488,18 +617,23 @@ export function AIAssistantModal({
             style={[styles.removeKeyButton, { borderColor: theme.error }]}
           >
             <Feather name="trash-2" size={16} color={theme.error} />
-            <ThemedText style={{ marginLeft: 8, color: theme.error, fontWeight: "600" }}>
+            <ThemedText
+              style={{ marginLeft: 8, color: theme.error, fontWeight: "600" }}
+            >
               Remove API Key
             </ThemedText>
           </Pressable>
         ) : (
           <View style={styles.apiKeyInputContainer}>
             <TextInput
-              style={[styles.apiKeyInput, { 
-                backgroundColor: theme.backgroundDefault,
-                borderColor: theme.border,
-                color: theme.text,
-              }]}
+              style={[
+                styles.apiKeyInput,
+                {
+                  backgroundColor: theme.backgroundDefault,
+                  borderColor: theme.border,
+                  color: theme.text,
+                },
+              ]}
               value={apiKeyInput}
               onChangeText={setApiKeyInput}
               placeholder="sk-..."
@@ -512,10 +646,12 @@ export function AIAssistantModal({
               onPress={saveApiKey}
               disabled={!apiKeyInput.trim()}
               style={[
-                styles.saveKeyButton, 
-                { 
-                  backgroundColor: apiKeyInput.trim() ? theme.primary : theme.border,
-                }
+                styles.saveKeyButton,
+                {
+                  backgroundColor: apiKeyInput.trim()
+                    ? theme.primary
+                    : theme.border,
+                },
               ]}
             >
               <Feather name="save" size={18} color="#FFFFFF" />
@@ -533,10 +669,14 @@ export function AIAssistantModal({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
+      <View
+        style={[styles.container, { backgroundColor: theme.backgroundRoot }]}
+      >
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <View style={[styles.aiIcon, { backgroundColor: theme.primary + "20" }]}>
+            <View
+              style={[styles.aiIcon, { backgroundColor: theme.primary + "20" }]}
+            >
               <Feather name="cpu" size={20} color={theme.primary} />
             </View>
             <ThemedText type="title3" style={{ marginLeft: Spacing.sm }}>
@@ -546,13 +686,23 @@ export function AIAssistantModal({
           <View style={styles.headerRight}>
             <Pressable
               onPress={() => setMode("setup")}
-              style={({ pressed }) => [styles.settingsButton, { opacity: pressed ? 0.7 : 1 }]}
+              style={({ pressed }) => [
+                styles.settingsButton,
+                { opacity: pressed ? 0.7 : 1 },
+              ]}
             >
-              <Feather name="settings" size={20} color={hasApiKey ? theme.success : theme.textSecondary} />
+              <Feather
+                name="settings"
+                size={20}
+                color={hasApiKey ? theme.success : theme.textSecondary}
+              />
             </Pressable>
             <Pressable
               onPress={onClose}
-              style={({ pressed }) => [styles.closeButton, { opacity: pressed ? 0.7 : 1 }]}
+              style={({ pressed }) => [
+                styles.closeButton,
+                { opacity: pressed ? 0.7 : 1 },
+              ]}
             >
               <Feather name="x" size={24} color={theme.text} />
             </Pressable>
@@ -562,15 +712,38 @@ export function AIAssistantModal({
         {mode !== "setup" ? renderModeSelector() : null}
 
         {(usingTemplates || !hasApiKey) && mode !== "setup" ? (
-          <View style={[styles.templateBanner, { backgroundColor: hasApiKey ? theme.warning + "15" : theme.primary + "10" }]}>
-            <Feather name={hasApiKey ? "info" : "key"} size={14} color={hasApiKey ? theme.warning : theme.primary} />
-            <ThemedText type="caption" style={{ marginLeft: 6, color: hasApiKey ? theme.warning : theme.primary, flex: 1 }}>
-              {hasApiKey 
+          <View
+            style={[
+              styles.templateBanner,
+              {
+                backgroundColor: hasApiKey
+                  ? theme.warning + "15"
+                  : theme.primary + "10",
+              },
+            ]}
+          >
+            <Feather
+              name={hasApiKey ? "info" : "key"}
+              size={14}
+              color={hasApiKey ? theme.warning : theme.primary}
+            />
+            <ThemedText
+              type="caption"
+              style={{
+                marginLeft: 6,
+                color: hasApiKey ? theme.warning : theme.primary,
+                flex: 1,
+              }}
+            >
+              {hasApiKey
                 ? "Using built-in templates. AI generation encountered an issue."
                 : "Add your OpenAI API key in Settings to unlock personalized AI-powered content."}
             </ThemedText>
             {!hasApiKey ? (
-              <Pressable onPress={() => setMode("setup")} style={{ marginLeft: 8 }}>
+              <Pressable
+                onPress={() => setMode("setup")}
+                style={{ marginLeft: 8 }}
+              >
                 <Feather name="settings" size={16} color={theme.primary} />
               </Pressable>
             ) : null}

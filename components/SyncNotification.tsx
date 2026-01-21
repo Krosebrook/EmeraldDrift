@@ -40,34 +40,41 @@ export function SyncNotification() {
     setNotification((prev) => ({ ...prev, visible: false }));
   }, []);
 
-  const showNotification = useCallback((type: NotificationState["type"], message: string, details?: string) => {
-    setNotification({ visible: true, type, message, details });
-    opacity.value = withTiming(1, { duration: 200 });
-    translateY.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.cubic) });
+  const showNotification = useCallback(
+    (type: NotificationState["type"], message: string, details?: string) => {
+      setNotification({ visible: true, type, message, details });
+      opacity.value = withTiming(1, { duration: 200 });
+      translateY.value = withTiming(0, {
+        duration: 200,
+        easing: Easing.out(Easing.cubic),
+      });
 
-    opacity.value = withDelay(
-      4000,
-      withTiming(0, { duration: 200 }, (finished) => {
-        if (finished) {
-          runOnJS(hideNotification)();
-        }
-      })
-    );
-    translateY.value = withDelay(4000, withTiming(-20, { duration: 200 }));
-  }, [opacity, translateY, hideNotification]);
+      opacity.value = withDelay(
+        4000,
+        withTiming(0, { duration: 200 }, (finished) => {
+          if (finished) {
+            runOnJS(hideNotification)();
+          }
+        }),
+      );
+      translateY.value = withDelay(4000, withTiming(-20, { duration: 200 }));
+    },
+    [opacity, translateY, hideNotification],
+  );
 
   useEffect(() => {
     const unsubscribe = syncService.subscribe((event, data) => {
       if (event === "syncComplete") {
         const result = data as SyncResult;
         if (result.successful > 0 || result.conflicts.length > 0) {
-          const conflictNote = result.conflicts.length > 0
-            ? ` (${result.conflicts.length} conflict${result.conflicts.length > 1 ? "s" : ""} resolved)`
-            : "";
+          const conflictNote =
+            result.conflicts.length > 0
+              ? ` (${result.conflicts.length} conflict${result.conflicts.length > 1 ? "s" : ""} resolved)`
+              : "";
           showNotification(
             "success",
             `Synced ${result.successful} change${result.successful !== 1 ? "s" : ""}${conflictNote}`,
-            result.failed > 0 ? `${result.failed} failed` : undefined
+            result.failed > 0 ? `${result.failed} failed` : undefined,
           );
         }
       } else if (event === "syncError") {
@@ -126,7 +133,9 @@ export function SyncNotification() {
         <View style={styles.textContainer}>
           <ThemedText style={styles.message}>{notification.message}</ThemedText>
           {notification.details ? (
-            <ThemedText style={styles.details}>{notification.details}</ThemedText>
+            <ThemedText style={styles.details}>
+              {notification.details}
+            </ThemedText>
           ) : null}
         </View>
         <Feather name="x" size={16} color="rgba(255,255,255,0.7)" />

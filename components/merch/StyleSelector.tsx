@@ -63,7 +63,9 @@ function StyleOption({
       style={[
         styles.styleOption,
         {
-          backgroundColor: selected ? theme.primaryLight : theme.backgroundSecondary,
+          backgroundColor: selected
+            ? theme.primaryLight
+            : theme.backgroundSecondary,
           borderColor: selected ? theme.primary : "transparent",
         },
         animatedStyle,
@@ -72,7 +74,11 @@ function StyleOption({
       <View
         style={[
           styles.iconContainer,
-          { backgroundColor: selected ? theme.primary : theme.backgroundTertiary },
+          {
+            backgroundColor: selected
+              ? theme.primary
+              : theme.backgroundTertiary,
+          },
         ]}
       >
         <Feather
@@ -92,14 +98,15 @@ function StyleOption({
           {info.description}
         </ThemedText>
       </View>
-      {selected && (
-        <Feather name="check" size={18} color={theme.primary} />
-      )}
+      {selected && <Feather name="check" size={18} color={theme.primary} />}
     </AnimatedPressable>
   );
 }
 
-export function StyleSelector({ selectedStyle, onSelectStyle }: StyleSelectorProps) {
+export function StyleSelector({
+  selectedStyle,
+  onSelectStyle,
+}: StyleSelectorProps) {
   const { theme } = useTheme();
 
   return (
@@ -152,7 +159,9 @@ export function StyleSelectorCompact({
             style={[
               styles.compactOption,
               {
-                backgroundColor: selected ? theme.primary : theme.backgroundSecondary,
+                backgroundColor: selected
+                  ? theme.primary
+                  : theme.backgroundSecondary,
                 borderColor: selected ? theme.primary : theme.border,
               },
             ]}

@@ -1,5 +1,11 @@
 import React from "react";
-import { View, ActivityIndicator, StyleSheet, ViewStyle, StyleProp } from "react-native";
+import {
+  View,
+  ActivityIndicator,
+  StyleSheet,
+  ViewStyle,
+  StyleProp,
+} from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing } from "@/constants/theme";

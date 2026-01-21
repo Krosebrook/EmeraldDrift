@@ -22,7 +22,11 @@ interface ProductCardProps {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export function ProductCard({ product, selected = false, onSelect }: ProductCardProps) {
+export function ProductCard({
+  product,
+  selected = false,
+  onSelect,
+}: ProductCardProps) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
   const [isLoading, setIsLoading] = useState(true);

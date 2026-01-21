@@ -1,5 +1,12 @@
 import React, { ReactNode } from "react";
-import { StyleSheet, Pressable, ViewStyle, StyleProp, View, ActivityIndicator } from "react-native";
+import {
+  StyleSheet,
+  Pressable,
+  ViewStyle,
+  StyleProp,
+  View,
+  ActivityIndicator,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Animated, {
   useAnimatedStyle,
@@ -37,7 +44,12 @@ const springConfig: WithSpringConfig = {
 
 const SIZES = {
   sm: { height: 36, paddingHorizontal: 12, fontSize: 14, iconSize: 14 },
-  md: { height: Spacing.buttonHeight, paddingHorizontal: 16, fontSize: 16, iconSize: 18 },
+  md: {
+    height: Spacing.buttonHeight,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    iconSize: 18,
+  },
   lg: { height: 56, paddingHorizontal: 24, fontSize: 18, iconSize: 20 },
 };
 
@@ -82,7 +94,11 @@ export function Button({
       case "secondary":
         return { bg: theme.backgroundSecondary, text: theme.text };
       case "outline":
-        return { bg: "transparent", text: theme.primary, border: theme.primary };
+        return {
+          bg: "transparent",
+          text: theme.primary,
+          border: theme.primary,
+        };
       case "ghost":
         return { bg: "transparent", text: theme.primary };
       case "danger":

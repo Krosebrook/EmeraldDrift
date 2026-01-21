@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { StyleSheet, View, TextInput, Pressable, Alert, Platform, ActivityIndicator, Image } from "react-native";
+import {
+  StyleSheet,
+  View,
+  TextInput,
+  Pressable,
+  Alert,
+  Platform,
+  ActivityIndicator,
+  Image,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -25,10 +34,20 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string; confirmPassword?: string }>({});
+  const [errors, setErrors] = useState<{
+    name?: string;
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+  }>({});
 
   const validate = (): boolean => {
-    const newErrors: { name?: string; email?: string; password?: string; confirmPassword?: string } = {};
+    const newErrors: {
+      name?: string;
+      email?: string;
+      password?: string;
+      confirmPassword?: string;
+    } = {};
 
     if (!name.trim()) {
       newErrors.name = "Name is required";
@@ -92,7 +111,9 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
           style={styles.logo}
           resizeMode="contain"
         />
-        <ThemedText type="display" style={styles.title}>Create Account</ThemedText>
+        <ThemedText type="display" style={styles.title}>
+          Create Account
+        </ThemedText>
         <ThemedText secondary style={styles.subtitle}>
           Start your content creation journey
         </ThemedText>
@@ -102,13 +123,16 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
 
       <View style={styles.form}>
         <View style={styles.fieldContainer}>
-          <ThemedText type="subhead" style={styles.label}>Full Name</ThemedText>
+          <ThemedText type="subhead" style={styles.label}>
+            Full Name
+          </ThemedText>
           <TextInput
             style={inputStyle(errors.name)}
             value={name}
             onChangeText={(text) => {
               setName(text);
-              if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }));
+              if (errors.name)
+                setErrors((prev) => ({ ...prev, name: undefined }));
             }}
             placeholder="Your full name"
             placeholderTextColor={theme.placeholder}
@@ -118,7 +142,10 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
             editable={!isLoading}
           />
           {errors.name ? (
-            <ThemedText type="caption" style={{ color: theme.error, marginTop: 4 }}>
+            <ThemedText
+              type="caption"
+              style={{ color: theme.error, marginTop: 4 }}
+            >
               {errors.name}
             </ThemedText>
           ) : null}
@@ -127,13 +154,16 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
         <Spacer height={Spacing.base} />
 
         <View style={styles.fieldContainer}>
-          <ThemedText type="subhead" style={styles.label}>Email</ThemedText>
+          <ThemedText type="subhead" style={styles.label}>
+            Email
+          </ThemedText>
           <TextInput
             style={inputStyle(errors.email)}
             value={email}
             onChangeText={(text) => {
               setEmail(text);
-              if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+              if (errors.email)
+                setErrors((prev) => ({ ...prev, email: undefined }));
             }}
             placeholder="your@email.com"
             placeholderTextColor={theme.placeholder}
@@ -144,7 +174,10 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
             editable={!isLoading}
           />
           {errors.email ? (
-            <ThemedText type="caption" style={{ color: theme.error, marginTop: 4 }}>
+            <ThemedText
+              type="caption"
+              style={{ color: theme.error, marginTop: 4 }}
+            >
               {errors.email}
             </ThemedText>
           ) : null}
@@ -153,14 +186,17 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
         <Spacer height={Spacing.base} />
 
         <View style={styles.fieldContainer}>
-          <ThemedText type="subhead" style={styles.label}>Password</ThemedText>
+          <ThemedText type="subhead" style={styles.label}>
+            Password
+          </ThemedText>
           <View style={styles.passwordContainer}>
             <TextInput
               style={[inputStyle(errors.password), styles.passwordInput]}
               value={password}
               onChangeText={(text) => {
                 setPassword(text);
-                if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
+                if (errors.password)
+                  setErrors((prev) => ({ ...prev, password: undefined }));
               }}
               placeholder="Create a password"
               placeholderTextColor={theme.placeholder}
@@ -170,8 +206,18 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
               editable={!isLoading}
             />
             <Pressable
-              onPress={() => setShowPassword(!showPassword)}
+              onPress={() => {
+                setShowPassword(!showPassword);
+                if (Platform.OS !== "web") {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+              }}
               style={styles.eyeButton}
+              accessibilityRole="button"
+              accessibilityLabel={
+                showPassword ? "Hide password" : "Show password"
+              }
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <Feather
                 name={showPassword ? "eye-off" : "eye"}
@@ -181,7 +227,10 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
             </Pressable>
           </View>
           {errors.password ? (
-            <ThemedText type="caption" style={{ color: theme.error, marginTop: 4 }}>
+            <ThemedText
+              type="caption"
+              style={{ color: theme.error, marginTop: 4 }}
+            >
               {errors.password}
             </ThemedText>
           ) : null}
@@ -190,13 +239,16 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
         <Spacer height={Spacing.base} />
 
         <View style={styles.fieldContainer}>
-          <ThemedText type="subhead" style={styles.label}>Confirm Password</ThemedText>
+          <ThemedText type="subhead" style={styles.label}>
+            Confirm Password
+          </ThemedText>
           <TextInput
             style={inputStyle(errors.confirmPassword)}
             value={confirmPassword}
             onChangeText={(text) => {
               setConfirmPassword(text);
-              if (errors.confirmPassword) setErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+              if (errors.confirmPassword)
+                setErrors((prev) => ({ ...prev, confirmPassword: undefined }));
             }}
             placeholder="Confirm your password"
             placeholderTextColor={theme.placeholder}
@@ -207,7 +259,10 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
             editable={!isLoading}
           />
           {errors.confirmPassword ? (
-            <ThemedText type="caption" style={{ color: theme.error, marginTop: 4 }}>
+            <ThemedText
+              type="caption"
+              style={{ color: theme.error, marginTop: 4 }}
+            >
               {errors.confirmPassword}
             </ThemedText>
           ) : null}
@@ -238,7 +293,9 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
           onPress={() => navigation.goBack()}
           style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
         >
-          <ThemedText type="link" style={{ fontWeight: "600" }}>Sign In</ThemedText>
+          <ThemedText type="link" style={{ fontWeight: "600" }}>
+            Sign In
+          </ThemedText>
         </Pressable>
       </View>
     </ScreenKeyboardAwareScrollView>

@@ -40,11 +40,21 @@ export function MetricCard({
     <Card onPress={onPress} style={[styles.card, style]}>
       <View style={styles.header}>
         {icon ? (
-          <View style={[styles.iconContainer, { backgroundColor: theme.primaryLight }]}>
+          <View
+            style={[
+              styles.iconContainer,
+              { backgroundColor: theme.primaryLight },
+            ]}
+          >
             <Feather name={icon} size={18} color={theme.primary} />
           </View>
         ) : null}
-        <ThemedText type="caption" secondary numberOfLines={1} style={styles.title}>
+        <ThemedText
+          type="caption"
+          secondary
+          numberOfLines={1}
+          style={styles.title}
+        >
           {title}
         </ThemedText>
       </View>
@@ -68,7 +78,10 @@ export function MetricCard({
             />
             <ThemedText
               type="caption"
-              style={{ color: trend.isPositive ? theme.success : theme.error, marginLeft: 2 }}
+              style={{
+                color: trend.isPositive ? theme.success : theme.error,
+                marginLeft: 2,
+              }}
             >
               {trend.value}%
             </ThemedText>
