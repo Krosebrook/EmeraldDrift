@@ -246,39 +246,101 @@ export const contentRepository = {
     // 1. Get old item to check for index changes
     const oldItem = await this.getById(item.id);
 
-    // 2. Save Item
-    await persistence.set(getItemKey(item.id), item);
+    // 2. Identify all index keys to read
+    const keysToRead = new Set<string>();
 
-    // 3. Update Global ID List
-    await addToIndex(ALL_IDS_KEY, item.id);
+    // Always need Global ID List and New Status Index
+    keysToRead.add(ALL_IDS_KEY);
+    keysToRead.add(getStatusIndexKey(item.status));
 
-    // 4. Update Indexes
+    // Old Status Index (if changed)
+    if (oldItem && oldItem.status !== item.status) {
+      keysToRead.add(getStatusIndexKey(oldItem.status));
+    }
+
+    // Platforms (New and Old)
+    item.platforms.forEach((p) => keysToRead.add(getPlatformIndexKey(p)));
+    if (oldItem) {
+      oldItem.platforms.forEach((p) => keysToRead.add(getPlatformIndexKey(p)));
+    }
+
+    // 3. Fetch all indexes in one go
+    const uniqueKeys = Array.from(keysToRead);
+    const values = await persistence.multiGet<any>(uniqueKeys);
+
+    // Map key -> current IDs
+    const indexMap = new Map<string, string[]>();
+    const pendingUpdates = new Map<string, any>();
+
+    for (let i = 0; i < uniqueKeys.length; i++) {
+      const key = uniqueKeys[i];
+      let val = values[i];
+
+      // Migration Check for ALL_IDS_KEY
+      if (
+        key === ALL_IDS_KEY &&
+        Array.isArray(val) &&
+        val.length > 0 &&
+        typeof val[0] !== "string"
+      ) {
+        console.log("Migrating content repository (during save)...");
+        await migrateLegacyData(val);
+        val = val.map((item: any) => item.id);
+      }
+
+      indexMap.set(key, val || []);
+    }
+
+    // Helper to update list
+    const updateList = (key: string, shouldAdd: boolean) => {
+      let ids = indexMap.get(key) || [];
+      const hasId = ids.includes(item.id);
+
+      let changed = false;
+      if (shouldAdd && !hasId) {
+        ids = [item.id, ...ids];
+        changed = true;
+      } else if (!shouldAdd && hasId) {
+        ids = ids.filter((id) => id !== item.id);
+        changed = true;
+      }
+
+      if (changed) {
+        indexMap.set(key, ids);
+        pendingUpdates.set(key, ids);
+      }
+    };
+
+    // Global ID List
+    updateList(ALL_IDS_KEY, true);
+
     // Status
     if (oldItem && oldItem.status !== item.status) {
-      await removeFromIndex(getStatusIndexKey(oldItem.status), item.id);
+      updateList(getStatusIndexKey(oldItem.status), false);
     }
-    await addToIndex(getStatusIndexKey(item.status), item.id);
+    updateList(getStatusIndexKey(item.status), true);
 
     // Platforms
     const newPlatforms = new Set(item.platforms);
-    const oldPlatforms = oldItem
-      ? new Set(oldItem.platforms)
-      : new Set<PlatformType>();
 
     // Add to new
     for (const p of item.platforms) {
-      if (!oldPlatforms.has(p)) {
-        await addToIndex(getPlatformIndexKey(p), item.id);
-      }
+      updateList(getPlatformIndexKey(p), true);
     }
-    // Remove from old
+    // Remove from old (only if not in new)
     if (oldItem) {
       for (const p of oldItem.platforms) {
         if (!newPlatforms.has(p)) {
-          await removeFromIndex(getPlatformIndexKey(p), item.id);
+          updateList(getPlatformIndexKey(p), false);
         }
       }
     }
+
+    // 5. Save Item + Updated Indexes
+    const updates: [string, any][] = Array.from(pendingUpdates.entries());
+    updates.push([getItemKey(item.id), item]);
+
+    await persistence.multiSet(updates);
   },
 
   async delete(id: string): Promise<void> {
