@@ -184,6 +184,9 @@ export default function MediaLibraryScreen() {
         styles.mediaItem,
         { opacity: pressed ? 0.8 : 1 },
       ]}
+      accessibilityLabel={`${item.type === "video" ? "Video" : "Image"}, ${item.name || "Media asset"}${item.isFavorite ? ", favorited" : ""}`}
+      accessibilityRole="button"
+      accessibilityHint="Double tap to view details"
     >
       <Image
         source={{ uri: item.uri }}
@@ -219,6 +222,8 @@ export default function MediaLibraryScreen() {
         <Pressable
           onPress={handleAddMedia}
           style={[styles.emptyButton, { backgroundColor: theme.primary }]}
+          accessibilityLabel="Add Media"
+          accessibilityRole="button"
         >
           <Feather name="plus" size={18} color="#FFFFFF" />
           <ThemedText style={{ color: "#FFFFFF", marginLeft: Spacing.xs, fontWeight: "600" }}>
@@ -240,9 +245,14 @@ export default function MediaLibraryScreen() {
             placeholderTextColor={theme.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
+            accessibilityLabel="Search media"
           />
           {searchQuery.length > 0 ? (
-            <Pressable onPress={() => setSearchQuery("")}>
+            <Pressable
+              onPress={() => setSearchQuery("")}
+              accessibilityLabel="Clear search"
+              accessibilityRole="button"
+            >
               <Feather name="x" size={18} color={theme.textSecondary} />
             </Pressable>
           ) : null}
@@ -271,6 +281,9 @@ export default function MediaLibraryScreen() {
                   backgroundColor: isActive ? theme.primary : theme.backgroundSecondary,
                 },
               ]}
+              accessibilityRole="button"
+              accessibilityLabel={`Filter by ${chip.label}`}
+              accessibilityState={{ selected: isActive }}
             >
               <Feather
                 name={chip.icon}
@@ -337,6 +350,9 @@ export default function MediaLibraryScreen() {
             opacity: pressed ? 0.9 : 1,
           },
         ]}
+        accessibilityLabel="Add Media"
+        accessibilityRole="button"
+        accessibilityState={{ disabled: isAddingMedia, busy: isAddingMedia }}
       >
         {isAddingMedia ? (
           <ActivityIndicator size="small" color="#FFFFFF" />
@@ -353,12 +369,19 @@ export default function MediaLibraryScreen() {
       >
         <ThemedView style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Pressable onPress={() => setShowAssetModal(false)}>
+            <Pressable
+              onPress={() => setShowAssetModal(false)}
+              accessibilityLabel="Close details"
+              accessibilityRole="button"
+            >
               <Feather name="x" size={24} color={theme.text} />
             </Pressable>
             <ThemedText type="title3">Media Details</ThemedText>
             <Pressable
               onPress={() => selectedAsset && handleToggleFavorite(selectedAsset)}
+              accessibilityLabel={selectedAsset?.isFavorite ? "Remove from favorites" : "Add to favorites"}
+              accessibilityRole="button"
+              accessibilityState={{ selected: selectedAsset?.isFavorite }}
             >
               <Feather
                 name="heart"
