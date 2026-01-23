@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from "react";
 import { StyleSheet, View, Pressable, RefreshControl } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import { useFocusEffect } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
@@ -33,9 +34,21 @@ interface KPICardProps {
 function KPICard({ icon, value, label, trend, color, onPress }: KPICardProps) {
   const { theme } = useTheme();
 
+  const trendText = trend !== undefined
+    ? `, trending ${trend >= 0 ? 'up' : 'down'} ${Math.abs(trend)}%`
+    : '';
+
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => {
+        if (onPress) {
+          Haptics.selectionAsync();
+          onPress();
+        }
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={`${label}: ${value}${trendText}`}
+      accessibilityHint="Double tap to view detailed analytics"
       style={({ pressed }) => [
         styles.kpiCard,
         { backgroundColor: theme.cardBackground, opacity: pressed ? 0.9 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] },
@@ -97,7 +110,15 @@ function PlatformCard({ platform, onPress }: PlatformCardProps) {
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => {
+        if (onPress) {
+          Haptics.selectionAsync();
+          onPress();
+        }
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={`${platform.displayName}, ${platform.username}, ${formatNumber(platform.followerCount)} followers`}
+      accessibilityHint="Double tap to manage platform settings"
       style={({ pressed }) => [
         styles.platformCard,
         { backgroundColor: theme.cardBackground, opacity: pressed ? 0.9 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] },
@@ -138,7 +159,15 @@ function RecentPostCard({ post, onPress }: RecentPostCardProps) {
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => {
+        if (onPress) {
+          Haptics.selectionAsync();
+          onPress();
+        }
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={`${post.title || "Untitled post"}, ${post.status}, ${formatDate(post.createdAt)}`}
+      accessibilityHint="Double tap to view post details"
       style={({ pressed }) => [
         styles.recentPostCard,
         { backgroundColor: theme.cardBackground, opacity: pressed ? 0.9 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] },
@@ -286,6 +315,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
             label="Followers"
             trend={userStats?.growthRate || 0}
             color={theme.primary}
+            onPress={() => navigation.navigate("AnalyticsTab" as any)}
           />
         </View>
         <View style={[styles.kpiCardWrapper, { width: isMobile ? "48%" : isTablet ? "31%" : "23%" }]}>
@@ -295,6 +325,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
             label="Engagement"
             trend={userStats?.engagementRate ? Math.round(userStats.engagementRate) : 0}
             color={theme.error}
+            onPress={() => navigation.navigate("AnalyticsTab" as any)}
           />
         </View>
         <View style={[styles.kpiCardWrapper, { width: isMobile ? "48%" : isTablet ? "31%" : "23%" }]}>
@@ -304,6 +335,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
             label="Views"
             trend={0}
             color={theme.success}
+            onPress={() => navigation.navigate("AnalyticsTab" as any)}
           />
         </View>
         <View style={[styles.kpiCardWrapper, { width: isMobile ? "48%" : isTablet ? "31%" : "23%" }]}>
@@ -312,6 +344,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
             value={(userStats?.totalPosts || content.length).toString()}
             label="Posts"
             color={theme.warning}
+            onPress={() => navigation.navigate("AnalyticsTab" as any)}
           />
         </View>
       </View>
