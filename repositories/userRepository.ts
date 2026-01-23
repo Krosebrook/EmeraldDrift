@@ -56,11 +56,13 @@ export const userRepository = {
     const existingStats = await storage.get<UserStats>(USER_STORAGE_KEYS.STATS);
     
     if (!existingStats) {
-      await storage.set(USER_STORAGE_KEYS.STATS, getDefaultStats());
-      await storage.set(USER_STORAGE_KEYS.ACTIVITIES, []);
-      await storage.set(USER_STORAGE_KEYS.PLATFORM_STATS, []);
-      await storage.set(USER_STORAGE_KEYS.ONBOARDING, getDefaultOnboarding());
-      await storage.set(USER_STORAGE_KEYS.TUTORIAL, getDefaultTutorial());
+      await storage.multiSet([
+        [USER_STORAGE_KEYS.STATS, getDefaultStats()],
+        [USER_STORAGE_KEYS.ACTIVITIES, []],
+        [USER_STORAGE_KEYS.PLATFORM_STATS, []],
+        [USER_STORAGE_KEYS.ONBOARDING, getDefaultOnboarding()],
+        [USER_STORAGE_KEYS.TUTORIAL, getDefaultTutorial()],
+      ]);
     }
   },
 
