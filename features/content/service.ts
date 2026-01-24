@@ -163,12 +163,33 @@ export const contentService: ContentService = {
     if (!isOk(allResult)) return allResult as any;
 
     const items = allResult.data;
-    return ok({
-      total: items.length,
-      drafts: items.filter((i) => i.status === "draft").length,
-      scheduled: items.filter((i) => i.status === "scheduled").length,
-      published: items.filter((i) => i.status === "published").length,
-      failed: items.filter((i) => i.status === "failed").length,
-    });
+    const stats = items.reduce(
+      (acc, item) => {
+        switch (item.status) {
+          case "draft":
+            acc.drafts++;
+            break;
+          case "scheduled":
+            acc.scheduled++;
+            break;
+          case "published":
+            acc.published++;
+            break;
+          case "failed":
+            acc.failed++;
+            break;
+        }
+        return acc;
+      },
+      {
+        total: items.length,
+        drafts: 0,
+        scheduled: 0,
+        published: 0,
+        failed: 0,
+      }
+    );
+
+    return ok(stats);
   },
 };
