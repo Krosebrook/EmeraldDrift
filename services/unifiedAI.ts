@@ -33,6 +33,10 @@ class UnifiedAIService {
   private readonly cacheTtlMs = 15 * 60 * 1000;
   private readonly maxCacheSize = 100;
 
+  // Cache for API key presence to avoid repeated SecureStore reads
+  private hasOpenAIKeyCache: boolean | null = null;
+  private hasGeminiKeyCache: boolean | null = null;
+
   private usageMetrics = {
     requestCount: 0,
     totalTokens: 0,
@@ -60,15 +64,22 @@ class UnifiedAIService {
 
   async setOpenAIKey(key: string): Promise<void> {
     await SecureStore.setItemAsync(OPENAI_API_KEY_STORAGE, key);
+    this.hasOpenAIKeyCache = !!key && key.length > 0;
   }
 
   async removeOpenAIKey(): Promise<void> {
     await SecureStore.deleteItemAsync(OPENAI_API_KEY_STORAGE);
+    this.hasOpenAIKeyCache = false;
   }
 
   async hasOpenAIKey(): Promise<boolean> {
+    if (this.hasOpenAIKeyCache !== null) {
+      return this.hasOpenAIKeyCache;
+    }
     const key = await this.getOpenAIKey();
-    return !!key && key.length > 0;
+    const hasKey = !!key && key.length > 0;
+    this.hasOpenAIKeyCache = hasKey;
+    return hasKey;
   }
 
   async getGeminiKey(): Promise<string | null> {
@@ -81,15 +92,22 @@ class UnifiedAIService {
 
   async setGeminiKey(key: string): Promise<void> {
     await SecureStore.setItemAsync(GEMINI_API_KEY_STORAGE, key);
+    this.hasGeminiKeyCache = !!key && key.length > 0;
   }
 
   async removeGeminiKey(): Promise<void> {
     await SecureStore.deleteItemAsync(GEMINI_API_KEY_STORAGE);
+    this.hasGeminiKeyCache = false;
   }
 
   async hasGeminiKey(): Promise<boolean> {
+    if (this.hasGeminiKeyCache !== null) {
+      return this.hasGeminiKeyCache;
+    }
     const key = await this.getGeminiKey();
-    return !!key && key.length > 0;
+    const hasKey = !!key && key.length > 0;
+    this.hasGeminiKeyCache = hasKey;
+    return hasKey;
   }
 
   async hasAnyApiKey(): Promise<boolean> {
@@ -102,19 +120,19 @@ class UnifiedAIService {
 
   async getActiveProvider(): Promise<AIProvider> {
     const flags = await featureFlags.get();
-    
+
     if (flags.aiProvider !== "simulated") {
-      if (flags.aiProvider === "openai" && await this.hasOpenAIKey()) {
+      if (flags.aiProvider === "openai" && (await this.hasOpenAIKey())) {
         return "openai";
       }
-      if (flags.aiProvider === "gemini" && await this.hasGeminiKey()) {
+      if (flags.aiProvider === "gemini" && (await this.hasGeminiKey())) {
         return "gemini";
       }
     }
 
     if (await this.hasOpenAIKey()) return "openai";
     if (await this.hasGeminiKey()) return "gemini";
-    
+
     return "simulated";
   }
 
@@ -123,7 +141,7 @@ class UnifiedAIService {
     let hash = 0;
     for (let i = 0; i < content.length; i++) {
       const char = content.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash;
     }
     return hash.toString(36);
@@ -185,14 +203,17 @@ class UnifiedAIService {
 
   private async generateWithOpenAI(
     prompt: string,
-    config: AIGenerationConfig
+    config: AIGenerationConfig,
   ): AsyncResult<AIGenerationResult, AppError> {
     const apiKey = await this.getOpenAIKey();
     if (!apiKey) {
-      return err(new AppError({
-        code: ErrorCode.VALIDATION_ERROR,
-        message: "OpenAI API key not configured. Please add your API key in Settings.",
-      }));
+      return err(
+        new AppError({
+          code: ErrorCode.VALIDATION_ERROR,
+          message:
+            "OpenAI API key not configured. Please add your API key in Settings.",
+        }),
+      );
     }
 
     try {
@@ -200,7 +221,9 @@ class UnifiedAIService {
       const requestBody: Record<string, unknown> = {
         model,
         messages: [
-          ...(config.systemPrompt ? [{ role: "system", content: config.systemPrompt }] : []),
+          ...(config.systemPrompt
+            ? [{ role: "system", content: config.systemPrompt }]
+            : []),
           { role: "user", content: prompt },
         ],
         temperature: config.temperature ?? 0.7,
@@ -211,14 +234,17 @@ class UnifiedAIService {
         requestBody.response_format = { type: "json_object" };
       }
 
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`,
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify(requestBody),
         },
-        body: JSON.stringify(requestBody),
-      });
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -227,7 +253,7 @@ class UnifiedAIService {
 
       const data = await response.json();
       const content = data.choices?.[0]?.message?.content;
-      
+
       if (!content) {
         throw new Error("No content returned from OpenAI");
       }
@@ -243,24 +269,30 @@ class UnifiedAIService {
         cached: false,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "OpenAI request failed";
-      return err(new AppError({
-        code: ErrorCode.SERVER_ERROR,
-        message,
-      }));
+      const message =
+        error instanceof Error ? error.message : "OpenAI request failed";
+      return err(
+        new AppError({
+          code: ErrorCode.SERVER_ERROR,
+          message,
+        }),
+      );
     }
   }
 
   private async generateWithGemini(
     prompt: string,
-    config: AIGenerationConfig
+    config: AIGenerationConfig,
   ): AsyncResult<AIGenerationResult, AppError> {
     const apiKey = await this.getGeminiKey();
     if (!apiKey) {
-      return err(new AppError({
-        code: ErrorCode.VALIDATION_ERROR,
-        message: "Gemini API key not configured. Please add your API key in Settings.",
-      }));
+      return err(
+        new AppError({
+          code: ErrorCode.VALIDATION_ERROR,
+          message:
+            "Gemini API key not configured. Please add your API key in Settings.",
+        }),
+      );
     }
 
     try {
@@ -276,7 +308,9 @@ class UnifiedAIService {
       };
 
       if (config.systemPrompt) {
-        requestBody.systemInstruction = { parts: [{ text: config.systemPrompt }] };
+        requestBody.systemInstruction = {
+          parts: [{ text: config.systemPrompt }],
+        };
       }
 
       const response = await fetch(`${endpoint}?key=${apiKey}`, {
@@ -308,17 +342,20 @@ class UnifiedAIService {
         cached: false,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Gemini request failed";
-      return err(new AppError({
-        code: ErrorCode.SERVER_ERROR,
-        message,
-      }));
+      const message =
+        error instanceof Error ? error.message : "Gemini request failed";
+      return err(
+        new AppError({
+          code: ErrorCode.SERVER_ERROR,
+          message,
+        }),
+      );
     }
   }
 
   public async generate(
     prompt: string,
-    config: AIGenerationConfig = {}
+    config: AIGenerationConfig = {},
   ): AsyncResult<AIGenerationResult, AppError> {
     const promptHash = this.hashPrompt(prompt, config);
     const cached = this.getCached(promptHash);
@@ -341,10 +378,13 @@ class UnifiedAIService {
         break;
       case "simulated":
       default:
-        return err(new AppError({
-          code: ErrorCode.VALIDATION_ERROR,
-          message: "No AI provider configured. Please add an OpenAI or Gemini API key in Settings.",
-        }));
+        return err(
+          new AppError({
+            code: ErrorCode.VALIDATION_ERROR,
+            message:
+              "No AI provider configured. Please add an OpenAI or Gemini API key in Settings.",
+          }),
+        );
     }
 
     if (result.success) {
@@ -359,28 +399,32 @@ class UnifiedAIService {
   public async generateWithFallback(
     prompt: string,
     config: AIGenerationConfig = {},
-    fallbackContent: string
+    fallbackContent: string,
   ): AsyncResult<AIGenerationResult, AppError> {
     const hasKey = await this.hasAnyApiKey();
-    
+
     if (!hasKey) {
-      return Promise.resolve(ok({
-        content: fallbackContent,
-        model: "fallback",
-        provider: "simulated",
-        cached: false,
-      }));
+      return Promise.resolve(
+        ok({
+          content: fallbackContent,
+          model: "fallback",
+          provider: "simulated",
+          cached: false,
+        }),
+      );
     }
 
     const result = await this.generate(prompt, config);
-    
+
     if (!result.success) {
-      return Promise.resolve(ok({
-        content: fallbackContent,
-        model: "fallback",
-        provider: "simulated",
-        cached: false,
-      }));
+      return Promise.resolve(
+        ok({
+          content: fallbackContent,
+          model: "fallback",
+          provider: "simulated",
+          cached: false,
+        }),
+      );
     }
 
     return Promise.resolve(result);
