@@ -17,7 +17,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { contentService } from "@/features";
 import { isOk } from "@/core/result";
-import type { ContentItem, ContentStatus } from "@/features/shared/types";
+import type { ContentItem } from "@/features/shared/types";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import type { DashboardStackParamList } from "@/navigation/DashboardStackNavigator";
 import { AppTheme } from "@/types";
