@@ -92,6 +92,24 @@ const getDefaultTutorial = (): TutorialState => ({
   skipped: false,
 });
 
+interface Cache {
+  stats: Map<string, UserStats>;
+  activities: Map<string, UserActivity[]>;
+  platformStats: Map<string, PlatformStats[]>;
+  onboarding: Map<string, OnboardingState>;
+  tutorial: Map<string, TutorialState>;
+}
+
+const memoryCache: Cache = {
+  stats: new Map(),
+  activities: new Map(),
+  platformStats: new Map(),
+  onboarding: new Map(),
+  tutorial: new Map(),
+};
+
+const deepClone = <T>(obj: T): T => JSON.parse(JSON.stringify(obj));
+
 export const userStatsService = {
   async initializeUser(userId: string): Promise<void> {
     const existingStats = await this.getStats(userId);
@@ -107,9 +125,17 @@ export const userStatsService = {
   },
 
   async getStats(userId: string): Promise<UserStats | null> {
+    if (memoryCache.stats.has(userId)) {
+      return { ...memoryCache.stats.get(userId)! };
+    }
     try {
       const data = await AsyncStorage.getItem(KEYS.stats(userId));
-      return data ? JSON.parse(data) : null;
+      if (data) {
+        const parsed = JSON.parse(data);
+        memoryCache.stats.set(userId, parsed);
+        return { ...parsed };
+      }
+      return null;
     } catch (error) {
       console.error("Error getting user stats:", error);
       return null;
@@ -119,6 +145,7 @@ export const userStatsService = {
   async saveStats(userId: string, stats: UserStats): Promise<void> {
     try {
       stats.lastUpdated = new Date().toISOString();
+      memoryCache.stats.set(userId, stats);
       await AsyncStorage.setItem(KEYS.stats(userId), JSON.stringify(stats));
     } catch (error) {
       console.error("Error saving user stats:", error);
@@ -146,9 +173,13 @@ export const userStatsService = {
 
   async getActivities(userId: string, limit: number = 20): Promise<UserActivity[]> {
     try {
+      if (memoryCache.activities.has(userId)) {
+        return deepClone(memoryCache.activities.get(userId)!.slice(0, limit));
+      }
       const data = await AsyncStorage.getItem(KEYS.activities(userId));
       const activities: UserActivity[] = data ? JSON.parse(data) : [];
-      return activities.slice(0, limit);
+      memoryCache.activities.set(userId, activities);
+      return deepClone(activities.slice(0, limit));
     } catch (error) {
       console.error("Error getting user activities:", error);
       return [];
@@ -157,6 +188,7 @@ export const userStatsService = {
 
   async saveActivities(userId: string, activities: UserActivity[]): Promise<void> {
     try {
+      memoryCache.activities.set(userId, activities);
       await AsyncStorage.setItem(KEYS.activities(userId), JSON.stringify(activities));
     } catch (error) {
       console.error("Error saving user activities:", error);
@@ -177,8 +209,13 @@ export const userStatsService = {
 
   async getPlatformStats(userId: string): Promise<PlatformStats[]> {
     try {
+      if (memoryCache.platformStats.has(userId)) {
+        return deepClone(memoryCache.platformStats.get(userId)!);
+      }
       const data = await AsyncStorage.getItem(KEYS.platformStats(userId));
-      return data ? JSON.parse(data) : [];
+      const stats = data ? JSON.parse(data) : [];
+      memoryCache.platformStats.set(userId, stats);
+      return deepClone(stats);
     } catch (error) {
       console.error("Error getting platform stats:", error);
       return [];
@@ -187,6 +224,7 @@ export const userStatsService = {
 
   async savePlatformStats(userId: string, stats: PlatformStats[]): Promise<void> {
     try {
+      memoryCache.platformStats.set(userId, stats);
       await AsyncStorage.setItem(KEYS.platformStats(userId), JSON.stringify(stats));
     } catch (error) {
       console.error("Error saving platform stats:", error);
@@ -207,10 +245,13 @@ export const userStatsService = {
 
   async getOnboardingState(userId: string): Promise<OnboardingState> {
     try {
+      if (memoryCache.onboarding.has(userId)) {
+        return deepClone(memoryCache.onboarding.get(userId)!);
+      }
       const data = await AsyncStorage.getItem(KEYS.onboarding(userId));
       if (data) {
         const parsed = JSON.parse(data);
-        return {
+        const state = {
           completed: parsed.completed ?? false,
           completedAt: parsed.completedAt,
           steps: {
@@ -219,6 +260,8 @@ export const userStatsService = {
             platforms: parsed.steps?.platforms ?? false,
           },
         };
+        memoryCache.onboarding.set(userId, state);
+        return deepClone(state);
       }
       return getDefaultOnboarding();
     } catch (error) {
@@ -229,6 +272,7 @@ export const userStatsService = {
 
   async saveOnboardingState(userId: string, state: OnboardingState): Promise<void> {
     try {
+      memoryCache.onboarding.set(userId, state);
       await AsyncStorage.setItem(KEYS.onboarding(userId), JSON.stringify(state));
     } catch (error) {
       console.error("Error saving onboarding state:", error);
@@ -251,8 +295,13 @@ export const userStatsService = {
 
   async getTutorialState(userId: string): Promise<TutorialState> {
     try {
+      if (memoryCache.tutorial.has(userId)) {
+        return deepClone(memoryCache.tutorial.get(userId)!);
+      }
       const data = await AsyncStorage.getItem(KEYS.tutorial(userId));
-      return data ? JSON.parse(data) : getDefaultTutorial();
+      const state = data ? JSON.parse(data) : getDefaultTutorial();
+      memoryCache.tutorial.set(userId, state);
+      return deepClone(state);
     } catch (error) {
       console.error("Error getting tutorial state:", error);
       return getDefaultTutorial();
@@ -261,6 +310,7 @@ export const userStatsService = {
 
   async saveTutorialState(userId: string, state: TutorialState): Promise<void> {
     try {
+      memoryCache.tutorial.set(userId, state);
       await AsyncStorage.setItem(KEYS.tutorial(userId), JSON.stringify(state));
     } catch (error) {
       console.error("Error saving tutorial state:", error);
@@ -287,6 +337,11 @@ export const userStatsService = {
 
   async resetUserData(userId: string): Promise<void> {
     try {
+      memoryCache.stats.delete(userId);
+      memoryCache.activities.delete(userId);
+      memoryCache.platformStats.delete(userId);
+      memoryCache.onboarding.delete(userId);
+      memoryCache.tutorial.delete(userId);
       await AsyncStorage.multiRemove([
         KEYS.stats(userId),
         KEYS.activities(userId),
