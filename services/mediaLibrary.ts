@@ -147,40 +147,40 @@ export const mediaLibraryService = {
     }>,
   ): Promise<MediaAsset[]> {
     const library = await this.getLibrary();
-    const newAssets: MediaAsset[] = [];
-
-    for (const item of items) {
-      let fileSize = item.fileSize || 0;
-      if (!fileSize && item.uri.startsWith("file://")) {
-        try {
-          const info = await FileSystem.getInfoAsync(item.uri);
-          if (info.exists && "size" in info) {
-            fileSize = info.size || 0;
+    const newAssets = await Promise.all(
+      items.map(async (item) => {
+        let fileSize = item.fileSize || 0;
+        if (!fileSize && item.uri.startsWith("file://")) {
+          try {
+            const info = await FileSystem.getInfoAsync(item.uri);
+            if (info.exists && "size" in info) {
+              fileSize = info.size || 0;
+            }
+          } catch {
+            fileSize = 0;
           }
-        } catch {
-          fileSize = 0;
         }
-      }
 
-      const asset: MediaAsset = {
-        id: generateId(),
-        uri: item.uri,
-        type: getMediaType(item.uri),
-        fileName: extractFileName(item.uri),
-        fileSize,
-        width: item.width,
-        height: item.height,
-        duration: item.duration,
-        category: [],
-        tags: [],
-        isFavorite: false,
-        usedIn: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+        const asset: MediaAsset = {
+          id: generateId(),
+          uri: item.uri,
+          type: getMediaType(item.uri),
+          fileName: extractFileName(item.uri),
+          fileSize,
+          width: item.width,
+          height: item.height,
+          duration: item.duration,
+          category: [],
+          tags: [],
+          isFavorite: false,
+          usedIn: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
 
-      newAssets.push(asset);
-    }
+        return asset;
+      }),
+    );
 
     library.assets = [...newAssets, ...library.assets];
     await this.saveLibrary(library);
