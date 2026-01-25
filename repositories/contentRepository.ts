@@ -439,21 +439,51 @@ export const contentRepository = {
     published: number;
     failed: number;
   }> {
-    const [totalIds, draftsIds, scheduledIds, publishedIds, failedIds] =
-      await Promise.all([
-        getIds(ALL_IDS_KEY),
-        getIds(getStatusIndexKey("draft")),
-        getIds(getStatusIndexKey("scheduled")),
-        getIds(getStatusIndexKey("published")),
-        getIds(getStatusIndexKey("failed")),
-      ]);
+    const keys = [
+      ALL_IDS_KEY,
+      getStatusIndexKey("draft"),
+      getStatusIndexKey("scheduled"),
+      getStatusIndexKey("published"),
+      getStatusIndexKey("failed"),
+    ];
+
+    // Use multiGet to fetch all stats in a single bridge call
+    const values = await persistence.multiGet<any>(keys);
+    const allIdsData = values[0];
+
+    // Migration Check: If we read ALL_IDS_KEY and got an array of Objects (legacy format)
+    if (
+      allIdsData &&
+      Array.isArray(allIdsData) &&
+      allIdsData.length > 0 &&
+      typeof allIdsData[0] !== "string"
+    ) {
+      console.log("Migrating content repository to new format...");
+      await migrateLegacyData(allIdsData);
+
+      // Recalculate stats from the legacy data we just migrated
+      const items = allIdsData as ContentItem[];
+      return {
+        total: items.length,
+        drafts: items.filter((i) => i.status === "draft").length,
+        scheduled: items.filter((i) => i.status === "scheduled").length,
+        published: items.filter((i) => i.status === "published").length,
+        failed: items.filter((i) => i.status === "failed").length,
+      };
+    }
+
+    const totalIds = values[0] as string[] | null;
+    const draftsIds = values[1] as string[] | null;
+    const scheduledIds = values[2] as string[] | null;
+    const publishedIds = values[3] as string[] | null;
+    const failedIds = values[4] as string[] | null;
 
     return {
-      total: totalIds.length,
-      drafts: draftsIds.length,
-      scheduled: scheduledIds.length,
-      published: publishedIds.length,
-      failed: failedIds.length,
+      total: totalIds?.length ?? 0,
+      drafts: draftsIds?.length ?? 0,
+      scheduled: scheduledIds?.length ?? 0,
+      published: publishedIds?.length ?? 0,
+      failed: failedIds?.length ?? 0,
     };
   },
 
