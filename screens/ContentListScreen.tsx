@@ -112,6 +112,15 @@ export default function ContentListScreen({
       <Pressable
         onPress={() => navigation.navigate("ContentDetail", { id: item.id })}
         onLongPress={() => handleDelete(item)}
+        accessibilityRole="button"
+        accessibilityLabel={`Post: ${item.title || "Untitled"}, Status: ${item.status}, Created: ${formatDate(item.createdAt)}`}
+        accessibilityHint="Double tap to view details, long press to delete"
+        accessibilityActions={[{ name: "delete", label: "Delete content" }]}
+        onAccessibilityAction={(event) => {
+          if (event.nativeEvent.actionName === "delete") {
+            handleDelete(item);
+          }
+        }}
         style={({ pressed }) => [
           styles.contentCard,
           { backgroundColor: theme.cardBackground, opacity: pressed ? 0.9 : 1 },
@@ -177,6 +186,9 @@ export default function ContentListScreen({
           (type) => (
             <Pressable
               key={type}
+              accessibilityRole="button"
+              accessibilityState={{ selected: filter === type }}
+              accessibilityLabel={`Filter by ${type}`}
               onPress={() => {
                 setFilter(type);
                 if (Platform.OS !== "web") {

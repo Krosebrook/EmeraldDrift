@@ -9,3 +9,7 @@
 ## 2025-01-28 - Dashboard Interactivity & Accessibility
 **Learning:** Dashboard summary cards (KPIs) are often visually interactive (ripples/opacity) but functionally inert, confusing users. Screen readers also miss the "trend" context without explicit labels.
 **Action:** Always make summary cards navigable (e.g. to Analytics). Use `accessibilityRole="button"` and construct dynamic labels like "Followers: 1.2M, Trending up 5%". Add `Haptics.selectionAsync()` to reinforce the interaction.
+
+## 2026-02-17 - Mapping Gestures to Accessibility Actions
+**Learning:** Hidden gestures like "long press to delete" are completely inaccessible to many assistive technology users. React Native's `accessibilityActions` API allows mapping these gestures to standard actions menu.
+**Action:** When using `onLongPress`, always provide an equivalent `accessibilityActions` entry (e.g., `name: 'delete'`) and handle it in `onAccessibilityAction` to ensure the functionality is discoverable and usable without the gesture.
