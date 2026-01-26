@@ -140,6 +140,7 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
             autoComplete="name"
             returnKeyType="next"
             editable={!isLoading}
+            accessibilityLabel="Full Name"
           />
           {errors.name ? (
             <ThemedText
@@ -172,6 +173,7 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
             autoComplete="email"
             returnKeyType="next"
             editable={!isLoading}
+            accessibilityLabel="Email address"
           />
           {errors.email ? (
             <ThemedText
@@ -204,6 +206,7 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
               autoCapitalize="none"
               returnKeyType="next"
               editable={!isLoading}
+              accessibilityLabel="Password"
             />
             <Pressable
               onPress={() => {
@@ -257,6 +260,7 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
             returnKeyType="done"
             onSubmitEditing={handleSignUp}
             editable={!isLoading}
+            accessibilityLabel="Confirm Password"
           />
           {errors.confirmPassword ? (
             <ThemedText
@@ -270,12 +274,8 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
 
         <Spacer height={Spacing.lg} />
 
-        <Button onPress={handleSignUp} disabled={isLoading}>
-          {isLoading ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            "Create Account"
-          )}
+        <Button onPress={handleSignUp} disabled={isLoading} loading={isLoading}>
+          Create Account
         </Button>
 
         <Spacer height={Spacing.base} />
@@ -292,6 +292,8 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
         <Pressable
           onPress={() => navigation.goBack()}
           style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+          accessibilityRole="link"
+          accessibilityLabel="Sign In"
         >
           <ThemedText type="link" style={{ fontWeight: "600" }}>
             Sign In

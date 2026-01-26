@@ -124,6 +124,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             autoComplete="email"
             returnKeyType="next"
             editable={!isLoading}
+            accessibilityLabel="Email address"
           />
           {errors.email ? (
             <ThemedText
@@ -157,6 +158,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               returnKeyType="done"
               onSubmitEditing={handleLogin}
               editable={!isLoading}
+              accessibilityLabel="Password"
             />
             <Pressable
               onPress={() => {
@@ -196,18 +198,16 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           style={({ pressed }) => [
             { opacity: pressed ? 0.7 : 1, alignSelf: "flex-end" },
           ]}
+          accessibilityRole="link"
+          accessibilityLabel="Forgot Password"
         >
           <ThemedText type="link">Forgot Password?</ThemedText>
         </Pressable>
 
         <Spacer height={Spacing.lg} />
 
-        <Button onPress={handleLogin} disabled={isLoading}>
-          {isLoading ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            "Sign In"
-          )}
+        <Button onPress={handleLogin} disabled={isLoading} loading={isLoading}>
+          Sign In
         </Button>
 
         <Spacer height={Spacing.lg} />
@@ -232,6 +232,8 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             { backgroundColor: "#F26207", opacity: pressed ? 0.9 : 1 },
           ]}
           onPress={() => navigation.navigate("ReplitAuth")}
+          accessibilityRole="button"
+          accessibilityLabel="Sign in with Replit"
         >
           <Feather name="code" size={20} color="#FFFFFF" />
           <ThemedText style={styles.replitButtonText}>
@@ -247,6 +249,8 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         <Pressable
           onPress={() => navigation.navigate("SignUp")}
           style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+          accessibilityRole="link"
+          accessibilityLabel="Sign Up"
         >
           <ThemedText type="link" style={{ fontWeight: "600" }}>
             Sign Up
