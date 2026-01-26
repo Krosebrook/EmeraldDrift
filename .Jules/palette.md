@@ -9,3 +9,7 @@
 ## 2025-01-28 - Dashboard Interactivity & Accessibility
 **Learning:** Dashboard summary cards (KPIs) are often visually interactive (ripples/opacity) but functionally inert, confusing users. Screen readers also miss the "trend" context without explicit labels.
 **Action:** Always make summary cards navigable (e.g. to Analytics). Use `accessibilityRole="button"` and construct dynamic labels like "Followers: 1.2M, Trending up 5%". Add `Haptics.selectionAsync()` to reinforce the interaction.
+
+## 2026-01-23 - Systemic Haptics & Accessibility
+**Learning:** Adding haptics and accessibility props to core reusable components (like `Button`) provides a consistent, high-quality "feel" across the app with minimal effort, avoiding the need for manual implementation in every screen.
+**Action:** Always check reusable components first for missing interaction feedback or accessibility defaults before implementing them in individual screens.

@@ -6,8 +6,11 @@ import {
   StyleProp,
   View,
   ActivityIndicator,
+  Platform,
+  PressableProps,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -21,7 +24,8 @@ import { BorderRadius, Spacing } from "@/constants/theme";
 
 type FeatherIconName = React.ComponentProps<typeof Feather>["name"];
 
-export interface ButtonProps {
+export interface ButtonProps
+  extends Omit<PressableProps, "style" | "children" | "onPress"> {
   onPress?: () => void;
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
@@ -66,6 +70,7 @@ export function Button({
   leftIcon,
   rightIcon,
   fullWidth = false,
+  ...rest
 }: ButtonProps) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
@@ -85,6 +90,13 @@ export function Button({
     if (!disabled && !loading) {
       scale.value = withSpring(1, springConfig);
     }
+  };
+
+  const handlePress = () => {
+    if (Platform.OS !== "web") {
+      Haptics.selectionAsync();
+    }
+    onPress?.();
   };
 
   const getStyles = (): { bg: string; text: string; border?: string } => {
@@ -113,7 +125,7 @@ export function Button({
 
   return (
     <AnimatedPressable
-      onPress={isDisabled ? undefined : onPress}
+      onPress={isDisabled ? undefined : handlePress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       disabled={isDisabled}
@@ -133,6 +145,7 @@ export function Button({
         style,
         animatedStyle,
       ]}
+      {...rest}
     >
       {loading ? (
         <ActivityIndicator size="small" color={colors.text} />
