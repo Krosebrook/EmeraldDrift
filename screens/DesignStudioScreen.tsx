@@ -252,6 +252,9 @@ export default function DesignStudioScreen({ navigation }: DesignStudioScreenPro
         <Pressable
           style={[styles.modeCard, { backgroundColor: theme.cardBackground }]}
           onPress={() => setMode("ai")}
+          accessibilityRole="button"
+          accessibilityLabel="AI Generation, Describe your design and let AI create it for you"
+          accessibilityHint="Double tap to start creating with AI"
         >
           <View style={[styles.modeIcon, { backgroundColor: theme.primary + "20" }]}>
             <Feather name="cpu" size={32} color={theme.primary} />
@@ -267,6 +270,9 @@ export default function DesignStudioScreen({ navigation }: DesignStudioScreenPro
         <Pressable
           style={[styles.modeCard, { backgroundColor: theme.cardBackground }]}
           onPress={() => setMode("upload")}
+          accessibilityRole="button"
+          accessibilityLabel="Upload Design, Upload your own design files from your device"
+          accessibilityHint="Double tap to upload an existing design"
         >
           <View style={[styles.modeIcon, { backgroundColor: theme.success + "20" }]}>
             <Feather name="upload" size={32} color={theme.success} />
@@ -282,6 +288,9 @@ export default function DesignStudioScreen({ navigation }: DesignStudioScreenPro
         <Pressable
           style={[styles.modeCard, { backgroundColor: theme.cardBackground }]}
           onPress={() => navigation.navigate("MerchStudio")}
+          accessibilityRole="button"
+          accessibilityLabel="Merch Studio, Create product mockups with AI"
+          accessibilityHint="Double tap to open Merch Studio"
         >
           <View style={[styles.modeIcon, { backgroundColor: theme.warning + "20" }]}>
             <Feather name="shopping-bag" size={32} color={theme.warning} />
@@ -319,10 +328,24 @@ export default function DesignStudioScreen({ navigation }: DesignStudioScreenPro
                   </ThemedText>
                 </View>
                 <View style={styles.recentActions}>
-                  <Pressable onPress={() => handleDownload(design)} style={styles.actionButton}>
+                  <Pressable
+                    onPress={() => handleDownload(design)}
+                    style={styles.actionButton}
+                    accessibilityRole="button"
+                    accessibilityLabel="Download design"
+                    accessibilityHint="Double tap to download this design to your device"
+                    hitSlop={8}
+                  >
                     <Feather name="download" size={20} color={theme.primary} />
                   </Pressable>
-                  <Pressable onPress={() => handlePublish(design)} style={styles.actionButton}>
+                  <Pressable
+                    onPress={() => handlePublish(design)}
+                    style={styles.actionButton}
+                    accessibilityRole="button"
+                    accessibilityLabel="Publish design"
+                    accessibilityHint="Double tap to proceed to publishing this design"
+                    hitSlop={8}
+                  >
                     <Feather name="send" size={20} color={theme.success} />
                   </Pressable>
                 </View>
@@ -349,7 +372,13 @@ export default function DesignStudioScreen({ navigation }: DesignStudioScreenPro
 
   const renderPlatformSelection = () => (
     <View>
-      <Pressable style={styles.backButton} onPress={resetForm}>
+      <Pressable
+        style={styles.backButton}
+        onPress={resetForm}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+        hitSlop={8}
+      >
         <Feather name="arrow-left" size={20} color={theme.text} />
         <ThemedText style={styles.backText}>Back</ThemedText>
       </Pressable>
@@ -378,6 +407,9 @@ export default function DesignStudioScreen({ navigation }: DesignStudioScreenPro
                 },
               ]}
               onPress={() => handleSelectPlatform(platform)}
+              accessibilityRole="button"
+              accessibilityLabel={`${info.name}, ${info.description}`}
+              accessibilityHint="Double tap to select this platform"
             >
               <Feather 
                 name={info.icon as any} 
@@ -415,6 +447,9 @@ export default function DesignStudioScreen({ navigation }: DesignStudioScreenPro
                     },
                   ]}
                   onPress={() => handleSelectTemplate(template)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${template.name}, ${template.dimensions.width} by ${template.dimensions.height} ${template.dimensions.unit}`}
+                  accessibilityHint="Double tap to select this template"
                 >
                   <ThemedText style={styles.templateName}>{template.name}</ThemedText>
                   <ThemedText type="caption" secondary>
@@ -445,7 +480,13 @@ export default function DesignStudioScreen({ navigation }: DesignStudioScreenPro
 
   const renderDesignForm = () => (
     <View>
-      <Pressable style={styles.backButton} onPress={() => setSelectedCategory(null)}>
+      <Pressable
+        style={styles.backButton}
+        onPress={() => setSelectedCategory(null)}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+        hitSlop={8}
+      >
         <Feather name="arrow-left" size={20} color={theme.text} />
         <ThemedText style={styles.backText}>Back</ThemedText>
       </Pressable>
@@ -471,7 +512,7 @@ export default function DesignStudioScreen({ navigation }: DesignStudioScreenPro
 
       <ThemedText style={styles.label}>Description (optional)</ThemedText>
       <TextInput
-        style={[styles.input, styles.textArea, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]}
+        style={[styles.input, styles.textArea, { backgroundColor: theme.backgroundDefault, color: theme.text, borderColor: theme.border }]}
         value={description}
         onChangeText={setDescription}
         placeholder="Enter design description"
@@ -486,7 +527,7 @@ export default function DesignStudioScreen({ navigation }: DesignStudioScreenPro
         <>
           <ThemedText style={styles.label}>Design Prompt *</ThemedText>
           <TextInput
-            style={[styles.input, styles.textArea, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]}
+            style={[styles.input, styles.textArea, { backgroundColor: theme.backgroundDefault, color: theme.text, borderColor: theme.border }]}
             value={aiPrompt}
             onChangeText={setAiPrompt}
             placeholder="Describe your design in detail... e.g., 'A minimalist mountain landscape with sunset colors, perfect for a t-shirt print'"

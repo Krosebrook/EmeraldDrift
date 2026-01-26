@@ -206,7 +206,7 @@ export default function PublishDesignScreen({ navigation, route }: PublishDesign
 
       <ThemedText style={styles.label}>Description</ThemedText>
       <TextInput
-        style={[styles.input, styles.textArea, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]}
+        style={[styles.input, styles.textArea, { backgroundColor: theme.backgroundDefault, color: theme.text, borderColor: theme.border }]}
         value={productDescription}
         onChangeText={setProductDescription}
         placeholder="Enter product description"

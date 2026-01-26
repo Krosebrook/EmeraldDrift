@@ -9,3 +9,7 @@
 ## 2025-01-28 - Dashboard Interactivity & Accessibility
 **Learning:** Dashboard summary cards (KPIs) are often visually interactive (ripples/opacity) but functionally inert, confusing users. Screen readers also miss the "trend" context without explicit labels.
 **Action:** Always make summary cards navigable (e.g. to Analytics). Use `accessibilityRole="button"` and construct dynamic labels like "Followers: 1.2M, Trending up 5%". Add `Haptics.selectionAsync()` to reinforce the interaction.
+
+## 2025-02-12 - Creative Tool Accessibility
+**Learning:** Complex creative tools often use large cards as mode selectors (e.g. "AI vs Upload") and icon-only actions for critical steps (Download/Publish). These are frequent accessibility blind spots.
+**Action:** For large touchable cards, use `accessibilityRole="button"` and combine the title and description into a comprehensive `accessibilityLabel`. For icon-only toolbars, `hitSlop` is essential for usability, and explicit labels are mandatory for screen readers.
