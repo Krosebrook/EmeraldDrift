@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   StyleSheet,
   View,
@@ -48,6 +48,81 @@ const getStatusColor = (
       return theme.textSecondary;
   }
 };
+
+const ListHeader = React.memo(
+  ({
+    filter,
+    onFilterChange,
+  }: {
+    filter: FilterType;
+    onFilterChange: (f: FilterType) => void;
+  }) => {
+    const { theme } = useTheme();
+
+    return (
+      <View style={styles.header}>
+        <View style={styles.filterContainer}>
+          {(["all", "draft", "scheduled", "published"] as FilterType[]).map(
+            (type) => (
+              <Pressable
+                key={type}
+                onPress={() => {
+                  onFilterChange(type);
+                  if (Platform.OS !== "web") {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }
+                }}
+                style={({ pressed }) => [
+                  styles.filterButton,
+                  {
+                    backgroundColor:
+                      filter === type ? theme.primary : theme.cardBackground,
+                    opacity: pressed ? 0.9 : 1,
+                  },
+                ]}
+              >
+                <ThemedText
+                  type="caption"
+                  style={{
+                    color: filter === type ? "#FFFFFF" : theme.text,
+                    fontWeight: "600",
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {type}
+                </ThemedText>
+              </Pressable>
+            ),
+          )}
+        </View>
+      </View>
+    );
+  },
+);
+
+const ListEmpty = React.memo(({ filter }: { filter: FilterType }) => {
+  const { theme } = useTheme();
+
+  return (
+    <View
+      style={[styles.emptyState, { backgroundColor: theme.cardBackground }]}
+    >
+      <Feather name="inbox" size={48} color={theme.textSecondary} />
+      <ThemedText style={{ marginTop: Spacing.md, textAlign: "center" }}>
+        {filter === "all" ? "No content yet" : `No ${filter} content`}
+      </ThemedText>
+      <ThemedText
+        type="caption"
+        secondary
+        style={{ textAlign: "center", marginTop: Spacing.xs }}
+      >
+        {filter === "all"
+          ? "Create your first post in the Studio"
+          : `You don't have any ${filter} content`}
+      </ThemedText>
+    </View>
+  );
+});
 
 export default function ContentListScreen({
   navigation,
@@ -102,10 +177,12 @@ export default function ContentListScreen({
     [loadContent],
   );
 
-  const filteredContent = content.filter((item) => {
-    if (filter === "all") return true;
-    return item.status === filter;
-  });
+  const filteredContent = useMemo(() => {
+    return content.filter((item) => {
+      if (filter === "all") return true;
+      return item.status === filter;
+    });
+  }, [content, filter]);
 
   const renderItem = useCallback(
     ({ item }: { item: ContentItem }) => (
@@ -170,73 +247,20 @@ export default function ContentListScreen({
     [navigation, handleDelete, theme],
   );
 
-  const ListHeader = () => (
-    <View style={styles.header}>
-      <View style={styles.filterContainer}>
-        {(["all", "draft", "scheduled", "published"] as FilterType[]).map(
-          (type) => (
-            <Pressable
-              key={type}
-              onPress={() => {
-                setFilter(type);
-                if (Platform.OS !== "web") {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                }
-              }}
-              style={({ pressed }) => [
-                styles.filterButton,
-                {
-                  backgroundColor:
-                    filter === type ? theme.primary : theme.cardBackground,
-                  opacity: pressed ? 0.9 : 1,
-                },
-              ]}
-            >
-              <ThemedText
-                type="caption"
-                style={{
-                  color: filter === type ? "#FFFFFF" : theme.text,
-                  fontWeight: "600",
-                  textTransform: "capitalize",
-                }}
-              >
-                {type}
-              </ThemedText>
-            </Pressable>
-          ),
-        )}
-      </View>
-    </View>
-  );
-
-  const ListEmpty = () => (
-    <View
-      style={[styles.emptyState, { backgroundColor: theme.cardBackground }]}
-    >
-      <Feather name="inbox" size={48} color={theme.textSecondary} />
-      <ThemedText style={{ marginTop: Spacing.md, textAlign: "center" }}>
-        {filter === "all" ? "No content yet" : `No ${filter} content`}
-      </ThemedText>
-      <ThemedText
-        type="caption"
-        secondary
-        style={{ textAlign: "center", marginTop: Spacing.xs }}
-      >
-        {filter === "all"
-          ? "Create your first post in the Studio"
-          : `You don't have any ${filter} content`}
-      </ThemedText>
-    </View>
-  );
-
   return (
     <ScreenFlatList
       data={filteredContent}
       renderItem={renderItem}
       keyExtractor={(item) => item.id}
-      ListHeaderComponent={ListHeader}
-      ListEmptyComponent={ListEmpty}
+      ListHeaderComponent={
+        <ListHeader filter={filter} onFilterChange={setFilter} />
+      }
+      ListEmptyComponent={<ListEmpty filter={filter} />}
       ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
+      initialNumToRender={10}
+      windowSize={5}
+      removeClippedSubviews={Platform.OS === "android"}
+      maxToRenderPerBatch={5}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
