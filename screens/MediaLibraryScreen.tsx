@@ -25,6 +25,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import Spacer from "@/components/Spacer";
 import { mediaLibraryService, MediaAsset, MediaCategory } from "@/services/mediaLibrary";
+import { AppTheme } from "@/types";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const GRID_SPACING = Spacing.xs;
@@ -45,6 +46,36 @@ const BASE_CATEGORIES: CategoryChip[] = [
   { id: "videos", label: "Videos", icon: "video" },
   { id: "favorites", label: "Favorites", icon: "heart" },
 ];
+
+const MediaItem = React.memo(({ item, onPress, theme }: { item: MediaAsset, onPress: (item: MediaAsset) => void, theme: AppTheme }) => (
+  <Pressable
+    onPress={() => onPress(item)}
+    style={({ pressed }) => [
+      styles.mediaItem,
+      { opacity: pressed ? 0.8 : 1 },
+    ]}
+    accessibilityLabel={`${item.type === "video" ? "Video" : "Image"}, ${item.fileName || "Media asset"}${item.isFavorite ? ", favorited" : ""}`}
+    accessibilityRole="button"
+    accessibilityHint="Double tap to view details"
+  >
+    <Image
+      source={{ uri: item.uri }}
+      style={styles.mediaImage}
+      contentFit="cover"
+      transition={200}
+    />
+    {item.type === "video" ? (
+      <View style={styles.videoIndicator}>
+        <Feather name="play-circle" size={20} color="#FFFFFF" />
+      </View>
+    ) : null}
+    {item.isFavorite ? (
+      <View style={[styles.favoriteIndicator, { backgroundColor: theme.error }]}>
+        <Feather name="heart" size={10} color="#FFFFFF" />
+      </View>
+    ) : null}
+  </Pressable>
+));
 
 export default function MediaLibraryScreen() {
   const { theme } = useTheme();
@@ -169,43 +200,17 @@ export default function MediaLibraryScreen() {
     );
   };
 
-  const openAssetDetail = (asset: MediaAsset) => {
+  const openAssetDetail = useCallback((asset: MediaAsset) => {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setSelectedAsset(asset);
     setShowAssetModal(true);
-  };
+  }, []);
 
-  const renderMediaItem = ({ item }: { item: MediaAsset }) => (
-    <Pressable
-      onPress={() => openAssetDetail(item)}
-      style={({ pressed }) => [
-        styles.mediaItem,
-        { opacity: pressed ? 0.8 : 1 },
-      ]}
-      accessibilityLabel={`${item.type === "video" ? "Video" : "Image"}, ${item.name || "Media asset"}${item.isFavorite ? ", favorited" : ""}`}
-      accessibilityRole="button"
-      accessibilityHint="Double tap to view details"
-    >
-      <Image
-        source={{ uri: item.uri }}
-        style={styles.mediaImage}
-        contentFit="cover"
-        transition={200}
-      />
-      {item.type === "video" ? (
-        <View style={styles.videoIndicator}>
-          <Feather name="play-circle" size={20} color="#FFFFFF" />
-        </View>
-      ) : null}
-      {item.isFavorite ? (
-        <View style={[styles.favoriteIndicator, { backgroundColor: theme.error }]}>
-          <Feather name="heart" size={10} color="#FFFFFF" />
-        </View>
-      ) : null}
-    </Pressable>
-  );
+  const renderMediaItem = useCallback(({ item }: { item: MediaAsset }) => (
+    <MediaItem item={item} onPress={openAssetDetail} theme={theme} />
+  ), [openAssetDetail, theme]);
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
@@ -337,6 +342,9 @@ export default function MediaLibraryScreen() {
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmpty}
         showsVerticalScrollIndicator={false}
+        initialNumToRender={15}
+        windowSize={5}
+        removeClippedSubviews={true}
       />
 
       <Pressable
