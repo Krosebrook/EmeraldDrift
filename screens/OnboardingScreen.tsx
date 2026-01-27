@@ -133,12 +133,18 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
   };
 
   const toggleGoal = (goalId: string) => {
+    if (Platform.OS !== "web") {
+      Haptics.selectionAsync();
+    }
     setSelectedGoals((prev) =>
       prev.includes(goalId) ? prev.filter((g) => g !== goalId) : [...prev, goalId]
     );
   };
 
   const togglePlatform = (platformId: string) => {
+    if (Platform.OS !== "web") {
+      Haptics.selectionAsync();
+    }
     setSelectedPlatforms((prev) =>
       prev.includes(platformId) ? prev.filter((p) => p !== platformId) : [...prev, platformId]
     );
@@ -207,6 +213,7 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
             onChangeText={setDisplayName}
             placeholder="Your name"
             placeholderTextColor={theme.placeholder}
+            accessibilityLabel="Display Name"
           />
         </View>
 
@@ -231,6 +238,7 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
             multiline
             numberOfLines={3}
             textAlignVertical="top"
+            accessibilityLabel="Bio"
           />
         </View>
 
@@ -245,6 +253,9 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
               <Pressable
                 key={goal.id}
                 onPress={() => toggleGoal(goal.id)}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: isSelected }}
+                accessibilityLabel={goal.label}
                 style={[
                   styles.goalChip,
                   {
@@ -294,6 +305,9 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
               <Pressable
                 key={platform.id}
                 onPress={() => togglePlatform(platform.id)}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: isSelected }}
+                accessibilityLabel={`${platform.name} platform`}
                 style={[
                   styles.platformCard,
                   {
@@ -351,7 +365,12 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
     <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         {currentStep > 0 ? (
-          <Pressable onPress={handleBack} style={styles.backButton}>
+          <Pressable
+            onPress={handleBack}
+            style={styles.backButton}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
             <Feather name="arrow-left" size={24} color={theme.text} />
           </Pressable>
         ) : (
@@ -372,7 +391,12 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
           ))}
         </View>
 
-        <Pressable onPress={handleSkip} style={styles.skipButton}>
+        <Pressable
+          onPress={handleSkip}
+          style={styles.skipButton}
+          accessibilityRole="button"
+          accessibilityLabel="Skip onboarding"
+        >
           <ThemedText type="link">Skip</ThemedText>
         </Pressable>
       </View>

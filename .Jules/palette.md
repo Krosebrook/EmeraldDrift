@@ -9,3 +9,7 @@
 ## 2025-01-28 - Dashboard Interactivity & Accessibility
 **Learning:** Dashboard summary cards (KPIs) are often visually interactive (ripples/opacity) but functionally inert, confusing users. Screen readers also miss the "trend" context without explicit labels.
 **Action:** Always make summary cards navigable (e.g. to Analytics). Use `accessibilityRole="button"` and construct dynamic labels like "Followers: 1.2M, Trending up 5%". Add `Haptics.selectionAsync()` to reinforce the interaction.
+
+## 2025-02-12 - Onboarding Custom Toggles
+**Learning:** Custom multi-select chips and cards often lack semantic meaning. Using `accessibilityRole="checkbox"` with `accessibilityState={{ checked: boolean }}` provides clear context to screen readers that "button" or "toggle" misses.
+**Action:** For custom selectable items (like interest chips or platform cards), explicitly define them as checkboxes (or switches) and ensure `Haptics.selectionAsync()` is manually triggered if the component doesn't use the standard Button.
