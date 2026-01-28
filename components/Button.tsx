@@ -118,7 +118,7 @@ export function Button({
       onPressOut={handlePressOut}
       disabled={isDisabled}
       accessibilityRole="button"
-      accessibilityState={{ disabled: isDisabled }}
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
       style={[
         styles.button,
         {
