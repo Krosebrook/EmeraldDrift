@@ -94,7 +94,7 @@ async function safeMultiGet<T>(keys: string[]): Promise<(T | null)[]> {
     return keys.map((key) => {
       const val = map.get(key);
       try {
-        return val ? JSON.parse(val) : null;
+        return typeof val === "string" ? JSON.parse(val) : null;
       } catch {
         return null;
       }
@@ -176,6 +176,14 @@ export function createUserScopedStorage(userId: string) {
 
     async clearAll(keys: string[]): Promise<void> {
       await safeMultiRemove(keys.map((k) => `${prefix}${k}`));
+    },
+
+    async multiSet(pairs: [string, any][]): Promise<void> {
+      await safeMultiSet(pairs.map(([k, v]) => [`${prefix}${k}`, v]));
+    },
+
+    async multiGet<T>(keys: string[]): Promise<(T | null)[]> {
+      return safeMultiGet<T>(keys.map((k) => `${prefix}${k}`));
     },
   };
 }
