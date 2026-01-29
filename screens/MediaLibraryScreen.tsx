@@ -24,14 +24,63 @@ import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import Spacer from "@/components/Spacer";
-import { mediaLibraryService, MediaAsset, MediaCategory } from "@/services/mediaLibrary";
+import {
+  mediaLibraryService,
+  MediaAsset,
+  MediaCategory,
+} from "@/services/mediaLibrary";
+import { AppTheme } from "@/types";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const GRID_SPACING = Spacing.xs;
 const NUM_COLUMNS = 3;
-const ITEM_WIDTH = (SCREEN_WIDTH - Spacing.base * 2 - GRID_SPACING * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
+const ITEM_WIDTH =
+  (SCREEN_WIDTH - Spacing.base * 2 - GRID_SPACING * (NUM_COLUMNS - 1)) /
+  NUM_COLUMNS;
 
 type FilterTab = MediaCategory | string;
+
+interface MediaGridItemProps {
+  item: MediaAsset;
+  onPress: (item: MediaAsset) => void;
+  theme: AppTheme;
+}
+
+const MediaGridItem = React.memo(
+  ({ item, onPress, theme }: MediaGridItemProps) => (
+    <Pressable
+      onPress={() => onPress(item)}
+      style={({ pressed }) => [
+        styles.mediaItem,
+        { opacity: pressed ? 0.8 : 1 },
+      ]}
+      accessibilityLabel={`${item.type === "video" ? "Video" : "Image"}, ${item.fileName || "Media asset"}${item.isFavorite ? ", favorited" : ""}`}
+      accessibilityRole="button"
+      accessibilityHint="Double tap to view details"
+    >
+      <Image
+        source={{ uri: item.uri }}
+        style={styles.mediaImage}
+        contentFit="cover"
+        transition={200}
+      />
+      {item.type === "video" ? (
+        <View style={styles.videoIndicator}>
+          <Feather name="play-circle" size={20} color="#FFFFFF" />
+        </View>
+      ) : null}
+      {item.isFavorite ? (
+        <View
+          style={[styles.favoriteIndicator, { backgroundColor: theme.error }]}
+        >
+          <Feather name="heart" size={10} color="#FFFFFF" />
+        </View>
+      ) : null}
+    </Pressable>
+  ),
+);
+
+MediaGridItem.displayName = "MediaGridItem";
 
 interface CategoryChip {
   id: FilterTab;
@@ -70,7 +119,7 @@ export default function MediaLibraryScreen() {
   useFocusEffect(
     useCallback(() => {
       loadLibrary();
-    }, [loadLibrary])
+    }, [loadLibrary]),
   );
 
   const filteredAssets = useMemo(() => {
@@ -96,7 +145,10 @@ export default function MediaLibraryScreen() {
 
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission Required", "Please allow access to your photo library to add media.");
+      Alert.alert(
+        "Permission Required",
+        "Please allow access to your photo library to add media.",
+      );
       return;
     }
 
@@ -117,10 +169,10 @@ export default function MediaLibraryScreen() {
           duration: pickedAsset.duration || undefined,
           fileSize: pickedAsset.fileSize || 0,
         }));
-        
+
         await mediaLibraryService.addAssetsBatch(itemsToAdd);
         await loadLibrary();
-        
+
         if (Platform.OS !== "web") {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
@@ -139,7 +191,9 @@ export default function MediaLibraryScreen() {
     }
     const updatedAsset = await mediaLibraryService.toggleFavorite(asset.id);
     if (updatedAsset) {
-      setAssets((prev) => prev.map((a) => (a.id === updatedAsset.id ? updatedAsset : a)));
+      setAssets((prev) =>
+        prev.map((a) => (a.id === updatedAsset.id ? updatedAsset : a)),
+      );
       if (selectedAsset?.id === asset.id) {
         setSelectedAsset(updatedAsset);
       }
@@ -161,59 +215,44 @@ export default function MediaLibraryScreen() {
             setSelectedAsset(null);
             setAssets((prev) => prev.filter((a) => a.id !== asset.id));
             if (Platform.OS !== "web") {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+              Haptics.notificationAsync(
+                Haptics.NotificationFeedbackType.Warning,
+              );
             }
           },
         },
-      ]
+      ],
     );
   };
 
-  const openAssetDetail = (asset: MediaAsset) => {
+  const openAssetDetail = useCallback((asset: MediaAsset) => {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setSelectedAsset(asset);
     setShowAssetModal(true);
-  };
+  }, []);
 
-  const renderMediaItem = ({ item }: { item: MediaAsset }) => (
-    <Pressable
-      onPress={() => openAssetDetail(item)}
-      style={({ pressed }) => [
-        styles.mediaItem,
-        { opacity: pressed ? 0.8 : 1 },
-      ]}
-      accessibilityLabel={`${item.type === "video" ? "Video" : "Image"}, ${item.name || "Media asset"}${item.isFavorite ? ", favorited" : ""}`}
-      accessibilityRole="button"
-      accessibilityHint="Double tap to view details"
-    >
-      <Image
-        source={{ uri: item.uri }}
-        style={styles.mediaImage}
-        contentFit="cover"
-        transition={200}
-      />
-      {item.type === "video" ? (
-        <View style={styles.videoIndicator}>
-          <Feather name="play-circle" size={20} color="#FFFFFF" />
-        </View>
-      ) : null}
-      {item.isFavorite ? (
-        <View style={[styles.favoriteIndicator, { backgroundColor: theme.error }]}>
-          <Feather name="heart" size={10} color="#FFFFFF" />
-        </View>
-      ) : null}
-    </Pressable>
+  const renderMediaItem = useCallback(
+    ({ item }: { item: MediaAsset }) => (
+      <MediaGridItem item={item} onPress={openAssetDetail} theme={theme} />
+    ),
+    [openAssetDetail, theme],
   );
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
       <Feather name="image" size={64} color={theme.textSecondary} />
-      <ThemedText type="title3" style={{ marginTop: Spacing.md, textAlign: "center" }}>
+      <ThemedText
+        type="title3"
+        style={{ marginTop: Spacing.md, textAlign: "center" }}
+      >
         {searchQuery ? "No Results Found" : "No Media Yet"}
       </ThemedText>
-      <ThemedText secondary style={{ marginTop: Spacing.xs, textAlign: "center" }}>
+      <ThemedText
+        secondary
+        style={{ marginTop: Spacing.xs, textAlign: "center" }}
+      >
         {searchQuery
           ? "Try a different search term"
           : "Add photos and videos to your library"}
@@ -226,7 +265,13 @@ export default function MediaLibraryScreen() {
           accessibilityRole="button"
         >
           <Feather name="plus" size={18} color="#FFFFFF" />
-          <ThemedText style={{ color: "#FFFFFF", marginLeft: Spacing.xs, fontWeight: "600" }}>
+          <ThemedText
+            style={{
+              color: "#FFFFFF",
+              marginLeft: Spacing.xs,
+              fontWeight: "600",
+            }}
+          >
             Add Media
           </ThemedText>
         </Pressable>
@@ -237,7 +282,12 @@ export default function MediaLibraryScreen() {
   const renderHeader = () => (
     <>
       <View style={styles.searchContainer}>
-        <View style={[styles.searchBox, { backgroundColor: theme.backgroundSecondary }]}>
+        <View
+          style={[
+            styles.searchBox,
+            { backgroundColor: theme.backgroundSecondary },
+          ]}
+        >
           <Feather name="search" size={18} color={theme.textSecondary} />
           <TextInput
             style={[styles.searchInput, { color: theme.text }]}
@@ -278,7 +328,9 @@ export default function MediaLibraryScreen() {
               style={[
                 styles.filterChip,
                 {
-                  backgroundColor: isActive ? theme.primary : theme.backgroundSecondary,
+                  backgroundColor: isActive
+                    ? theme.primary
+                    : theme.backgroundSecondary,
                 },
               ]}
               accessibilityRole="button"
@@ -306,7 +358,8 @@ export default function MediaLibraryScreen() {
 
       <View style={styles.statsRow}>
         <ThemedText secondary type="caption">
-          {filteredAssets.length} {filteredAssets.length === 1 ? "item" : "items"}
+          {filteredAssets.length}{" "}
+          {filteredAssets.length === 1 ? "item" : "items"}
         </ThemedText>
       </View>
     </>
@@ -314,7 +367,12 @@ export default function MediaLibraryScreen() {
 
   if (isLoading) {
     return (
-      <ThemedView style={[styles.container, { paddingBottom: insets.bottom + Spacing.xl }]}>
+      <ThemedView
+        style={[
+          styles.container,
+          { paddingBottom: insets.bottom + Spacing.xl },
+        ]}
+      >
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.primary} />
         </View>
@@ -329,7 +387,9 @@ export default function MediaLibraryScreen() {
         renderItem={renderMediaItem}
         keyExtractor={(item) => item.id}
         numColumns={NUM_COLUMNS}
-        columnWrapperStyle={filteredAssets.length > 0 ? styles.gridRow : undefined}
+        columnWrapperStyle={
+          filteredAssets.length > 0 ? styles.gridRow : undefined
+        }
         contentContainerStyle={[
           styles.gridContent,
           { paddingBottom: insets.bottom + 80 + Spacing.xl },
@@ -378,15 +438,23 @@ export default function MediaLibraryScreen() {
             </Pressable>
             <ThemedText type="title3">Media Details</ThemedText>
             <Pressable
-              onPress={() => selectedAsset && handleToggleFavorite(selectedAsset)}
-              accessibilityLabel={selectedAsset?.isFavorite ? "Remove from favorites" : "Add to favorites"}
+              onPress={() =>
+                selectedAsset && handleToggleFavorite(selectedAsset)
+              }
+              accessibilityLabel={
+                selectedAsset?.isFavorite
+                  ? "Remove from favorites"
+                  : "Add to favorites"
+              }
               accessibilityRole="button"
               accessibilityState={{ selected: selectedAsset?.isFavorite }}
             >
               <Feather
                 name="heart"
                 size={24}
-                color={selectedAsset?.isFavorite ? theme.error : theme.textSecondary}
+                color={
+                  selectedAsset?.isFavorite ? theme.error : theme.textSecondary
+                }
               />
             </Pressable>
           </View>
@@ -408,13 +476,19 @@ export default function MediaLibraryScreen() {
                   <Feather name="file" size={16} color={theme.textSecondary} />
                   <ThemedText secondary style={{ marginLeft: Spacing.sm }}>
                     {selectedAsset.type === "image" ? "Image" : "Video"}
-                    {selectedAsset.fileSize > 0 ? ` - ${mediaLibraryService.formatFileSize(selectedAsset.fileSize)}` : ""}
+                    {selectedAsset.fileSize > 0
+                      ? ` - ${mediaLibraryService.formatFileSize(selectedAsset.fileSize)}`
+                      : ""}
                   </ThemedText>
                 </View>
 
                 {selectedAsset.width && selectedAsset.height ? (
                   <View style={styles.detailRow}>
-                    <Feather name="maximize" size={16} color={theme.textSecondary} />
+                    <Feather
+                      name="maximize"
+                      size={16}
+                      color={theme.textSecondary}
+                    />
                     <ThemedText secondary style={{ marginLeft: Spacing.sm }}>
                       {selectedAsset.width} x {selectedAsset.height}
                     </ThemedText>
@@ -423,7 +497,11 @@ export default function MediaLibraryScreen() {
 
                 {selectedAsset.duration ? (
                   <View style={styles.detailRow}>
-                    <Feather name="clock" size={16} color={theme.textSecondary} />
+                    <Feather
+                      name="clock"
+                      size={16}
+                      color={theme.textSecondary}
+                    />
                     <ThemedText secondary style={{ marginLeft: Spacing.sm }}>
                       {Math.round(selectedAsset.duration / 1000)}s
                     </ThemedText>
@@ -431,33 +509,65 @@ export default function MediaLibraryScreen() {
                 ) : null}
 
                 <View style={styles.detailRow}>
-                  <Feather name="calendar" size={16} color={theme.textSecondary} />
+                  <Feather
+                    name="calendar"
+                    size={16}
+                    color={theme.textSecondary}
+                  />
                   <ThemedText secondary style={{ marginLeft: Spacing.sm }}>
-                    Added {new Date(selectedAsset.createdAt).toLocaleDateString()}
+                    Added{" "}
+                    {new Date(selectedAsset.createdAt).toLocaleDateString()}
                   </ThemedText>
                 </View>
 
                 {selectedAsset.usedIn.length > 0 ? (
-                  <View style={[styles.usedInBadge, { backgroundColor: theme.success + "20" }]}>
-                    <Feather name="check-circle" size={14} color={theme.success} />
-                    <ThemedText style={{ marginLeft: Spacing.xs, color: theme.success, fontSize: 13 }}>
-                      Used in {selectedAsset.usedIn.length} {selectedAsset.usedIn.length === 1 ? "post" : "posts"}
+                  <View
+                    style={[
+                      styles.usedInBadge,
+                      { backgroundColor: theme.success + "20" },
+                    ]}
+                  >
+                    <Feather
+                      name="check-circle"
+                      size={14}
+                      color={theme.success}
+                    />
+                    <ThemedText
+                      style={{
+                        marginLeft: Spacing.xs,
+                        color: theme.success,
+                        fontSize: 13,
+                      }}
+                    >
+                      Used in {selectedAsset.usedIn.length}{" "}
+                      {selectedAsset.usedIn.length === 1 ? "post" : "posts"}
                     </ThemedText>
                   </View>
                 ) : null}
 
                 {selectedAsset.category.length > 0 ? (
                   <View style={styles.tagsContainer}>
-                    <ThemedText type="caption" secondary style={{ marginBottom: Spacing.xs }}>
+                    <ThemedText
+                      type="caption"
+                      secondary
+                      style={{ marginBottom: Spacing.xs }}
+                    >
                       Categories
                     </ThemedText>
                     <View style={styles.tagsRow}>
                       {selectedAsset.category.map((cat) => (
                         <View
                           key={cat}
-                          style={[styles.tag, { backgroundColor: theme.primary + "20" }]}
+                          style={[
+                            styles.tag,
+                            { backgroundColor: theme.primary + "20" },
+                          ]}
                         >
-                          <ThemedText style={{ color: theme.primary, fontSize: 12 }}>{cat}</ThemedText>
+                          <ThemedText
+                            style={{ color: theme.primary, fontSize: 12 }}
+                          >
+                            {cat}
+                          </ThemedText>
                         </View>
                       ))}
                     </View>
@@ -467,11 +577,18 @@ export default function MediaLibraryScreen() {
 
               <View style={styles.actionsSection}>
                 <Pressable
-                  onPress={() => selectedAsset && handleDeleteAsset(selectedAsset)}
-                  style={[styles.deleteButton, { backgroundColor: theme.error + "15" }]}
+                  onPress={() =>
+                    selectedAsset && handleDeleteAsset(selectedAsset)
+                  }
+                  style={[
+                    styles.deleteButton,
+                    { backgroundColor: theme.error + "15" },
+                  ]}
                 >
                   <Feather name="trash-2" size={18} color={theme.error} />
-                  <ThemedText style={{ marginLeft: Spacing.sm, color: theme.error }}>
+                  <ThemedText
+                    style={{ marginLeft: Spacing.sm, color: theme.error }}
+                  >
                     Delete from Library
                   </ThemedText>
                 </Pressable>
