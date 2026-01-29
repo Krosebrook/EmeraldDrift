@@ -9,3 +9,7 @@
 ## 2025-01-28 - Dashboard Interactivity & Accessibility
 **Learning:** Dashboard summary cards (KPIs) are often visually interactive (ripples/opacity) but functionally inert, confusing users. Screen readers also miss the "trend" context without explicit labels.
 **Action:** Always make summary cards navigable (e.g. to Analytics). Use `accessibilityRole="button"` and construct dynamic labels like "Followers: 1.2M, Trending up 5%". Add `Haptics.selectionAsync()` to reinforce the interaction.
+
+## 2025-05-30 - Centralized Haptics & Loading Accessibility
+**Learning:** Implementing haptics and accessibility states (like `busy: loading`) directly in base UI components (Button) guarantees consistency and prevents "silent" loading states where manual implementations forget to announce status updates.
+**Action:** Audit base components (Button, Input, Card) first. If they support a state (like `loading`), ensure that state maps to `accessibilityState.busy` and appropriate feedback mechanisms (haptics) internally.
