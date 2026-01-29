@@ -6,8 +6,10 @@ import {
   StyleProp,
   View,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -77,6 +79,9 @@ export function Button({
 
   const handlePressIn = () => {
     if (!disabled && !loading) {
+      if (Platform.OS !== "web") {
+        Haptics.selectionAsync();
+      }
       scale.value = withSpring(0.98, springConfig);
     }
   };
@@ -118,7 +123,7 @@ export function Button({
       onPressOut={handlePressOut}
       disabled={isDisabled}
       accessibilityRole="button"
-      accessibilityState={{ disabled: isDisabled }}
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
       style={[
         styles.button,
         {

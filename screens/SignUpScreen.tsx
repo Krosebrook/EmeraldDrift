@@ -6,7 +6,6 @@ import {
   Pressable,
   Alert,
   Platform,
-  ActivityIndicator,
   Image,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
@@ -270,12 +269,8 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
 
         <Spacer height={Spacing.lg} />
 
-        <Button onPress={handleSignUp} disabled={isLoading}>
-          {isLoading ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            "Create Account"
-          )}
+        <Button onPress={handleSignUp} loading={isLoading}>
+          Create Account
         </Button>
 
         <Spacer height={Spacing.base} />

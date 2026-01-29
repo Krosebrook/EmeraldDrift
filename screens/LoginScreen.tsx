@@ -6,7 +6,6 @@ import {
   Pressable,
   Alert,
   Platform,
-  ActivityIndicator,
   Image,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
@@ -202,12 +201,8 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
         <Spacer height={Spacing.lg} />
 
-        <Button onPress={handleLogin} disabled={isLoading}>
-          {isLoading ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            "Sign In"
-          )}
+        <Button onPress={handleLogin} loading={isLoading}>
+          Sign In
         </Button>
 
         <Spacer height={Spacing.lg} />
