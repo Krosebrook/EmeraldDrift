@@ -9,3 +9,7 @@
 ## 2025-01-28 - Dashboard Interactivity & Accessibility
 **Learning:** Dashboard summary cards (KPIs) are often visually interactive (ripples/opacity) but functionally inert, confusing users. Screen readers also miss the "trend" context without explicit labels.
 **Action:** Always make summary cards navigable (e.g. to Analytics). Use `accessibilityRole="button"` and construct dynamic labels like "Followers: 1.2M, Trending up 5%". Add `Haptics.selectionAsync()` to reinforce the interaction.
+
+## 2025-02-18 - Settings List Accessibility & Feel
+**Learning:** List items in settings screens often act as buttons but lack the `accessibilityRole="button"` and tactile feedback, making them feel flat and hard to distinguish for screen readers.
+**Action:** For clickable list rows, explicitly set `accessibilityRole="button"`, construct descriptive `accessibilityLabel`s (combining title + description), and add `Haptics.selectionAsync()` on `onPressIn` for immediate feedback.

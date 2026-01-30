@@ -35,7 +35,15 @@ function SettingsRow({ icon, label, description, onPress, danger, isLoading }: S
   return (
     <Pressable
       onPress={onPress}
+      onPressIn={() => {
+        if (onPress && !isLoading && Platform.OS !== "web") {
+          Haptics.selectionAsync();
+        }
+      }}
       disabled={isLoading}
+      accessibilityRole="button"
+      accessibilityLabel={`${label}${description ? `, ${description}` : ""}`}
+      accessibilityState={{ disabled: isLoading, busy: isLoading }}
       style={({ pressed }) => [
         styles.settingsRow,
         { backgroundColor: theme.cardBackground, opacity: pressed && onPress ? 0.9 : 1 },
@@ -396,7 +404,12 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
           <View style={[styles.modalContent, { backgroundColor: theme.cardBackground }]}>
             <View style={styles.modalHeader}>
               <ThemedText type="title3">Add Gemini API Key</ThemedText>
-              <Pressable onPress={() => setShowApiKeyModal(false)} hitSlop={8}>
+              <Pressable
+                onPress={() => setShowApiKeyModal(false)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Close"
+              >
                 <Feather name="x" size={24} color={theme.text} />
               </Pressable>
             </View>
@@ -418,6 +431,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
               onChangeText={setApiKeyInput}
               placeholder="Enter your Gemini API key"
               placeholderTextColor={theme.textSecondary}
+              accessibilityLabel="Gemini API Key Input"
               secureTextEntry
               autoCapitalize="none"
               autoCorrect={false}
