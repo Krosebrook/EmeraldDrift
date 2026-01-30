@@ -46,6 +46,45 @@ const BASE_CATEGORIES: CategoryChip[] = [
   { id: "favorites", label: "Favorites", icon: "heart" },
 ];
 
+interface MediaItemProps {
+  item: MediaAsset;
+  onPress: (item: MediaAsset) => void;
+}
+
+const MediaItem = React.memo(({ item, onPress }: MediaItemProps) => {
+  const { theme } = useTheme();
+
+  return (
+    <Pressable
+      onPress={() => onPress(item)}
+      style={({ pressed }) => [
+        styles.mediaItem,
+        { opacity: pressed ? 0.8 : 1 },
+      ]}
+      accessibilityLabel={`${item.type === "video" ? "Video" : "Image"}, ${item.name || "Media asset"}${item.isFavorite ? ", favorited" : ""}`}
+      accessibilityRole="button"
+      accessibilityHint="Double tap to view details"
+    >
+      <Image
+        source={{ uri: item.uri }}
+        style={styles.mediaImage}
+        contentFit="cover"
+        transition={200}
+      />
+      {item.type === "video" ? (
+        <View style={styles.videoIndicator}>
+          <Feather name="play-circle" size={20} color="#FFFFFF" />
+        </View>
+      ) : null}
+      {item.isFavorite ? (
+        <View style={[styles.favoriteIndicator, { backgroundColor: theme.error }]}>
+          <Feather name="heart" size={10} color="#FFFFFF" />
+        </View>
+      ) : null}
+    </Pressable>
+  );
+});
+
 export default function MediaLibraryScreen() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -169,43 +208,17 @@ export default function MediaLibraryScreen() {
     );
   };
 
-  const openAssetDetail = (asset: MediaAsset) => {
+  const openAssetDetail = useCallback((asset: MediaAsset) => {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setSelectedAsset(asset);
     setShowAssetModal(true);
-  };
+  }, []);
 
-  const renderMediaItem = ({ item }: { item: MediaAsset }) => (
-    <Pressable
-      onPress={() => openAssetDetail(item)}
-      style={({ pressed }) => [
-        styles.mediaItem,
-        { opacity: pressed ? 0.8 : 1 },
-      ]}
-      accessibilityLabel={`${item.type === "video" ? "Video" : "Image"}, ${item.name || "Media asset"}${item.isFavorite ? ", favorited" : ""}`}
-      accessibilityRole="button"
-      accessibilityHint="Double tap to view details"
-    >
-      <Image
-        source={{ uri: item.uri }}
-        style={styles.mediaImage}
-        contentFit="cover"
-        transition={200}
-      />
-      {item.type === "video" ? (
-        <View style={styles.videoIndicator}>
-          <Feather name="play-circle" size={20} color="#FFFFFF" />
-        </View>
-      ) : null}
-      {item.isFavorite ? (
-        <View style={[styles.favoriteIndicator, { backgroundColor: theme.error }]}>
-          <Feather name="heart" size={10} color="#FFFFFF" />
-        </View>
-      ) : null}
-    </Pressable>
-  );
+  const renderMediaItem = useCallback(({ item }: { item: MediaAsset }) => (
+    <MediaItem item={item} onPress={openAssetDetail} />
+  ), [openAssetDetail]);
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
