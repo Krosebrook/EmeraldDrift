@@ -170,6 +170,10 @@ export function createUserScopedStorage(userId: string) {
       await safeSet(`${prefix}${key}`, value);
     },
 
+    async multiSet(pairs: [string, any][]): Promise<void> {
+      await safeMultiSet(pairs.map(([k, v]) => [`${prefix}${k}`, v]));
+    },
+
     async remove(key: string): Promise<void> {
       await safeRemove(`${prefix}${key}`);
     },
