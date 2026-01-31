@@ -2,11 +2,9 @@ import React, { useState } from "react";
 import {
   StyleSheet,
   View,
-  TextInput,
   Pressable,
   Alert,
   Platform,
-  ActivityIndicator,
   Image,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
@@ -16,9 +14,10 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ScreenKeyboardAwareScrollView } from "@/components/ScreenKeyboardAwareScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
+import { Input } from "@/components/Input";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuthContext } from "@/context/AuthContext";
-import { Spacing, BorderRadius, Typography } from "@/constants/theme";
+import { Spacing, BorderRadius } from "@/constants/theme";
 import Spacer from "@/components/Spacer";
 import type { AuthStackParamList } from "@/navigation/AuthStackNavigator";
 
@@ -27,7 +26,7 @@ type LoginScreenProps = {
 };
 
 export default function LoginScreen({ navigation }: LoginScreenProps) {
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
   const { signIn, isLoading } = useAuthContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -77,15 +76,6 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     }
   };
 
-  const inputStyle = (error?: string) => [
-    styles.input,
-    {
-      backgroundColor: theme.backgroundDefault,
-      color: theme.text,
-      borderColor: error ? theme.error : theme.border,
-    },
-  ];
-
   return (
     <ScreenKeyboardAwareScrollView contentContainerStyle={styles.container}>
       <View style={styles.headerSection}>
@@ -105,59 +95,40 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       <Spacer height={Spacing.xl} />
 
       <View style={styles.form}>
-        <View style={styles.fieldContainer}>
-          <ThemedText type="subhead" style={styles.label}>
-            Email
-          </ThemedText>
-          <TextInput
-            style={inputStyle(errors.email)}
-            value={email}
-            onChangeText={(text) => {
-              setEmail(text);
-              if (errors.email)
-                setErrors((prev) => ({ ...prev, email: undefined }));
-            }}
-            placeholder="your@email.com"
-            placeholderTextColor={theme.placeholder}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            returnKeyType="next"
-            editable={!isLoading}
-          />
-          {errors.email ? (
-            <ThemedText
-              type="caption"
-              style={{ color: theme.error, marginTop: 4 }}
-            >
-              {errors.email}
-            </ThemedText>
-          ) : null}
-        </View>
+        <Input
+          label="Email"
+          value={email}
+          onChangeText={(text) => {
+            setEmail(text);
+            if (errors.email)
+              setErrors((prev) => ({ ...prev, email: undefined }));
+          }}
+          placeholder="your@email.com"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoComplete="email"
+          returnKeyType="next"
+          editable={!isLoading}
+          error={errors.email}
+          containerStyle={{ marginBottom: Spacing.base }}
+        />
 
-        <Spacer height={Spacing.base} />
-
-        <View style={styles.fieldContainer}>
-          <ThemedText type="subhead" style={styles.label}>
-            Password
-          </ThemedText>
-          <View style={styles.passwordContainer}>
-            <TextInput
-              style={[inputStyle(errors.password), styles.passwordInput]}
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                if (errors.password)
-                  setErrors((prev) => ({ ...prev, password: undefined }));
-              }}
-              placeholder="Enter your password"
-              placeholderTextColor={theme.placeholder}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              returnKeyType="done"
-              onSubmitEditing={handleLogin}
-              editable={!isLoading}
-            />
+        <Input
+          label="Password"
+          value={password}
+          onChangeText={(text) => {
+            setPassword(text);
+            if (errors.password)
+              setErrors((prev) => ({ ...prev, password: undefined }));
+          }}
+          placeholder="Enter your password"
+          secureTextEntry={!showPassword}
+          autoCapitalize="none"
+          returnKeyType="done"
+          onSubmitEditing={handleLogin}
+          editable={!isLoading}
+          error={errors.password}
+          rightElement={
             <Pressable
               onPress={() => {
                 setShowPassword(!showPassword);
@@ -165,7 +136,6 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 }
               }}
-              style={styles.eyeButton}
               accessibilityRole="button"
               accessibilityLabel={
                 showPassword ? "Hide password" : "Show password"
@@ -178,16 +148,8 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
                 color={theme.textSecondary}
               />
             </Pressable>
-          </View>
-          {errors.password ? (
-            <ThemedText
-              type="caption"
-              style={{ color: theme.error, marginTop: 4 }}
-            >
-              {errors.password}
-            </ThemedText>
-          ) : null}
-        </View>
+          }
+        />
 
         <Spacer height={Spacing.sm} />
 
@@ -196,18 +158,16 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           style={({ pressed }) => [
             { opacity: pressed ? 0.7 : 1, alignSelf: "flex-end" },
           ]}
+          accessibilityRole="button"
+          accessibilityLabel="Forgot Password"
         >
           <ThemedText type="link">Forgot Password?</ThemedText>
         </Pressable>
 
         <Spacer height={Spacing.lg} />
 
-        <Button onPress={handleLogin} disabled={isLoading}>
-          {isLoading ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            "Sign In"
-          )}
+        <Button onPress={handleLogin} disabled={isLoading} loading={isLoading}>
+          Sign In
         </Button>
 
         <Spacer height={Spacing.lg} />
@@ -232,6 +192,8 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             { backgroundColor: "#F26207", opacity: pressed ? 0.9 : 1 },
           ]}
           onPress={() => navigation.navigate("ReplitAuth")}
+          accessibilityRole="button"
+          accessibilityLabel="Sign in with Replit"
         >
           <Feather name="code" size={20} color="#FFFFFF" />
           <ThemedText style={styles.replitButtonText}>
@@ -247,6 +209,8 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         <Pressable
           onPress={() => navigation.navigate("SignUp")}
           style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+          accessibilityRole="button"
+          accessibilityLabel="Sign Up"
         >
           <ThemedText type="link" style={{ fontWeight: "600" }}>
             Sign Up
@@ -280,35 +244,6 @@ const styles = StyleSheet.create({
   form: {
     width: "100%",
   },
-  fieldContainer: {
-    width: "100%",
-  },
-  label: {
-    marginBottom: Spacing.sm,
-    fontWeight: "600",
-  },
-  input: {
-    height: Spacing.inputHeight,
-    borderWidth: 1,
-    borderRadius: BorderRadius.sm,
-    paddingHorizontal: Spacing.base,
-    fontSize: Typography.body.fontSize,
-  },
-  passwordContainer: {
-    position: "relative",
-  },
-  passwordInput: {
-    paddingRight: 48,
-  },
-  eyeButton: {
-    position: "absolute",
-    right: 0,
-    top: 0,
-    height: Spacing.inputHeight,
-    width: 48,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   divider: {
     flexDirection: "row",
     alignItems: "center",
@@ -319,11 +254,6 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     marginHorizontal: Spacing.md,
-  },
-  socialButtons: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: Spacing.md,
   },
   replitButton: {
     flexDirection: "row",
